@@ -170,7 +170,13 @@ export async function getUserFromRequest(req: Request): Promise<{ uid: string; u
   const cookies = parseCookies(req.headers.get("cookie"));
   const token = cookies[SESSION_COOKIE];
   if (!token) return null;
-  return await verifySessionToken(token);
+  const session = await verifySessionToken(token);
+  if (!session) return null;
+  // v2.2.2 (ACC-02): a deactivated or deleted account loses API access immediately,
+  // not only on the next page load — signed tokens themselves cannot be revoked.
+  const rows = await getDatabase().sql`SELECT status, deleted_at FROM users WHERE id = ${session.uid}`;
+  if (!rows.length || (rows[0].status && rows[0].status !== "Active") || rows[0].deleted_at) return null;
+  return session;
 }
 
 /**

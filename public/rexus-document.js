@@ -13,6 +13,9 @@
   var shareUrl='/api/rexus-document-shares',threadUrl='/api/rexus-document-threads';
   var spaceMenuOpen=false;
   var collapsedTreeFolders=new Set();
+  // v2.2.2 DOC-01: sidebar sections can be shown/hidden; remembered per browser.
+  var collapsedSections = (function(){ try { return new Set(JSON.parse(localStorage.getItem('rd-collapsed-sections') || '[]')); } catch (e) { return new Set(); } })();
+  function sectionHead(key, label){ var closed = collapsedSections.has(key); return '<button type="button" class="rd-section-title rd-section-toggle" data-rd="toggle-section" data-id="' + key + '" aria-expanded="' + (!closed) + '" aria-controls="rdSec-' + key + '"><span class="rd-section-chevron" aria-hidden="true">' + (closed ? '›' : '⌄') + '</span><span>' + label + '</span></button>'; }
   var state = { spaces: [], documents: [], files: [], spaceId: '', folderId: '', pageId: '', home: true, search: '', searchScope: 'all', edit: false, dirty: false, busy: false, details: false, folderComments: [], sort: 'name', filter: 'all', userId: '', selected: new Set(), threads: [], commentPanel: false, activeThread: '', error: '', loaded: false };
   function el(id) { return document.getElementById(id); }
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -377,9 +380,9 @@
     var shared=state.documents.filter(function(d){return (d.space_id!==state.spaceId && !d.parent_id) || (d.space_id===state.spaceId && !!d.parent_id && !docById(d.parent_id)) || (!perm(current,'view') && !d.parent_id);}).slice(0,25);
     return '<div class="rd-side-head"><button type="button" class="rd-space-switch" data-rd="toggle-space-menu" aria-haspopup="dialog" aria-expanded="'+(spaceMenuOpen?'true':'false')+'"><span class="rd-space-switch-label">Document spaces <span class="rd-chevron">⌄</span></span><small>'+esc(current?.name||'Choose a space')+'</small></button><button class="rd-icon-btn" data-rd="new-space" title="Create space" aria-label="Create space">+</button>'+dropdown+'</div>'+
       '<div class="rd-sidebar-top"><button class="rd-nav-row '+(state.home&&!state.search?'active':'')+'" data-rd="overview"><span class="rd-plain-mark">⌂</span><span>Home</span></button><button class="rd-nav-row '+(allFilesMode?'active':'')+'" data-rd="all-files"><span class="rd-plain-mark">▤</span><span>All files</span></button></div>'+
-      '<div class="rd-section-title">'+(current?'IN '+esc(current.name.toUpperCase()):'DOCUMENTS')+'</div><div class="rd-spaces-tree">'+
+      sectionHead('space', current?'IN '+esc(current.name.toUpperCase()):'DOCUMENTS')+'<div class="rd-spaces-tree" id="rdSec-space"'+(collapsedSections.has('space')?' hidden':'')+'>'+
       (current?'<button class="rd-nav-row rd-space-title" data-rd="space" data-id="'+esc(current.id)+'"><span class="rd-nav-glyph">'+spaceGlyph()+'</span><span>'+esc(current.name)+'</span></button>'+currentItems:'<div class="rd-empty rd-sidebar-empty">No spaces shared with you yet.</div>')+'</div>'+
-      (shared.length?'<div class="rd-section-title">OTHER SHARED ITEMS</div><div class="rd-spaces-tree">'+shared.map(function(d){return '<button class="rd-nav-row" data-rd="doc" data-id="'+esc(d.id)+'"><span class="rd-plain-mark">'+(d.kind==='folder'?'▱':'▤')+'</span><span>'+esc(d.title)+'</span></button>';}).join('')+'</div>':'');
+      (shared.length?sectionHead('shared','OTHER SHARED ITEMS')+'<div class="rd-spaces-tree" id="rdSec-shared"'+(collapsedSections.has('shared')?' hidden':'')+'>'+shared.map(function(d){return '<button class="rd-nav-row" data-rd="doc" data-id="'+esc(d.id)+'"><span class="rd-plain-mark">'+(d.kind==='folder'?'▱':'▤')+'</span><span>'+esc(d.title)+'</span></button>';}).join('')+'</div>':'');
   }
   function spaceGlyph(){return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3.5" y="4" width="7" height="7" rx="2"/><rect x="13.5" y="4" width="7" height="7" rx="2"/><rect x="3.5" y="14" width="7" height="7" rx="2"/><rect x="13.5" y="14" width="7" height="7" rx="2"/></svg>';}
 
@@ -421,9 +424,9 @@
       '<p>One beautiful place for your team knowledge, product guides, notes and files — connected to REXUS tasks.</p></div>' +
       '<div aria-hidden="true" class="rx-home-hero-icon">📚</div></section>';
     var actions = '<div class="rd-home-actions">' +
-      '<button class="rd-home-action" data-rd="new-page"><span class="rd-home-icon">▤</span><span>Create a page<small>Start writing something new</small></span></button>' +
-      '<button class="rd-home-action" data-rd="all-files"><span class="rd-home-icon">⇧</span><span>Browse files<small>Find uploaded attachments</small></span></button>' +
-      '<button class="rd-home-action" data-rd="new-space"><span class="rd-home-icon">▣</span><span>Create a space<small>Organize your team content</small></span></button></div>';
+      '<button class="rd-home-action" data-rd="new-page"><span class="rd-home-icon">▤</span><span>Create a page</span></button>' +
+      '<button class="rd-home-action" data-rd="all-files"><span class="rd-home-icon">⇧</span><span>Browse files</span></button>' +
+      '<button class="rd-home-action" data-rd="new-space"><span class="rd-home-icon">▣</span><span>Create a space</span></button></div>';
     var recents = latest.length ? latest.map(function(d){
       return '<button class="rd-list-row" data-rd="doc" data-id="' + esc(d.id) + '"><span class="rd-list-icon">▤</span><span style="min-width:0"><span class="rd-row-name" style="display:block">' + esc(d.title) + '</span><span class="rd-row-meta">' + esc(spaceById(d.space_id)?.name || 'Space') + ' · Updated ' + date(d.updated_at) + '</span></span><span class="rd-row-end">Open →</span></button>';
     }).join('') : '<div class="rd-empty">No pages yet — create your first page above.</div>';
@@ -1082,6 +1085,7 @@
     var action=target.dataset.rd,id=target.dataset.id;
     if(action==='retry')refresh(true);
     else if(action==='toggle-space-menu'){spaceMenuOpen=!spaceMenuOpen;paintSidebar();if(spaceMenuOpen&&el('rdSpaceSearch'))el('rdSpaceSearch').focus();}
+    else if(action==='toggle-section'){if(collapsedSections.has(id))collapsedSections.delete(id);else collapsedSections.add(id);try{localStorage.setItem('rd-collapsed-sections',JSON.stringify(Array.from(collapsedSections)));}catch(e){}paintSidebar();var t=document.querySelector('[data-rd="toggle-section"][data-id="'+id+'"]');if(t)t.focus();}
     else if(action==='toggle-folder'){if(collapsedTreeFolders.has(id))collapsedTreeFolders.delete(id);else collapsedTreeFolders.add(id);paintSidebar();}
     else if(action==='space')spaceRoute(id);
     else if(action==='doc'){allFilesMode=false;gotoDocument(id);}

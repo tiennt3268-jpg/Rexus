@@ -1,5 +1,7 @@
 # 05 — WBS + Gantt and notification-only workflow: implementation notes
 
+> **v2.2.2:** the legacy frappe-gantt "Interactive Gantt (drag to reschedule)" mentioned below was removed (Requirement GEN-06). Task dates are edited only through the task forms; the WBS timeline described here is unchanged.
+
 ## 1. Where it lives
 - UI: `public/rexus-v221.js` → `REXUS221.wbs(node, ctx)`, rendered into `<section id="pdWbs">` on the project detail page (`public/index.html`). Styles are in `public/rexus-ui.css` §18 (`.rx-wbs-*`, `.rx-gt-*`).
 - API: `netlify/functions/task-dependencies.mts`, `netlify/functions/workflow-templates.mts`, and `netlify/functions/lib/task-ready.mts` (ready notifications).

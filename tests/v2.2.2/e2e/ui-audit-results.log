@@ -1,0 +1,154 @@
+== dark mono 1440
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+all-tasks            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+projects             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-detail       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+worklog              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-employees         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-leave             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-capacity          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-team              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+resource-planning    fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+approval-center      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+finance              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-financials   fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+my-account           fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+new-task-modal       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+documents            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark navy 1440
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+all-tasks            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+projects             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-detail       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+worklog              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-employees         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-leave             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-capacity          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-team              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+resource-planning    fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+approval-center      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+finance              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-financials   fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+my-account           fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+new-task-modal       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+documents            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark mono 768
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+all-tasks            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+projects             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-detail       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+worklog              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-employees         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-leave             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-capacity          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-team              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+resource-planning    fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+approval-center      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+finance              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-financials   fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+my-account           fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+new-task-modal       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+documents            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark mono 375
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+all-tasks            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+projects             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-detail       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+worklog              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-employees         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-leave             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-capacity          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-team              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+resource-planning    fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+approval-center      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+finance              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-financials   fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+my-account           fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+new-task-modal       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+documents            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== light mono 1440
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+all-tasks            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+projects             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-detail       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+worklog              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-employees         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-leave             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-capacity          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-team              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+resource-planning    fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+approval-center      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+finance              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-financials   fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+my-account           fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+new-task-modal       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+documents            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== light navy 1440
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+all-tasks            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+projects             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-detail       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+worklog              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-employees         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-leave             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-capacity          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-team              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+resource-planning    fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+approval-center      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+finance              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-financials   fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+my-account           fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+new-task-modal       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+documents            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== light mono 375
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+all-tasks            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+projects             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-detail       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+worklog              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-employees         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-leave             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-capacity          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-team              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+resource-planning    fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+approval-center      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+finance              fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+project-financials   fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+my-account           fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+new-task-modal       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+documents            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []

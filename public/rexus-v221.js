@@ -119,27 +119,47 @@
 
   /* =============================================================== THEME (Module 9) */
   var THEMES = { mono: 'Black & White', navy: 'Navy Blue & Light Blue' };
-  function applyTheme(t, density) {
-    var theme = THEMES[t] ? t : 'mono';
-    document.documentElement.setAttribute('data-rx-theme', theme);
-    if (density) document.documentElement.setAttribute('data-rx-density', density);
-    try { localStorage.setItem('rexus-theme', theme); if (density) localStorage.setItem('rexus-density', density); } catch (e) {}
+  var MODES = { light: 'Light', dark: 'Dark', system: 'System' };
+  var darkMq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+  function resolveMode(m) { return m === 'dark' || (m === 'system' && darkMq && darkMq.matches) ? 'dark' : 'light'; }
+  function applyTheme(t, density, mode) {
+    var h = document.documentElement;
+    var theme = THEMES[t] ? t : (h.getAttribute('data-rx-theme') || 'mono');
+    h.setAttribute('data-rx-theme', theme);
+    if (density) h.setAttribute('data-rx-density', density);
+    var pref = MODES[mode] ? mode : (h.getAttribute('data-rx-mode-pref') || 'light');
+    h.setAttribute('data-rx-mode-pref', pref); h.setAttribute('data-rx-mode', resolveMode(pref));
+    try { localStorage.setItem('rexus-theme', theme); localStorage.setItem('rexus-mode', pref); if (density) localStorage.setItem('rexus-density', density); } catch (e) {}
   }
+  // "System" follows the OS setting live, without a reload.
+  if (darkMq) { var onOs = function () { if (document.documentElement.getAttribute('data-rx-mode-pref') === 'system') applyTheme(null, null, 'system'); };
+    if (darkMq.addEventListener) darkMq.addEventListener('change', onOs); else if (darkMq.addListener) darkMq.addListener(onOs); }
   function syncThemeFromServer() {
-    return api('/api/preferences').then(function (p) { applyTheme(p.theme, p.density); return p; }).catch(function () { return null; });
+    return api('/api/preferences').then(function (p) { applyTheme(p.theme, p.density, p.mode); return p; }).catch(function () { return null; });
   }
   function bindAppearance() {
     var root = $('rexusAppearance'); if (!root) return;
-    var current = document.documentElement.getAttribute('data-rx-theme') || 'mono';
-    root.innerHTML = '<h4 class="rx-section-h">Appearance</h4><p class="rx-muted">Color theme is saved to your REXUS account and follows you on every device.</p>' +
+    var h = document.documentElement, current = h.getAttribute('data-rx-theme') || 'mono', mode = h.getAttribute('data-rx-mode-pref') || 'light';
+    root.innerHTML = '<h4 class="rx-section-h">Appearance</h4>' +
+      '<div class="rx-mode-row"><span class="rx-mode-label" id="rxModeLbl">Mode</span><div class="rx213-subnav rx-seg" role="radiogroup" aria-labelledby="rxModeLbl">' + Object.keys(MODES).map(function (k) {
+        return '<button type="button" role="radio" data-mode-choice="' + k + '" aria-checked="' + (k === mode) + '">' + MODES[k] + '</button>';
+      }).join('') + '</div></div>' +
       '<div class="rx-theme-grid" role="radiogroup" aria-label="Color theme">' + Object.keys(THEMES).map(function (k) {
         return '<button type="button" class="rx-theme-card" role="radio" data-theme-choice="' + k + '" aria-checked="' + (k === current) + '"><span class="rx-theme-swatch rx-swatch-' + k + '" aria-hidden="true"><i></i><i></i><i></i></span><strong>' + esc(THEMES[k]) + '</strong><small>' + (k === 'mono' ? 'Neutral, minimal, glass surfaces' : 'Navy headings and accents, light-blue highlights') + '</small></button>';
-      }).join('') + '</div>';
+      }).join('') + '</div><p class="rx-muted">Saved to your REXUS account and applied on every device.</p>';
+    function save(body, label) { api('/api/preferences', { method: 'PUT', body: body }).then(function () { toast(label); }).catch(function (e) { toast('Could not save appearance: ' + e.message, 'error'); }); }
     root.querySelectorAll('[data-theme-choice]').forEach(function (b) {
       b.addEventListener('click', function () {
         var t = b.dataset.themeChoice; applyTheme(t);
         root.querySelectorAll('[data-theme-choice]').forEach(function (x) { x.setAttribute('aria-checked', String(x === b)); });
-        api('/api/preferences', { method: 'PUT', body: { theme: t } }).then(function () { toast('Theme saved: ' + THEMES[t]); }).catch(function (e) { toast('Could not save theme: ' + e.message, 'error'); });
+        save({ theme: t }, 'Theme saved: ' + THEMES[t]);
+      });
+    });
+    root.querySelectorAll('[data-mode-choice]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var m = b.dataset.modeChoice; applyTheme(null, null, m);
+        root.querySelectorAll('[data-mode-choice]').forEach(function (x) { x.setAttribute('aria-checked', String(x === b)); });
+        save({ mode: m }, 'Mode saved: ' + MODES[m]);
       });
     });
   }
@@ -150,9 +170,9 @@
     if (initial) HR_STATE.sub = initial;
     me().then(function (u) {
       var admin = u.role === 'System Admin';
-      var items = [['employees', 'Employee Search'], ['leave', 'Leave Management'], ['capacity', 'Capacity Declarations'], ['resources', 'Resource Planning']];
+      var items = [['employees', 'Employee Search'], ['leave', 'Leave Management'], ['capacity', 'Monthly Schedule'], ['resources', 'Resource Planning']];
       if (admin) items.splice(3, 0, ['schedules', 'Working Schedules & Holidays']);
-      node.innerHTML = header('Human Resources Management', 'Employees, leave, availability and capacity in one place.') + tabs('rxHrTabs', items, HR_STATE.sub) + '<div id="rxHrBody" class="rx-hr-body"></div>';
+      node.innerHTML = header('Human Resources Management', '') + tabs('rxHrTabs', items, HR_STATE.sub) + '<div id="rxHrBody" class="rx-hr-body"></div>';
       node.querySelectorAll('#rxHrTabs [data-tab]').forEach(function (b) { b.onclick = function () { HR_STATE.sub = b.dataset.tab; hr(node); }; });
       var body = $('rxHrBody');
       if (HR_STATE.sub === 'leave') return leave(body, u);
@@ -225,12 +245,13 @@
         field('Capacity method', '<select name="capacity_method"><option value="schedule"' + (pr.capacity_method === 'schedule' ? ' selected' : '') + '>Working schedule (working days × hours − leave)</option><option value="declaration"' + (pr.capacity_method === 'declaration' ? ' selected' : '') + '>Monthly declaration (approved availability)</option></select>') + '</div>' +
         '<div class="wm-form-grid">' + field('Daily working hours', '<input name="hours_per_day" type="number" min="0" max="24" step="0.5" value="' + esc(pr.hours_per_day) + '">') + field('Effective from', '<input name="effective_from" type="date" value="' + todayStr() + '">', { help: 'Earlier periods keep their previous schedule.' }) + '</div>' +
         field('Working days', '<div class="rx-weekdays">' + [1, 2, 3, 4, 5, 6, 0].map(function (d) { return '<label class="rx-check"><input type="checkbox" name="wd' + d + '"' + ((pr.workdays || []).indexOf(d) !== -1 ? ' checked' : '') + '> ' + DOW[d] + '</label>'; }).join('') + '</div>') +
+        field('Personal minimum regular hours / month', '<input name="min_monthly_hours" type="number" min="0" max="744" step="1" value="' + (pr.min_monthly_hours === null || pr.min_monthly_hours === undefined ? '' : esc(pr.min_monthly_hours)) + '" placeholder="Company default">', { help: 'Declaration-based staff only. Leave empty to use the company default.' }) +
         '<div class="wm-form-grid">' + field('Manager', '<select name="manager_id">' + userOptions(list, pr.manager_id, { empty: '— None —', exclude: [x.id] }) + '</select>') + field('Capacity approver', '<select name="capacity_approver_id">' + userOptions(list, pr.capacity_approver_id, { empty: '— Manager —', exclude: [x.id] }) + '</select>') + '</div>',
         onOpen: function (d) { var t = d.form.elements.employment_type, m = d.form.elements.capacity_method; t.onchange = function () { m.value = ['Part-time', 'Freelancer', 'Contractor', 'Collaborator'].indexOf(t.value) !== -1 ? 'declaration' : 'schedule'; }; },
         onSubmit: function (d) {
           var wd = [0, 1, 2, 3, 4, 5, 6].filter(function (n) { return d.val('wd' + n); });
           return api('/api/hr/profile', { method: 'PUT', body: { user_id: x.id, employment_type: d.val('employment_type'), capacity_method: d.val('capacity_method'), hours_per_day: Number(d.val('hours_per_day')), workdays: wd,
-            manager_id: d.val('manager_id') || null, capacity_approver_id: d.val('capacity_approver_id') || null, effective_from: d.val('effective_from') } }).then(function () { toast('Employment updated'); done(); });
+            manager_id: d.val('manager_id') || null, capacity_approver_id: d.val('capacity_approver_id') || null, effective_from: d.val('effective_from'), min_monthly_hours: d.val('min_monthly_hours') === '' ? null : Number(d.val('min_monthly_hours')) } }).then(function () { toast('Employment updated'); done(); });
         } });
     });
   }
@@ -314,87 +335,164 @@
     }).catch(function (e) { errorBox(grid, e); });
   }
 
-  /* -------------------------------------------------------------- capacity */
+  /* -------------------------------------------------------------- monthly schedule (HRM-02..05) */
   var CAP_STATE = { month: todayStr().slice(0, 7), view: 'calendar', tab: 'mine' };
+  function openSchedule(month) {   // from a "please register your schedule" notification (HRM-05)
+    if (/^\d{4}-\d{2}$/.test(month || '')) CAP_STATE.month = month;
+    CAP_STATE.tab = 'mine'; HR_STATE.sub = 'capacity';
+    var t = document.querySelector('.wm-tab[data-view="organization"]'); if (t) t.click();
+  }
+  function monthLabel(m) { return new Date(m + '-01T12:00:00Z').toLocaleString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }); }
+  function monthNav(prefix, m, go) {
+    var from = m + '-01', to = monthEnd(from);
+    var html = '<div class="rx-month-nav"><button type="button" class="wm-glass-icon-btn" id="' + prefix + 'Prev" title="Previous month"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><input type="month" id="' + prefix + 'Month" value="' + m + '" aria-label="Month"><button type="button" class="wm-glass-icon-btn" id="' + prefix + 'Next" title="Next month"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button></div>';
+    return { html: html, wire: function () {
+      $(prefix + 'Prev').onclick = function () { go(addDays(from, -1).slice(0, 7)); };
+      $(prefix + 'Next').onclick = function () { go(addDays(to, 1).slice(0, 7)); };
+      $(prefix + 'Month').onchange = function () { if (this.value) go(this.value); };
+    } };
+  }
   function capacity(node, u) {
     api('/api/hr/team?month=' + CAP_STATE.month).then(function (t) {
       var manages = t.is_admin || (t.employees || []).length > 0;
-      node.innerHTML = (manages ? tabs('rxCapTabs', [['mine', 'My Capacity'], ['team', 'Team Capacity']], CAP_STATE.tab) : '') + '<div id="rxCapBody"></div>';
+      node.innerHTML = (manages ? tabs('rxCapTabs', [['mine', 'My Schedule'], ['team', 'Team Schedules']], CAP_STATE.tab) : '') + '<div id="rxCapBody"></div>';
       if (manages) node.querySelectorAll('#rxCapTabs [data-tab]').forEach(function (b) { b.onclick = function () { CAP_STATE.tab = b.dataset.tab; capacity(node, u); }; });
       var body = $('rxCapBody');
-      if (CAP_STATE.tab === 'team' && manages) return teamCapacity(body, t);
+      if (CAP_STATE.tab === 'team' && manages) return teamCapacity(body, t, function () { capacity(node, u); });
       myCapacity(body, u);
     }).catch(function (e) { errorBox(node, e); });
   }
-  function teamCapacity(node, t) {
-    var filt = '<label class="rx-inline-field">Status <select id="rxTeamCapFilter"><option value="">All</option><option>Missing Declaration</option><option>Pending Approval</option><option>Approved</option><option>Draft</option><option>Changes Requested</option><option>Rejected</option><option>Schedule-based</option></select></label>';
+  function teamCapacity(node, t, refresh) {
+    var STATUSES = ['Missing Declaration', 'Schedule-based', 'Draft', 'Pending Approval', 'Changes Requested', 'Approved', 'Rejected'];
+    var nav = monthNav('rxTeamCap', t.month, function (m) { CAP_STATE.month = m; refresh(); });
+    var filt = '<label class="rx-inline-field">Status <select id="rxTeamCapFilter"><option value="">All</option>' + STATUSES.map(function (s) { return '<option>' + s + '</option>'; }).join('') + '</select></label>';
+    var below = t.employees.filter(function (e) { return e.below_minimum; }).length, missing = t.employees.filter(function (e) { return e.status === 'Missing Declaration'; }).length, pending = t.employees.filter(function (e) { return e.status === 'Pending Approval'; }).length;
+    var regular = t.employees.reduce(function (s, e) { return s + (e.regular_capacity || 0); }, 0), ot = t.employees.reduce(function (s, e) { return s + (e.ot_hours || 0); }, 0);
+    node.innerHTML = nav.html + '<div class="rx-metrics">' + metric('People you manage', t.employees.length, 'info') + metric('Regular capacity', fmt(regular) + ' h', 'success') + metric('Approved OT', fmt(ot) + ' h', 'indigo') +
+      metric('Not registered', missing, missing ? 'danger' : 'success') + metric('Pending approval', pending, pending ? 'warning' : 'neutral') + metric('Below minimum', below, below ? 'warning' : 'neutral') + '</div>' +
+      '<div class="rx-toolbar"><span class="rx-muted">' + esc(monthLabel(t.month)) + ' · approve schedules in the Approval Center.</span><div class="rx-btn-row">' + filt + '<button type="button" class="wm-btn primary" id="rxSendReq">Request schedules</button></div></div><div id="rxTeamCapTable"></div>';
+    nav.wire();
     function render(f) {
-      var rows = t.employees.filter(function (e) { return !f || e.status === f; }).map(function (e) { return '<tr><td>' + esc(e.name) + '</td><td>' + esc(e.department || '—') + '</td><td>' + esc(e.employment_type) + '</td><td>' + statusChip(e.status) + '</td><td>' + (e.capacity_method === 'declaration' ? fmt(e.approved_hours) + ' h' : '—') + '</td><td>' + (e.pending_hours ? fmt(e.pending_hours) + ' h' : '—') + '</td></tr>'; });
-      $('rxTeamCapTable').innerHTML = table(['Employee', 'Department', 'Employment', 'Status (' + t.month + ')', 'Approved', 'Pending'], rows, { min: 680, empty: 'No employees match.' });
+      var rows = t.employees.filter(function (e) { return !f || e.status === f; }).map(function (e) {
+        var minCell = e.minimum_hours ? (e.below_minimum ? '<span class="rx-warn-text" title="Registered regular hours are below the minimum">' + fmt(e.declared_hours) + ' / ' + fmt(e.minimum_hours) + ' h ⚠</span>' : fmt(e.declared_hours) + ' / ' + fmt(e.minimum_hours) + ' h') : '—';
+        var reqCell = e.request ? 'Sent' + (e.request.send_count > 1 ? ' ×' + e.request.send_count : '') + ' · ' + fmtTime(e.request.last_sent_at) + (e.request.due_date ? '<br><small class="rx-muted">Due ' + fmtDay(e.request.due_date) + '</small>' : '') : '—';
+        return '<tr><td><label class="rx-check"><input type="checkbox" class="rx-req-pick" value="' + esc(e.id) + '" aria-label="Select ' + esc(e.name) + '"></label></td><td>' + esc(e.name) + '</td><td>' + esc(e.employment_type) + '</td><td>' + statusChip(e.status) + '</td>' +
+          '<td>' + (e.regular_capacity === null ? '<span class="rx-muted">Not confirmed</span>' : fmt(e.regular_capacity) + ' h') + '</td><td>' + (e.ot_hours ? fmt(e.ot_hours) + ' h' : (e.declared_ot_hours ? '<span class="rx-muted">' + fmt(e.declared_ot_hours) + ' h pending</span>' : '—')) + '</td>' +
+          '<td>' + minCell + '</td><td>' + reqCell + '</td></tr>';
+      });
+      $('rxTeamCapTable').innerHTML = table(['', 'Employee', 'Employment', 'Status', 'Regular capacity', 'Overtime', 'Registered / minimum', 'Request'], rows, { min: 900, empty: 'No employees match.' });
     }
-    var missing = t.employees.filter(function (e) { return e.status === 'Missing Declaration'; }).length, pending = t.employees.filter(function (e) { return e.status === 'Pending Approval'; }).length;
-    node.innerHTML = '<div class="rx-metrics">' + metric('People you manage', t.employees.length, 'info') + metric('Missing declarations', missing, missing ? 'danger' : 'success') + metric('Pending approval', pending, pending ? 'warning' : 'neutral') + '</div>' +
-      '<div class="rx-toolbar"><span class="rx-muted">Month ' + esc(t.month) + ' · approve declarations in the Approval Center.</span>' + filt + '</div><div id="rxTeamCapTable"></div>';
     $('rxTeamCapFilter').onchange = function () { render(this.value); }; render('');
+    $('rxSendReq').onclick = function () {
+      var picked = [].slice.call(node.querySelectorAll('.rx-req-pick:checked')).map(function (c) { return c.value; });
+      var people = t.employees.map(function (e) { return '<label class="rx-check rx-req-person"><input type="checkbox" name="p_' + esc(e.id) + '"' + (picked.indexOf(e.id) !== -1 ? ' checked' : '') + '> ' + esc(e.name) + (e.request ? ' <small class="rx-muted">(sent)</small>' : '') + '</label>'; }).join('');
+      dialog({ title: 'Request schedules for ' + monthLabel(t.month), width: 600, submit: 'Send request',
+        body: '<fieldset class="rx-fieldset"><legend>Recipients</legend><label class="rx-check"><input type="radio" name="scope" value="all"' + (picked.length ? '' : ' checked') + '> All people I manage (' + t.employees.length + ')</label>' +
+          '<label class="rx-check"><input type="radio" name="scope" value="selected"' + (picked.length ? ' checked' : '') + '> Selected people</label><div class="rx-req-people">' + people + '</div></fieldset>' +
+          '<div class="wm-form-grid">' + field('Due date', '<input type="date" name="due_date">') + field('Message', '<input name="note" maxlength="500" placeholder="Optional">') + '</div>' +
+          '<p class="rx-muted">Each person gets an in-app notification with a link to the form. Sending again to someone who already has a request for this month re-sends it instead of creating a duplicate.</p>',
+        onOpen: function (d) {
+          var sync = function () { var sel = d.form.querySelector('[name=scope]:checked').value === 'selected'; d.form.querySelectorAll('.rx-req-people input').forEach(function (i) { i.disabled = !sel; }); };
+          d.form.querySelectorAll('[name=scope]').forEach(function (r) { r.onchange = sync; }); sync();
+        },
+        onSubmit: function (d) {
+          var scope = d.form.querySelector('[name=scope]:checked').value;
+          var ids = t.employees.filter(function (e) { return d.val('p_' + e.id); }).map(function (e) { return e.id; });
+          if (scope === 'selected' && !ids.length) throw new Error('Choose at least one person.');
+          if (scope === 'all' && !t.employees.length) throw new Error('There is no one to send the request to.');
+          return api('/api/hr/requests', { method: 'POST', body: { month: t.month, scope: scope, user_ids: ids, due_date: d.val('due_date') || null, note: d.val('note') } })
+            .then(function (r) { toast('Request sent to ' + r.recipients + (r.resent ? ' (' + r.resent + ' re-sent)' : '')); refresh(); });
+        } });
+    };
   }
   function myCapacity(node, u) {
     var m = CAP_STATE.month, from = m + '-01', to = monthEnd(from);
-    node.innerHTML = '<div class="rx-month-nav"><button type="button" class="wm-glass-icon-btn" id="rxCapPrev" title="Previous month"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button><input type="month" id="rxCapMonth" value="' + m + '" aria-label="Month"><button type="button" class="wm-glass-icon-btn" id="rxCapNext" title="Next month"><svg viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button></div><div id="rxCapContent"></div>';
-    $('rxCapPrev').onclick = function () { CAP_STATE.month = addDays(from, -1).slice(0, 7); myCapacity(node, u); };
-    $('rxCapNext').onclick = function () { CAP_STATE.month = addDays(to, 1).slice(0, 7); myCapacity(node, u); };
-    $('rxCapMonth').onchange = function () { if (this.value) { CAP_STATE.month = this.value; myCapacity(node, u); } };
+    var nav = monthNav('rxCap', m, function (x) { CAP_STATE.month = x; myCapacity(node, u); });
+    node.innerHTML = nav.html + '<div id="rxCapContent"></div>'; nav.wire();
     var c = $('rxCapContent'); loading(c);
     Promise.all([api('/api/hr/capacity?month=' + m), api('/api/resource-planning?from=' + from + '&to=' + to + '&user_id=' + encodeURIComponent(u.id))]).then(function (res) {
       var data = res[0], plan = (res[1].employees || [])[0] || {};
+      var schedBased = data.method === 'schedule';
       var approved = data.versions.find(function (v) { return v.status === 'Approved'; });
       var open = data.versions.find(function (v) { return ['Draft', 'Changes Requested', 'Pending Approval'].indexOf(v.status) !== -1; });
-      var editable = data.requires_declaration && (!open || open.status !== 'Pending Approval');
+      var editable = !open || open.status !== 'Pending Approval';
       var src = open || approved || { entries: [] };
       var byDay = {}; src.entries.forEach(function (e) { byDay[e.day] = e; });
       var holidays = {}; data.holidays.forEach(function (h) { holidays[h.day] = h.name; });
-      var declared = src.entries.filter(function (e) { return e.availability !== 'unavailable'; }).reduce(function (s, e) { return s + Number(e.hours || 0); }, 0);
-      var summary = '<div class="rx-metrics">' + metric('Declared (' + (open ? 'v' + open.version + ' ' + open.status : approved ? 'approved' : 'none') + ')', fmt(declared) + ' h', 'info') +
-        metric('Approved capacity', approved ? fmt(approved.total_hours) + ' h' : (data.requires_declaration ? 'Not confirmed' : fmt(plan.approved_capacity) + ' h'), approved || !data.requires_declaration ? 'success' : 'danger') +
-        metric('Pending', open && open.status === 'Pending Approval' ? fmt(open.total_hours) + ' h' : '—', 'warning') + metric('Planned work', fmt(plan.planned_hours) + ' h', 'indigo') +
-        metric('Remaining', plan.remaining_hours === null || plan.remaining_hours === undefined ? '—' : fmt(plan.remaining_hours) + ' h', plan.remaining_hours < 0 ? 'danger' : 'neutral') + '</div>';
-      if (!data.requires_declaration) {
-        c.innerHTML = summary + '<div class="rx-card rx-note">Your capacity is calculated from your working schedule (' + fmt(data.profile.hours_per_day) + ' h/day, ' + data.profile.workdays.map(function (d) { return DOW[d]; }).join(', ') + ') minus holidays and approved leave. Monthly declarations are used by part-time, freelancer, contractor and collaborator employment types.</div>';
-        return;
-      }
-      var lead = (new Date(from + 'T12:00:00Z').getUTCDay() + 6) % 7, days = eachDay(from, to);
+      var days = eachDay(from, to);
+      var regOf = function (d) { var e = byDay[d]; return schedBased ? (data.schedule_hours[d] || 0) : (e && e.availability !== 'unavailable' ? Number(e.hours || 0) : 0); };
+      var regTotal = days.reduce(function (s, d) { return s + regOf(d); }, 0), otTotal = src.entries.reduce(function (s, e) { return s + (e.availability === 'unavailable' ? 0 : Number(e.ot_hours || 0)); }, 0);
+      var minH = open || !approved ? (data.minimum && data.minimum.hours) : (approved.min_hours_snapshot || null);
+      var statusLbl = open ? open.status : approved ? 'Approved' : (schedBased ? 'Not registered' : 'Missing Declaration');
+      var reqBanner = (data.requests || []).map(function (r) {
+        return '<div class="rx-banner rx-banner-info" role="status"><span><strong>' + esc(r.requested_by_name || 'Your manager') + '</strong> asked you to register your schedule for <strong>' + esc(monthLabel(r.month)) + '</strong>' + (r.due_date ? ' by ' + fmtDay(r.due_date) : '') + (r.note ? ' — ' + esc(r.note) : '') + '.</span>' +
+          (r.month !== m ? '<button type="button" class="wm-btn rx-btn-sm" data-open-month="' + esc(r.month) + '">Open ' + esc(monthLabel(r.month)) + '</button>' : '') + '</div>';
+      }).join('');
+      var summary = '<div class="rx-metrics">' +
+        metric('Regular hours' + (schedBased ? ' (schedule)' : ''), fmt(regTotal) + ' h', 'info') + metric('Overtime', fmt(otTotal) + ' h', 'indigo') +
+        metric('Approved regular capacity', plan.approved_capacity === null || plan.approved_capacity === undefined ? 'Not confirmed' : fmt(plan.approved_capacity) + ' h', plan.approved_capacity === null ? 'danger' : 'success') +
+        metric('Approved OT', fmt(plan.ot_hours || 0) + ' h', 'neutral') +
+        (minH ? metric('Minimum (' + (open || !approved ? data.minimum.source : 'at submission') + ')', fmt(minH) + ' h', regTotal < minH ? 'warning' : 'success') : '') +
+        metric('Planned work', fmt(plan.planned_hours) + ' h', 'neutral') + '</div>';
+      var warn = minH && regTotal < minH && !schedBased ? '<div class="rx-banner rx-banner-warn" role="alert">Your regular hours for ' + esc(monthLabel(m)) + ' (' + fmt(regTotal) + ' h) are below the minimum of ' + fmt(minH) + ' h. You can still submit; your approver will see the shortfall.</div>' : '';
+      var lead = (new Date(from + 'T12:00:00Z').getUTCDay() + 6) % 7;
       var cells = ''; for (var i = 0; i < lead; i++) cells += '<div class="rx-cal-cell is-out" aria-hidden="true"></div>';
       days.forEach(function (d) {
-        var e = byDay[d] || {}, off = e.availability === 'unavailable';
-        cells += '<div class="rx-cal-cell rx-cap-cell' + (holidays[d] ? ' is-holiday' : '') + (off ? ' is-off' : '') + '" data-day="' + d + '"><span class="rx-cal-num">' + (+d.slice(8)) + ' <small>' + DOW[new Date(d + 'T12:00:00Z').getUTCDay()] + '</small></span>' + (holidays[d] ? '<span class="rx-cal-tag">' + esc(holidays[d]) + '</span>' : '') +
-          '<label class="rx-sr-only" for="cap-' + d + '">Available hours on ' + d + '</label><input id="cap-' + d + '" class="rx-cap-hours" type="number" min="0" max="24" step="0.5" value="' + (e.hours !== undefined && !off ? esc(e.hours) : '') + '" placeholder="0" ' + (editable ? '' : 'disabled') + ' inputmode="decimal">' +
-          '<label class="rx-cap-off"><input type="checkbox" class="rx-cap-unavail" ' + (off ? 'checked' : '') + ' ' + (editable ? '' : 'disabled') + '> Unavailable</label></div>';
+        var e = byDay[d] || {}, off = !schedBased && e.availability === 'unavailable', reg = regOf(d), restDay = schedBased && !reg;
+        cells += '<div class="rx-cal-cell rx-cap-cell' + (holidays[d] ? ' is-holiday' : '') + (off ? ' is-off' : '') + (restDay ? ' is-rest' : '') + '" data-day="' + d + '"><span class="rx-cal-num">' + (+d.slice(8)) + ' <small>' + DOW[new Date(d + 'T12:00:00Z').getUTCDay()] + '</small>' + (e.note ? ' <span class="rx-cap-note-dot" title="' + esc(e.note) + '">•</span>' : '') + '</span>' + (holidays[d] ? '<span class="rx-cal-tag">' + esc(holidays[d]) + '</span>' : '') +
+          '<div class="rx-cap-pair"><label><span>Reg</span>' + (schedBased ? '<output class="rx-cap-reg-ro" aria-label="Regular hours on ' + d + '">' + fmt(reg) + '</output>' : '<input class="rx-cap-hours" type="number" min="0" max="24" step="0.5" value="' + (e.hours && !off ? esc(e.hours) : '') + '" placeholder="0" ' + (editable ? '' : 'disabled') + ' inputmode="decimal" aria-label="Regular hours on ' + d + '">') + '</label>' +
+          '<label><span>OT</span><input class="rx-cap-ot" type="number" min="0" max="24" step="0.5" value="' + (Number(e.ot_hours) && !off ? esc(e.ot_hours) : '') + '" placeholder="0" ' + (editable ? '' : 'disabled') + ' inputmode="decimal" aria-label="Overtime hours on ' + d + '"></label></div>' +
+          (schedBased ? '' : '<label class="rx-cap-off"><input type="checkbox" class="rx-cap-unavail" ' + (off ? 'checked' : '') + ' ' + (editable ? '' : 'disabled') + '> Unavailable</label>') +
+          '<input type="hidden" class="rx-cap-note" value="' + esc(e.note || '') + '"></div>';
       });
-      var status = open ? open.status : approved ? 'Approved' : 'Missing Declaration';
-      c.innerHTML = summary + '<div class="rx-toolbar"><span>' + statusChip(status) + (open && open.status === 'Changes Requested' ? ' <span class="rx-muted">Your approver asked for changes — update and resubmit.</span>' : '') + (approved && open ? ' <span class="rx-muted">Approved v' + approved.version + ' stays in effect until this revision is approved.</span>' : '') + '</span>' +
-        '<div class="rx-btn-row">' + tabs('rxCapView', [['calendar', 'Calendar'], ['list', 'List']], CAP_STATE.view) + (editable ? '<button type="button" class="wm-btn rx-btn-sm" id="rxCapCopy">Copy previous month</button><button type="button" class="wm-btn rx-btn-sm" id="rxCapWeekly">Apply weekly availability</button><button type="button" class="wm-btn" id="rxCapSave">Save draft</button><button type="button" class="wm-btn primary" id="rxCapSubmit">Submit for approval</button>' : '') + '</div></div>' +
+      c.innerHTML = reqBanner + summary + warn + '<div class="rx-toolbar"><span>' + statusChip(statusLbl) + (open && open.status === 'Changes Requested' ? ' <span class="rx-muted">Your approver asked for changes — update and resubmit.</span>' : '') + (approved && open ? ' <span class="rx-muted">Approved v' + approved.version + ' stays in effect until this revision is approved.</span>' : '') + (schedBased ? ' <span class="rx-muted">Regular hours follow your working schedule (' + fmt(data.profile.hours_per_day) + ' h on ' + data.profile.workdays.map(function (d) { return DOW[d]; }).join(', ') + '); add overtime and notes.</span>' : '') + '</span>' +
+        '<div class="rx-btn-row">' + tabs('rxCapView', [['calendar', 'Calendar'], ['list', 'List']], CAP_STATE.view) + (editable ? '<button type="button" class="wm-btn rx-btn-sm" id="rxCapCopy">Copy previous month</button>' + (schedBased ? '' : '<button type="button" class="wm-btn rx-btn-sm" id="rxCapWeekly">Apply weekly availability</button>') + '<button type="button" class="wm-btn" id="rxCapSave">Save draft</button><button type="button" class="wm-btn primary" id="rxCapSubmit">Submit for approval</button>' : '') + '</div></div>' +
         '<div id="rxCapCal" class="rx-cal rx-cap-cal"' + (CAP_STATE.view === 'list' ? ' hidden' : '') + '><div class="rx-cal-dow">Mon</div><div class="rx-cal-dow">Tue</div><div class="rx-cal-dow">Wed</div><div class="rx-cal-dow">Thu</div><div class="rx-cal-dow">Fri</div><div class="rx-cal-dow">Sat</div><div class="rx-cal-dow">Sun</div>' + cells + '</div>' +
         '<div id="rxCapList"' + (CAP_STATE.view === 'calendar' ? ' hidden' : '') + '></div>' +
-        (data.versions.length ? '<details class="rx-card rx-details"><summary>Version history (' + data.versions.length + ')</summary>' + table(['Version', 'Status', 'Total', 'Submitted', 'Decided'], data.versions.map(function (v) { return '<tr><td>v' + v.version + '</td><td>' + statusChip(v.status) + '</td><td>' + fmt(v.total_hours) + ' h</td><td>' + fmtTime(v.submitted_at) + '</td><td>' + fmtTime(v.decided_at) + '</td></tr>'; }), { min: 520 }) + '</details>' : '');
-      // List alternative (accessible / small screens) mirrors the same inputs.
-      $('rxCapList').innerHTML = table(['Date', 'Available hours', 'Unavailable'], days.map(function (d) { var e = byDay[d] || {}; return '<tr><td>' + DOW[new Date(d + 'T12:00:00Z').getUTCDay()] + ' ' + fmtDay(d) + (holidays[d] ? ' · ' + esc(holidays[d]) : '') + '</td><td><input class="rx-cap-hours-l" data-day="' + d + '" type="number" min="0" max="24" step="0.5" value="' + (e.hours !== undefined && e.availability !== 'unavailable' ? esc(e.hours) : '') + '" ' + (editable ? '' : 'disabled') + ' aria-label="Hours on ' + d + '"></td><td><input type="checkbox" class="rx-cap-unavail-l" data-day="' + d + '" ' + (e.availability === 'unavailable' ? 'checked' : '') + ' ' + (editable ? '' : 'disabled') + ' aria-label="Unavailable on ' + d + '"></td></tr>'; }), { min: 420 });
+        (data.versions.length ? '<details class="rx-card rx-details"><summary>Version history (' + data.versions.length + ')</summary>' + table(['Version', 'Status', 'Regular', 'OT', 'Minimum', 'Submitted', 'Decided'], data.versions.map(function (v) { return '<tr><td>v' + v.version + '</td><td>' + statusChip(v.status) + '</td><td>' + fmt(v.total_hours) + ' h</td><td>' + fmt(v.ot_total_hours) + ' h</td><td>' + (v.min_hours_snapshot ? fmt(v.min_hours_snapshot) + ' h' : '—') + '</td><td>' + fmtTime(v.submitted_at) + '</td><td>' + fmtTime(v.decided_at) + '</td></tr>'; }), { min: 640 }) + '</details>' : '');
+      c.querySelectorAll('[data-open-month]').forEach(function (b) { b.onclick = function () { CAP_STATE.month = b.dataset.openMonth; myCapacity(node, u); }; });
+      // List view (accessible / small screens): same values plus a note per day.
+      var cellOf = function (d) { return c.querySelector('.rx-cap-cell[data-day="' + d + '"]'); };
+      $('rxCapList').innerHTML = table(['Date', 'Regular hours', 'Overtime', schedBased ? '' : 'Unavailable', 'Note'].filter(Boolean), days.map(function (d) {
+        var e = byDay[d] || {}, off = !schedBased && e.availability === 'unavailable';
+        return '<tr><td>' + DOW[new Date(d + 'T12:00:00Z').getUTCDay()] + ' ' + fmtDay(d) + (holidays[d] ? ' · ' + esc(holidays[d]) : '') + '</td>' +
+          '<td>' + (schedBased ? fmt(regOf(d)) : '<input class="rx-cap-hours-l" data-day="' + d + '" type="number" min="0" max="24" step="0.5" value="' + (e.hours && !off ? esc(e.hours) : '') + '" ' + (editable ? '' : 'disabled') + ' aria-label="Regular hours on ' + d + '">') + '</td>' +
+          '<td><input class="rx-cap-ot-l" data-day="' + d + '" type="number" min="0" max="24" step="0.5" value="' + (Number(e.ot_hours) && !off ? esc(e.ot_hours) : '') + '" ' + (editable ? '' : 'disabled') + ' aria-label="Overtime on ' + d + '"></td>' +
+          (schedBased ? '' : '<td><input type="checkbox" class="rx-cap-unavail-l" data-day="' + d + '" ' + (off ? 'checked' : '') + ' ' + (editable ? '' : 'disabled') + ' aria-label="Unavailable on ' + d + '"></td>') +
+          '<td><input class="rx-cap-note-l" data-day="' + d + '" maxlength="300" value="' + esc(e.note || '') + '" ' + (editable ? '' : 'disabled') + ' aria-label="Note for ' + d + '"></td></tr>';
+      }), { min: 620 });
+      function syncFrom(view) { if (view !== 'list') return; days.forEach(function (d) { var cell = cellOf(d), q = function (s) { return c.querySelector(s + '[data-day="' + d + '"]'); };
+        if (!schedBased) { cell.querySelector('.rx-cap-hours').value = q('.rx-cap-hours-l').value; cell.querySelector('.rx-cap-unavail').checked = q('.rx-cap-unavail-l').checked; }
+        cell.querySelector('.rx-cap-ot').value = q('.rx-cap-ot-l').value; cell.querySelector('.rx-cap-note').value = q('.rx-cap-note-l').value; }); }
+      function syncTo(view) { if (view !== 'list') return; days.forEach(function (d) { var cell = cellOf(d), q = function (s) { return c.querySelector(s + '[data-day="' + d + '"]'); };
+        if (!schedBased) { q('.rx-cap-hours-l').value = cell.querySelector('.rx-cap-hours').value; q('.rx-cap-unavail-l').checked = cell.querySelector('.rx-cap-unavail').checked; }
+        q('.rx-cap-ot-l').value = cell.querySelector('.rx-cap-ot').value; q('.rx-cap-note-l').value = cell.querySelector('.rx-cap-note').value; }); }
       c.querySelectorAll('#rxCapView [data-tab]').forEach(function (b) { b.onclick = function () { syncFrom(CAP_STATE.view); CAP_STATE.view = b.dataset.tab; $('rxCapCal').hidden = CAP_STATE.view !== 'calendar'; $('rxCapList').hidden = CAP_STATE.view !== 'list'; syncTo(CAP_STATE.view); c.querySelectorAll('#rxCapView [data-tab]').forEach(function (x) { x.setAttribute('aria-selected', String(x === b)); }); }; });
-      function syncFrom(view) { if (view !== 'list') return; days.forEach(function (d) { var h = c.querySelector('.rx-cap-hours-l[data-day="' + d + '"]'), u2 = c.querySelector('.rx-cap-unavail-l[data-day="' + d + '"]'), cell = c.querySelector('.rx-cap-cell[data-day="' + d + '"]'); cell.querySelector('.rx-cap-hours').value = h.value; cell.querySelector('.rx-cap-unavail').checked = u2.checked; }); }
-      function syncTo(view) { if (view !== 'list') return; days.forEach(function (d) { var cell = c.querySelector('.rx-cap-cell[data-day="' + d + '"]'); c.querySelector('.rx-cap-hours-l[data-day="' + d + '"]').value = cell.querySelector('.rx-cap-hours').value; c.querySelector('.rx-cap-unavail-l[data-day="' + d + '"]').checked = cell.querySelector('.rx-cap-unavail').checked; }); }
-      function collect() { syncFrom(CAP_STATE.view); return days.map(function (d) { var cell = c.querySelector('.rx-cap-cell[data-day="' + d + '"]'); var off = cell.querySelector('.rx-cap-unavail').checked, h = Number(cell.querySelector('.rx-cap-hours').value || 0); return off ? { day: d, hours: 0, availability: 'unavailable' } : h > 0 ? { day: d, hours: h } : null; }).filter(Boolean); }
-      c.querySelectorAll('.rx-cap-unavail').forEach(function (cb) { cb.onchange = function () { var cell = cb.closest('.rx-cap-cell'); cell.classList.toggle('is-off', cb.checked); if (cb.checked) cell.querySelector('.rx-cap-hours').value = ''; }; });
+      function collect() {
+        syncFrom(CAP_STATE.view);
+        return days.map(function (d) {
+          var cell = cellOf(d), off = !schedBased && cell.querySelector('.rx-cap-unavail').checked;
+          var h = schedBased ? 0 : Number(cell.querySelector('.rx-cap-hours').value || 0), ot = Number(cell.querySelector('.rx-cap-ot').value || 0), note = cell.querySelector('.rx-cap-note').value.trim();
+          if (off) return { day: d, hours: 0, ot_hours: 0, availability: 'unavailable', note: note };
+          return h > 0 || ot > 0 || note ? { day: d, hours: h, ot_hours: ot, note: note } : null;
+        }).filter(Boolean);
+      }
+      c.querySelectorAll('.rx-cap-unavail').forEach(function (cb) { cb.onchange = function () { var cell = cb.closest('.rx-cap-cell'); cell.classList.toggle('is-off', cb.checked); if (cb.checked) { cell.querySelector('.rx-cap-hours').value = ''; cell.querySelector('.rx-cap-ot').value = ''; } }; });
       if (!editable) return;
       function send(action, extra) { return api('/api/hr/capacity', { method: 'POST', body: Object.assign({ action: action, month: m, entries: collect() }, extra || {}) }); }
-      $('rxCapSave').onclick = function () { send('save').then(function (r) { toast('Draft saved · ' + fmt(r.total_hours) + ' h'); myCapacity(node, u); }).catch(function (e) { toast(e.message, 'error'); }); };
+      function done(r, label) { toast(label + ' · ' + fmt(r.total_hours) + ' h regular' + (r.ot_total_hours ? ' + ' + fmt(r.ot_total_hours) + ' h OT' : '') + (r.below_minimum ? ' (below minimum)' : '')); myCapacity(node, u); }
+      $('rxCapSave').onclick = function () { send('save').then(function (r) { done(r, 'Draft saved'); }).catch(function (e) { toast(e.message, 'error'); }); };
       $('rxCapSubmit').onclick = function () {
-        var entries = collect(), total = entries.reduce(function (s, e) { return s + (e.hours || 0); }, 0);
-        confirmDialog('Submit capacity for ' + m, 'Submit ' + fmt(total) + ' available hours for manager approval? Only approved capacity is used for planning.', 'Submit').then(function (ok) { if (!ok) return; send('submit').then(function () { toast('Submitted for approval'); myCapacity(node, u); }).catch(function (e) { toast(e.message, 'error'); }); });
+        var entries = collect(), reg = schedBased ? regTotal : entries.reduce(function (s, e) { return s + (e.hours || 0); }, 0), ot = entries.reduce(function (s, e) { return s + (e.ot_hours || 0); }, 0);
+        var minNote = data.minimum && !schedBased && reg < data.minimum.hours ? ' This is below the minimum of ' + fmt(data.minimum.hours) + ' h.' : '';
+        confirmDialog('Submit schedule for ' + monthLabel(m), 'Submit ' + fmt(reg) + ' h regular' + (ot ? ' and ' + fmt(ot) + ' h overtime' : '') + ' for approval?' + minNote + ' Only approved hours are used for planning.', 'Submit').then(function (ok) { if (!ok) return; send('submit').then(function (r) { done(r, 'Submitted for approval'); }).catch(function (e) { toast(e.message, 'error'); }); });
       };
-      $('rxCapCopy').onclick = function () { send('copy_previous').then(function (r) { toast('Copied previous month pattern · ' + fmt(r.total_hours) + ' h'); myCapacity(node, u); }).catch(function (e) { toast(e.message, 'error'); }); };
-      $('rxCapWeekly').onclick = function () {
-        dialog({ title: 'Apply weekly availability', width: 520, submit: 'Apply to month', body: '<p class="rx-muted">Hours per weekday are filled into every matching day of ' + esc(m) + '. Holidays are left empty. You can adjust individual days afterwards.</p><div class="rx-weekly-grid">' +
+      $('rxCapCopy').onclick = function () { send('copy_previous').then(function (r) { done(r, 'Copied previous month pattern'); }).catch(function (e) { toast(e.message, 'error'); }); };
+      if ($('rxCapWeekly')) $('rxCapWeekly').onclick = function () {
+        dialog({ title: 'Apply weekly availability', width: 520, submit: 'Apply to month', body: '<p class="rx-muted">Regular hours per weekday are filled into every matching day of ' + esc(monthLabel(m)) + '. Holidays are left empty. You can adjust individual days afterwards.</p><div class="rx-weekly-grid">' +
           [1, 2, 3, 4, 5, 6, 0].map(function (d) { return field(DOW[d], '<input type="number" name="w' + d + '" min="0" max="24" step="0.5" placeholder="0">'); }).join('') + '</div>',
           onSubmit: function (d) {
-            days.forEach(function (x) { if (holidays[x]) return; var wd = new Date(x + 'T12:00:00Z').getUTCDay(), v = d.val('w' + wd); var cell = c.querySelector('.rx-cap-cell[data-day="' + x + '"]'); cell.querySelector('.rx-cap-hours').value = v && Number(v) > 0 ? v : ''; cell.querySelector('.rx-cap-unavail').checked = false; cell.classList.remove('is-off'); });
+            days.forEach(function (x) { if (holidays[x]) return; var wd = new Date(x + 'T12:00:00Z').getUTCDay(), v = d.val('w' + wd); var cell = cellOf(x); cell.querySelector('.rx-cap-hours').value = v && Number(v) > 0 ? v : ''; cell.querySelector('.rx-cap-unavail').checked = false; cell.classList.remove('is-off'); });
             syncTo(CAP_STATE.view); toast('Weekly pattern applied — save or submit to keep it');
           } });
       };
@@ -404,7 +502,9 @@
   /* ------------------------------------------------------- schedules (admin) */
   function schedules(node, u) {
     var year = new Date().getFullYear();
-    node.innerHTML = '<div class="rx-card"><div class="rx-card-head"><h4>Public & company holidays ' + year + '</h4><button type="button" class="wm-btn primary rx-btn-sm" id="rxAddHol">Add holiday</button></div><p class="rx-muted">Company-wide days excluded from every working schedule. Employee schedules (working days, hours, employment type) are edited from each employee profile and keep their history.</p><div id="rxHolList"></div></div>';
+    node.innerHTML = '<div class="rx-card" id="rxHrSettings"><div class="rx-card-head"><h4>Part-time minimum</h4></div><form class="rx-inline-form" id="rxMinForm"><label class="rx-inline-field" for="rxMinHours">Minimum regular hours per month (company default)</label><input id="rxMinHours" type="number" min="0" max="744" step="1" required><button type="submit" class="wm-btn primary rx-btn-sm">Save</button></form>' +
+      '<p class="rx-muted">Applies to declaration-based staff (part-time, freelancer, contractor, collaborator); 0 = no minimum. A personal minimum can be set on an employee profile. Months already submitted keep the minimum that applied at the time.</p></div>' +
+      '<div class="rx-card"><div class="rx-card-head"><h4>Public & company holidays ' + year + '</h4><button type="button" class="wm-btn primary rx-btn-sm" id="rxAddHol">Add holiday</button></div><p class="rx-muted">Company-wide days excluded from every working schedule. Employee schedules (working days, hours, employment type) are edited from each employee profile and keep their history.</p><div id="rxHolList"></div></div>';
     function load() {
       var t = $('rxHolList'); loading(t);
       api('/api/hr/holidays?from=' + year + '-01-01&to=' + (year + 1) + '-12-31').then(function (j) {
@@ -412,6 +512,8 @@
         t.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { confirmDialog('Delete holiday', 'Remove this company-wide day? Capacity for that date will count it as a working day again.', 'Delete', true).then(function (ok) { if (ok) api('/api/hr/holidays', { method: 'DELETE', body: { id: b.dataset.del } }).then(load).catch(function (e) { toast(e.message, 'error'); }); }); }; });
       }).catch(function (e) { errorBox(t, e); });
     }
+    api('/api/hr/settings').then(function (j) { $('rxMinHours').value = j.part_time_min_monthly_hours; }).catch(function () {});
+    $('rxMinForm').onsubmit = function (e) { e.preventDefault(); var v = Number($('rxMinHours').value); api('/api/hr/settings', { method: 'PUT', body: { part_time_min_monthly_hours: v } }).then(function () { toast('Part-time minimum saved: ' + fmt(v) + ' h / month'); }).catch(function (x) { toast(x.message, 'error'); }); };
     $('rxAddHol').onclick = function () {
       dialog({ title: 'Add holiday', width: 480, submit: 'Add', body: field('Date', '<input type="date" name="day" required>', { req: true }) + field('Name', '<input name="name" required maxlength="200">', { req: true }) +
         field('Calendar', '<select name="kind"><option value="holiday_public">Public holiday</option><option value="holiday_company">Company holiday</option><option value="non_working">Non-working day</option></select>'),
@@ -473,9 +575,9 @@
     return '<span class="rx-util"><span class="rx-util-track"><span class="rx-util-fill rx-tone-bg-' + tone + '" style="width:' + pct + '%"></span></span><span>' + fmt(e.utilization, 1) + '%</span></span>';
   }
   function drawEmployees(body, r) {
-    body.innerHTML = table(['Employee', 'Employment', 'Capacity status', 'Approved', 'Planned', 'Actual', 'Utilization', 'Remaining', 'Projects', 'Workload'], r.employees.map(function (e) {
+    body.innerHTML = table(['Employee', 'Employment', 'Capacity status', 'Approved', 'OT', 'Planned', 'Actual', 'Utilization', 'Remaining', 'Projects', 'Workload'], r.employees.map(function (e) {
       return '<tr data-emp="' + esc(e.id) + '"><td><strong>' + esc(e.name) + '</strong><small class="rx-sub">' + esc(e.department || '') + '</small></td><td>' + esc(e.employment_type) + '</td><td>' + statusChip(e.capacity_status) + '</td>' +
-        '<td>' + (e.approved_capacity === null ? '<span class="rx-muted" title="Approved part: ' + fmt(e.approved_capacity_partial) + ' h">—</span>' : fmt(e.approved_capacity) + ' h') + '</td><td>' + fmt(e.planned_hours) + ' h</td><td>' + fmt(e.actual_hours) + ' h</td><td>' + utilBar(e) + '</td>' +
+        '<td>' + (e.approved_capacity === null ? '<span class="rx-muted" title="Approved part: ' + fmt(e.approved_capacity_partial) + ' h">—</span>' : fmt(e.approved_capacity) + ' h') + '</td><td>' + (e.ot_hours ? fmt(e.ot_hours) + ' h' : '—') + '</td><td>' + fmt(e.planned_hours) + ' h</td><td>' + fmt(e.actual_hours) + ' h</td><td>' + utilBar(e) + '</td>' +
         '<td>' + (e.remaining_hours === null ? '—' : '<span class="' + (e.remaining_hours < 0 ? 'rx-neg' : '') + '">' + fmt(e.remaining_hours) + ' h</span>') + '</td><td class="rx-cell-wrap">' + esc(e.projects.join(', ') || '—') + '</td><td>' + statusChip(e.status) + (e.overload_hours ? '<small class="rx-sub rx-neg">+' + fmt(e.overload_hours) + ' h over</small>' : '') + '</td></tr>';
     }), { min: 1100, empty: 'No employees match these filters.' }) + '<p class="rx-muted rx-footnote">Capacity = approved availability (schedule or declaration) minus holidays and approved leave. Planned = Task/Subtask estimates allocated over working days (roll-ups not double-counted). Actual = Worklogs. Pending or missing declarations are never shown as confirmed capacity.</p>';
     body.querySelectorAll('tr[data-emp]').forEach(function (tr) { tr.onclick = function () { var e = r.employees.find(function (x) { return x.id === tr.dataset.emp; }); employeeWorkload(e, r); }; });
@@ -529,7 +631,7 @@
     Promise.all([api('/api/approval-center?meta=1'), users()]).then(function (res) {
       var meta = res[0], list = res[1];
       var tabList = [['pending', 'Pending'], ['assigned', 'Assigned to Me'], ['mine', 'My Requests'], ['delegated', 'Delegated'], ['approved', 'Approved'], ['rejected', 'Rejected']].concat(meta.is_admin ? [['all', 'All Requests']] : []).concat([['delegations', 'Delegations']]).concat(meta.is_admin ? [['routing', 'Routing rules']] : []);
-      node.innerHTML = header('Approval Center', 'Every approval — HR, projects, finance and documents — in one queue.', '<button type="button" class="wm-btn primary" id="apNew">New request</button>') +
+      node.innerHTML = header('Approval Center', '', '<button type="button" class="wm-btn primary" id="apNew">New request</button>') +
         tabs('apTabs', tabList, AP.tab) + '<div id="apBody"></div>';
       node.querySelectorAll('#apTabs [data-tab]').forEach(function (b) { b.onclick = function () { AP.tab = b.dataset.tab; AP.page = 1; approvals(node); }; });
       $('apNew').onclick = function () { newRequest(meta, list, function () { AP.tab = 'mine'; approvals(node); }); };
@@ -653,7 +755,7 @@
   var FN = { q: '', status: '', sort: 'name_asc', open: null, tab: 'overview' };
   function financials(node) {
     if (FN.open) return financeDetail(node, FN.open, function () { FN.open = null; financials(node); });
-    node.innerHTML = header('Project Finance', 'Budget, cash received, expenses and disbursements per project. Approved budget is never treated as received cash.') +
+    node.innerHTML = header('Project Finance', 'Approved budget is never counted as received cash.') +
       '<div class="rx-card rx-filters"><div class="rx-filter-row"><label class="rx-inline-field rx-grow">Search <input type="search" id="fnQ" placeholder="Project or owner…" value="' + esc(FN.q) + '"></label>' +
       '<label class="rx-inline-field">Status <select id="fnStatus"><option value="">All</option><option>Active</option><option>On Hold</option><option>Completed</option><option>Cancelled</option></select></label>' +
       '<label class="rx-inline-field">Sort <select id="fnSort"><option value="name_asc">Name A–Z</option><option value="cash_balance_desc">Cash balance ↓</option><option value="total_expenses_desc">Expenses ↓</option><option value="budget_utilization_desc">Utilization ↓</option></select></label></div></div><div id="fnList"></div>';
@@ -942,7 +1044,7 @@
   }
 
   /* =============================================================== boot */
-  window.REXUS221 = { hr: hr, resource: resource, approvals: approvals, financials: financials, financeDetail: financeDetail, wbs: wbs, bindAppearance: bindAppearance, applyTheme: applyTheme, syncThemeFromServer: syncThemeFromServer, FN: FN };
+  window.REXUS221 = { openSchedule: openSchedule, dialog: dialog, field: field, esc: esc, hr: hr, resource: resource, approvals: approvals, financials: financials, financeDetail: financeDetail, wbs: wbs, bindAppearance: bindAppearance, applyTheme: applyTheme, syncThemeFromServer: syncThemeFromServer, FN: FN };
   // Keep the v2.1.0 entry points working, now backed by the v2.2.1 screens.
   window.REXUS210 = { organization: function (n) { hr(n, 'employees'); }, resource: function (n) { resource(n); }, approvals: approvals, financials: financials };
   // Theme follows the account: load once the session is known .

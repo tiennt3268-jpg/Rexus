@@ -12,9 +12,12 @@ export default async (req: Request, context: Context) => {
   const department = (url.searchParams.get("department") || "").trim();
 
   let rows = await db.sql`
-    SELECT id, username, full_name, email, avatar, role, position, department, status
+    SELECT id, username, full_name, email, avatar, role, position, department, status, deleted_at
     FROM users ORDER BY full_name ASC, username ASC
   `;
+  // ACC-02: deleted accounts are hidden from pickers/lists; ?include_deleted=1 keeps them for name lookups on old records.
+  const includeDeleted = url.searchParams.get("include_deleted") === "1";
+  rows = rows.filter((u: any) => includeDeleted ? true : !u.deleted_at);
 
   if (department) {
     rows = rows.filter((u: any) => (u.department || "") === department);
@@ -36,7 +39,8 @@ export default async (req: Request, context: Context) => {
       role: u.role || "Member",
       position: u.position || "",
       department: u.department || "",
-      status: u.status || "Active"
+      status: u.status || "Active",
+      deleted: !!u.deleted_at
     }))
   });
 };

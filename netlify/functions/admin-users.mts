@@ -5,6 +5,8 @@ import { getUserFromRequest, unauthorized, hashPassword } from "./lib/auth.mts";
 import { getFullUser, isSystemAdmin, serializeUserWithRole, SYSTEM_ADMIN, PROJECT_MANAGER, MEMBER } from "./lib/rbac.mts";
 import { logActivity } from "./lib/activity-log.mts";
 import { createNotification } from "./lib/notify.mts";
+import { logAudit } from "./lib/rexus-audit.mts";
+import { usernameError, takenError } from "./lib/account-rules.mts";
 
 const VALID_ROLES = [SYSTEM_ADMIN, PROJECT_MANAGER, MEMBER];
 
@@ -39,16 +41,44 @@ export default async (req: Request, context: Context) => {
   try {
     if (req.method === "GET") {
       const rows = await db.sql`
-        SELECT id, username, email, full_name, avatar, role, position, department, status, created_at
+        SELECT id, username, email, full_name, avatar, role, position, department, status, created_at, deleted_at
         FROM users ORDER BY full_name ASC, username ASC
       `;
       return Response.json({
         users: rows.map((u: any) => ({
           ...serializeUserWithRole(u),
           status: u.status || "Active",
+          deleted: !!u.deleted_at,
           created_at: u.created_at instanceof Date ? u.created_at.toISOString() : u.created_at
         }))
       });
+    }
+
+    if (req.method === "POST" && targetId) {
+      // ACC-02: restore a soft-deleted account (it comes back Inactive; an admin re-activates it explicitly).
+      const body = await req.json().catch(() => ({}));
+      if (body.action !== "restore") return Response.json({ error: "Unknown action" }, { status: 400 });
+      const rows = await db.sql`UPDATE users SET deleted_at = NULL, deleted_by = NULL, updated_at = ${new Date().toISOString()} WHERE id = ${targetId} AND deleted_at IS NOT NULL RETURNING id, username, full_name`;
+      if (!rows.length) return Response.json({ error: "Deleted account not found" }, { status: 404 });
+      await logAudit(db, { actorId: session.uid, actorName: requester.username, action: "account_restore", entityType: "account", entityId: targetId, summary: `Restored account ${rows[0].username}` });
+      await logActivity(db, { userId: session.uid, project: "", action: "restore_account", description: `${requester.username} restored the account "${rows[0].full_name || rows[0].username}"` });
+      return Response.json({ ok: true });
+    }
+
+    if (req.method === "DELETE") {
+      // ACC-02: soft delete only. Nothing the account created is removed or re-assigned.
+      if (!targetId) return Response.json({ error: "Missing user id" }, { status: 400 });
+      if (targetId === session.uid) return Response.json({ error: "You cannot delete the account you are signed in with." }, { status: 400 });
+      const body = await req.json().catch(() => ({}));
+      const rows = await db.sql`SELECT id, username, full_name, role, deleted_at FROM users WHERE id = ${targetId}`;
+      if (!rows.length || rows[0].deleted_at) return Response.json({ error: "Account not found" }, { status: 404 });
+      if (String(body.confirm_username || "") !== rows[0].username) return Response.json({ error: "Type the account's username to confirm deletion." }, { status: 400 });
+      const upd = await db.sql`UPDATE users SET status = 'Inactive', deleted_at = NOW(), deleted_by = ${session.uid}, updated_at = ${new Date().toISOString()}
+        WHERE id = ${targetId} AND deleted_at IS NULL RETURNING id`;
+      if (!upd.length) return Response.json({ error: "Account was already deleted" }, { status: 409 });
+      await logAudit(db, { actorId: session.uid, actorName: requester.username, action: "account_delete", entityType: "account", entityId: targetId, summary: `Deleted (soft) account ${rows[0].username}` });
+      await logActivity(db, { userId: session.uid, project: "", action: "delete_account", description: `${requester.username} deleted the account "${rows[0].full_name || rows[0].username}"` });
+      return Response.json({ ok: true });
     }
 
     if (req.method === "POST") {
@@ -67,15 +97,20 @@ export default async (req: Request, context: Context) => {
         return Response.json({ error: "Please enter the person's full name." }, { status: 400 });
       }
 
-      let username = String(body.username || "").trim() || slugUsernameFrom(fullName, email);
-      const existing = await db.sql`SELECT id FROM users WHERE email = ${email}`;
-      if (existing.length) {
-        return Response.json({ error: "An account with this email already exists." }, { status: 409 });
+      const requested = String(body.username || "").trim().toLowerCase();
+      if (requested) {
+        const bad = usernameError(requested); if (bad) return Response.json({ error: bad, field: "username" }, { status: 400 });
+        const taken = await takenError(db, "username", requested, null); if (taken) return Response.json({ error: taken, field: "username" }, { status: 409 });
+      }
+      let username = requested || slugUsernameFrom(fullName, email);
+      const existing = await takenError(db, "email", email, null);
+      if (existing) {
+        return Response.json({ error: existing, field: "email" }, { status: 409 });
       }
       // Make sure the username is unique — append a short suffix if needed.
       let uniqueUsername = username;
       let suffix = 1;
-      while ((await db.sql`SELECT id FROM users WHERE username = ${uniqueUsername}`).length) {
+      while (!requested && (await db.sql`SELECT id FROM users WHERE LOWER(username) = LOWER(${uniqueUsername})`).length) {
         suffix += 1;
         uniqueUsername = username + suffix;
       }
@@ -106,6 +141,7 @@ export default async (req: Request, context: Context) => {
       const rows = await db.sql`SELECT * FROM users WHERE id = ${targetId}`;
       if (!rows.length) return Response.json({ error: "Account not found" }, { status: 404 });
       const current = rows[0];
+      if (current.deleted_at) return Response.json({ error: "Restore this deleted account before editing it." }, { status: 409 });
 
       const patch = await req.json();
       const fullName = patch.full_name !== undefined ? String(patch.full_name).trim() : (current.full_name || "");

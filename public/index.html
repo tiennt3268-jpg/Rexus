@@ -11,12 +11,13 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="/rexus-document.css">
-<script>/* v2.2.1: apply the cached theme before paint (the account preference is re-synced after sign-in) */
-try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttribute('data-rx-theme',t==='navy'?'navy':'mono');var d=localStorage.getItem('rexus-density');if(d)document.documentElement.setAttribute('data-rx-density',d);}catch(e){document.documentElement.setAttribute('data-rx-theme','mono');}</script>
+<link rel="stylesheet" href="/rexus-document.css?v=2.2.2">
+<script>/* v2.2.2: apply the cached theme + Light/Dark/System mode before paint (the account preference is re-synced after sign-in) */
+try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=localStorage.getItem('rexus-mode')||'light';h.setAttribute('data-rx-theme',t==='navy'?'navy':'mono');h.setAttribute('data-rx-mode-pref',m);h.setAttribute('data-rx-mode',m==='dark'||(m==='system'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');var d=localStorage.getItem('rexus-density');if(d)h.setAttribute('data-rx-density',d);}catch(e){document.documentElement.setAttribute('data-rx-theme','mono');}</script>
+<style>html[data-rx-mode="dark"],html[data-rx-mode="dark"] body{background:#0f1319;color:#e8ecf2;color-scheme:dark}</style>
 </head>
 <body>
-<div id="wmAuthScreen" class="wm-auth-screen">
+<div id="wmAuthScreen" class="wm-auth-screen" style="display:none">
   <style>
     .wm-auth-screen{
       --a-navy:#12325C; --a-navy-deep:#0B2340; --a-gold:#A8792F; --a-gold-deep:#7A5A22;
@@ -1120,18 +1121,6 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
       background: var(--c-yellow-tint); color: var(--c-yellow); border: 1px solid var(--c-yellow);
       padding: 8px 14px; border-radius: 8px; font-size: 13.5px; font-weight: 700; margin-bottom: 14px;
     }
-    .wm-gantt-toolbar{ display:flex; gap:8px; align-items:center; }
-    .wm-gantt-toolbar select{ padding:6px 10px; border-radius:8px; border:1px solid var(--line); font-size:13.5px; }
-    #pdGanttChart{ border:1px solid var(--line); border-radius:10px; overflow-x:auto; background:#fff; min-height:120px; }
-    #pdGanttChart .gantt .bar{ fill:#8AA7D6; stroke:#5C7FB3; }
-    #pdGanttChart .gantt .bar-progress{ fill:#3E63A6; }
-    #pdGanttChart .gantt .bar-wrapper.wm-g-completed .bar{ fill:#8FD6B0; stroke:#2FA76B; }
-    #pdGanttChart .gantt .bar-wrapper.wm-g-completed .bar-progress{ fill:#2FA76B; }
-    #pdGanttChart .gantt .bar-wrapper.wm-g-overdue .bar{ fill:#F0AEBB; stroke:#D6425B; }
-    #pdGanttChart .gantt .bar-wrapper.wm-g-overdue .bar-progress{ fill:#D6425B; }
-    #pdGanttChart .gantt .bar-wrapper.wm-g-critical .bar{ stroke:#D6425B; stroke-width:2.4; }
-    #pdGanttChart .gantt .bar-wrapper.wm-g-critical .bar-label{ font-weight:700; }
-    #pdGanttChart .gantt .bar-wrapper.wm-g-milestone .bar{ fill:#E8AA1F; stroke:#B9860E; }
     .wm-user-picker{ position: relative; }
     .wm-user-picker-input{
       width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; background: #F7F6F2;
@@ -1296,7 +1285,7 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
         <div class="rexus-app-switch" id="rexusAppSwitch" aria-label="REXUS applications">
           <button type="button" class="rexus-switch-trigger" id="rexusLauncherButton" aria-label="Switch REXUS application" aria-haspopup="menu" aria-expanded="false" aria-controls="rexusLauncherMenu" title="Switch application"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg></button>
           <div class="rx-app-launcher" id="rexusLauncherMenu" role="menu" aria-label="REXUS applications" hidden>
-            <div class="rx-launcher-heading">ỨNG DỤNG CỦA TÔI <small>MY APPLICATIONS</small></div>
+            <div class="rx-launcher-heading">My applications</div>
             <button class="rx-launcher-item rx-selected" type="button" role="menuitem" aria-current="page" data-rexus-app="rexus"><span class="rx-app-emoji rx-app-work" aria-hidden="true">💼</span><span><strong>REXUS</strong><small>Work Management</small></span><span class="rx-selected-mark">✓</span></button>
             <button class="rx-launcher-item" type="button" role="menuitem" data-rexus-app="document"><span class="rx-app-emoji rx-app-document" aria-hidden="true">📚</span><span><strong>REXUS <em>Document</em></strong><small>Knowledge &amp; documents</small></span><span class="rx-selected-mark">✓</span></button>
           </div>
@@ -1541,8 +1530,8 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
       </div>
       <div class="wm-modal-body">
         <div class="wm-detail-tabs" id="wmEmployeeTabs">
-          <div class="wm-detail-tab active" data-emp-tab="info">Thông tin nhân viên</div>
-          <div class="wm-detail-tab" data-emp-tab="account" id="wmEmployeeAccountTabBtn" style="display:none;">Quản lý tài khoản</div>
+          <div class="wm-detail-tab active" data-emp-tab="info">Employee Information</div>
+          <div class="wm-detail-tab" data-emp-tab="account" id="wmEmployeeAccountTabBtn" style="display:none;">Account Management</div>
         </div>
         <div class="wm-detail-tab-pane" id="wmEmployeeInfoPane">
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;" id="wmEmployeeInfoHead"></div>
@@ -1551,8 +1540,8 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
             <div class="wm-form-row"><label>Username</label><div id="empInfoUsername" class="wm-static-value"></div></div>
           </div>
           <div class="wm-form-grid">
-            <div class="wm-form-row"><label>Position (Chức vụ)</label><div id="empInfoPosition" class="wm-static-value"></div></div>
-            <div class="wm-form-row"><label>Department (Phòng ban)</label><div id="empInfoDepartment" class="wm-static-value"></div></div>
+            <div class="wm-form-row"><label>Position</label><div id="empInfoPosition" class="wm-static-value"></div></div>
+            <div class="wm-form-row"><label>Department</label><div id="empInfoDepartment" class="wm-static-value"></div></div>
           </div>
           <div class="wm-form-grid">
             <div class="wm-form-row"><label>Role</label><div id="empInfoRole" class="wm-static-value"></div></div>
@@ -1561,8 +1550,8 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
         </div>
         <div class="wm-detail-tab-pane" id="wmEmployeeAccountPane" style="display:none;">
           <div class="wm-form-grid">
-            <div class="wm-form-row"><label>Position (Chức vụ)</label><input id="empAcctPosition" placeholder="Teaching Assistant"></div>
-            <div class="wm-form-row"><label>Department (Phòng ban)</label><input id="empAcctDepartment" placeholder="UEH Nexus Campus Nha Trang"></div>
+            <div class="wm-form-row"><label>Position</label><input id="empAcctPosition" placeholder="Teaching Assistant"></div>
+            <div class="wm-form-row"><label>Department</label><input id="empAcctDepartment" placeholder="UEH Nexus Campus Nha Trang"></div>
           </div>
           <div class="wm-form-grid">
             <div class="wm-form-row"><label>Role</label>
@@ -1769,7 +1758,11 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
 
   var UsersAPI = {
     getUsers: function(){
-      return apiGet('/api/users').then(function(json){ return json.users || []; });
+      return apiGet('/api/users?include_deleted=1').then(function(json){
+        var all = json.users || [];
+        STATE.deletedUsers = all.filter(function(u){ return u.deleted; });   // ACC-02: names on old records still resolve
+        return all.filter(function(u){ return !u.deleted; });
+      });
     }
   };
 
@@ -1836,6 +1829,12 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
     },
     updateUser: function(id, patch){
       return apiSend('/api/admin/users/' + encodeURIComponent(id), 'PUT', patch);
+    },
+    deleteUser: function(id, confirmUsername){
+      return apiSend('/api/admin/users/' + encodeURIComponent(id), 'DELETE', { confirm_username: confirmUsername });
+    },
+    restoreUser: function(id){
+      return apiSend('/api/admin/users/' + encodeURIComponent(id), 'POST', { action: 'restore' });
     }
   };
 
@@ -1930,9 +1929,9 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
   };
 
   function userById(userId){
-    return STATE.allUsers.filter(function(u){ return u.id === userId; })[0];
+    return STATE.allUsers.filter(function(u){ return u.id === userId; })[0] || (STATE.deletedUsers || []).filter(function(u){ return u.id === userId; })[0];
   }
-  var AVATAR_COLORS = ['#2E7DD6','#2FA76B','#E8AA1F','#E8862E','#D6425B','#8B5FBF','#1E9E9E','#12325C'];
+  var AVATAR_COLORS = ['#1f4f8f','#2a6f97','#1d6b52','#8a5a12','#a3364a','#5a4a9a','#31556f','#12325C']; // v2.2.2: all ≥ 4.5:1 with white initials
   function avatarColorFor(id){
     var h = 0;
     for(var i=0;i<id.length;i++) h = (h*31 + id.charCodeAt(i)) >>> 0;
@@ -3227,18 +3226,6 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
 
     }
 
-    // 4b. Gantt Chart — only rendered when this project has Gantt turned on.
-    if(proj.gantt_enabled){
-      html += '<div style="display:flex;justify-content:space-between;align-items:center;margin:26px 0 10px;flex-wrap:wrap;gap:8px;">' +
-        '<h3 style="margin:0;">Interactive Gantt (drag to reschedule)</h3>' +
-        '<div class="wm-gantt-toolbar">' +
-          '<span style="font-size:12.5px;color:var(--ink-soft);"><span style="display:inline-block;width:10px;height:10px;border:2px solid #D6425B;border-radius:2px;margin-right:4px;vertical-align:middle;"></span>Critical path</span>' +
-          '<select id="pdGanttViewMode"><option value="Day">Day</option><option value="Week" selected>Week</option><option value="Month">Month</option></select>' +
-        '</div>' +
-      '</div>' +
-      '<div id="pdGanttChart"></div>';
-    }
-
     // 4c. Cost & Approvals — only shown to whoever the server confirms can
     // manage this project's costs (PM of this project or Admin); hidden
     // silently for everyone else rather than guessed from role labels.
@@ -3306,12 +3293,11 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
       });
       if(byId('pdFinance')) window.REXUS221.financeDetail(byId('pdFinance'), { owner: pdOwner, project: name }, function(){}, true);
     }
-    if(proj.gantt_enabled) renderProjectGantt(name, proj, allProjectTasks);
     renderProjectCostSection(name);
   }
 
   /* =========================================================
-     COST & APPROVALS — chốt chi phí dự án / mở lại + chi phí dự án.
+     COST & APPROVALS — close / reopen project costs.
      Visibility is decided by the server (PM of this project, or
      Admin): if the cost API 403s, the whole section stays hidden
      rather than guessed from the coarse Owner/Member label the
@@ -3347,7 +3333,7 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
             '<div data-export="pdf">Export as PDF</div>' +
           '</div>' +
         '</div>' +
-        (submittedCount ? '<button class="wm-btn primary" id="pdCloseCostsBtn">Chốt chi phí dự án (' + submittedCount + ')</button>' : '') +
+        (submittedCount ? '<button class="wm-btn primary" id="pdCloseCostsBtn">Close project costs (' + submittedCount + ')</button>' : '') +
       '</div>' +
     '</div>';
 
@@ -3389,7 +3375,7 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
       html += '<div style="margin-top:14px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
           '<label style="font-weight:700;font-size:14px;">Approved log entries <span style="font-weight:400;color:var(--ink-soft);">(select to reopen)</span></label>' +
-          '<button class="wm-btn" id="pdReopenBtn">Mở lại (Reopen) selected</button>' +
+          '<button class="wm-btn" id="pdReopenBtn">Reopen selected</button>' +
         '</div>' +
         '<div class="wm-table-wrap"><table class="wm-table"><thead><tr><th></th><th>Date</th><th>Employee</th><th>Task</th><th>Hours</th><th>Cost</th></tr></thead><tbody>' +
         approvedLines.map(function(l){
@@ -3422,202 +3408,33 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
     });
     if(byId('pdCloseCostsBtn')){
       byId('pdCloseCostsBtn').addEventListener('click', function(){
-        askConfirm('Chốt chi phí sẽ khoá ' + submittedCount + ' dòng giờ khai báo đang "submitted" của dự án này sang "approved". Tiếp tục?', 'Chốt chi phí dự án').then(function(ok){
+        askConfirm('Closing costs locks ' + submittedCount + ' submitted time entr' + (submittedCount === 1 ? 'y' : 'ies') + ' of this project as approved. Continue?', 'Close project costs').then(function(ok){
           if(!ok) return;
-          showSync('Đang chốt chi phí…');
+          showSync('Closing project costs…');
           CostApprovalsAPI.closeProjectCosts(name).then(function(){
-            showSync('Đã chốt chi phí dự án', 'ok');
+            showSync('Project costs closed', 'ok');
             return reloadLogsAndRefreshEverything();
-          }).catch(function(err){ showSync('Không thể chốt chi phí: ' + err.message, 'error'); });
+          }).catch(function(err){ showSync('Could not close costs: ' + err.message, 'error'); });
         });
       });
     }
     if(byId('pdReopenBtn')){
       byId('pdReopenBtn').addEventListener('click', function(){
         var ids = Array.prototype.slice.call(container.querySelectorAll('.pd-reopen-check:checked')).map(function(el){ return el.value; });
-        if(!ids.length){ showAlert('Chọn ít nhất một dòng để mở lại.'); return; }
-        var reason = window.prompt('Nhập lý do mở lại ' + ids.length + ' dòng giờ khai báo đã chốt (bắt buộc):');
+        if(!ids.length){ showAlert('Select at least one entry to reopen.'); return; }
+        var reason = window.prompt('Reason for reopening ' + ids.length + ' closed time entr' + (ids.length === 1 ? 'y' : 'ies') + ' (required):');
         if(reason === null) return;
         reason = reason.trim();
-        if(!reason){ showAlert('Bắt buộc phải nhập lý do để mở lại.'); return; }
-        showSync('Đang mở lại…');
+        if(!reason){ showAlert('A reason is required to reopen.'); return; }
+        showSync('Reopening…');
         CostApprovalsAPI.reopenLogs(ids, reason).then(function(){
-          showSync('Đã mở lại các dòng đã chọn', 'ok');
+          showSync('Selected entries reopened', 'ok');
           return reloadLogsAndRefreshEverything();
-        }).catch(function(err){ showSync('Không thể mở lại: ' + err.message, 'error'); });
+        }).catch(function(err){ showSync('Could not reopen: ' + err.message, 'error'); });
       });
     }
   }
 
-  /* =========================================================
-     GANTT CHART — powered by frappe-gantt (loaded on demand).
-     Two-way sync: task list edits feed this render; dragging a bar or
-     resizing it writes back to the task via TaskAPI.updateTask(), and
-     the whole project detail is re-rendered afterwards so both views
-     always agree. Critical path is computed client-side using a
-     standard forward/backward CPM pass over Finish-to-Start
-     predecessor edges (the dominant relationship type) — SS/FF/SF
-     edges are still respected by the server-side auto-scheduler, but
-     are not (yet) reflected as arrows on this chart or in the
-     critical-path highlight, which is a known simplification.
-     ========================================================= */
-  var FRAPPE_GANTT_LOADING = null;
-  function ensureFrappeGanttLoaded(){
-    if(window.Gantt) return Promise.resolve();
-    if(FRAPPE_GANTT_LOADING) return FRAPPE_GANTT_LOADING;
-    FRAPPE_GANTT_LOADING = new Promise(function(resolve, reject){
-      var link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = 'https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.css';
-      document.head.appendChild(link);
-      var script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/frappe-gantt@0.6.1/dist/frappe-gantt.min.js';
-      script.onload = function(){ resolve(); };
-      script.onerror = function(){ reject(new Error('Could not load the Gantt chart library.')); };
-      document.head.appendChild(script);
-    });
-    return FRAPPE_GANTT_LOADING;
-  }
-
-  function parseDateSafe(s){
-    if(!s) return null;
-    var d = new Date(s + 'T00:00:00');
-    return isNaN(d.getTime()) ? null : d;
-  }
-  function diffDaysGantt(a, b){ return Math.round((b - a) / 86400000); }
-
-  // Standard CPM forward/backward pass, limited to FS edges within the
-  // same project. Returns a Set of task ids on the critical path.
-  function computeCriticalPath(tasks){
-    var byId2 = {}; tasks.forEach(function(t){ byId2[t.id] = t; });
-    var dur = {}, es = {}, ef = {}, ls = {}, lf = {};
-    var fsPreds = {}, fsSuccs = {};
-    tasks.forEach(function(t){
-      fsPreds[t.id] = (t.predecessors || []).filter(function(pr){ return pr.type === 'FS' && byId2[pr.id]; });
-      fsSuccs[t.id] = [];
-    });
-    tasks.forEach(function(t){
-      fsPreds[t.id].forEach(function(pr){ fsSuccs[pr.id].push({ id: t.id, lag_days: pr.lag_days || 0 }); });
-    });
-    tasks.forEach(function(t){
-      var s = parseDateSafe(t.start_date), e = parseDateSafe(t.due_date);
-      dur[t.id] = (s && e) ? Math.max(0, diffDaysGantt(s, e)) : 0;
-    });
-    // Forward pass (topological by repeated relaxation — small task counts make this cheap).
-    var ids = tasks.map(function(t){ return t.id; });
-    ids.forEach(function(id){ es[id] = 0; });
-    for(var iter = 0; iter < ids.length + 1; iter++){
-      ids.forEach(function(id){
-        var maxEs = 0;
-        fsPreds[id].forEach(function(pr){
-          if(ef[pr.id] !== undefined) maxEs = Math.max(maxEs, ef[pr.id] + (pr.lag_days || 0));
-        });
-        es[id] = maxEs;
-        ef[id] = es[id] + dur[id];
-      });
-    }
-    var projectFinish = 0;
-    ids.forEach(function(id){ projectFinish = Math.max(projectFinish, ef[id]); });
-    ids.forEach(function(id){ lf[id] = projectFinish; });
-    for(var iter2 = 0; iter2 < ids.length + 1; iter2++){
-      ids.forEach(function(id){
-        var minLf = projectFinish;
-        var hasSucc = false;
-        fsSuccs[id].forEach(function(sc){
-          if(ls[sc.id] !== undefined){ minLf = Math.min(minLf, ls[sc.id] - (sc.lag_days || 0)); hasSucc = true; }
-        });
-        lf[id] = hasSucc ? minLf : projectFinish;
-        ls[id] = lf[id] - dur[id];
-      });
-    }
-    var critical = new Set();
-    ids.forEach(function(id){ if(Math.abs(ls[id] - es[id]) < 0.5 && dur[id] >= 0) critical.add(id); });
-    return critical;
-  }
-
-  function renderProjectGantt(name, proj, allProjectTasks){
-    var container = byId('pdGanttChart');
-    if(!container) return;
-    var eligible = allProjectTasks.filter(function(t){ return t.start_date && t.due_date; });
-    if(!eligible.length){
-      container.innerHTML = '<div class="wm-empty" style="padding:24px;">No tasks with both a start and due date yet — add dates to see them on the Gantt chart.</div>';
-      return;
-    }
-    container.innerHTML = '<div style="padding:24px;color:var(--ink-soft);">Loading chart…</div>';
-
-    ensureFrappeGanttLoaded().then(function(){
-      var critical = computeCriticalPath(eligible);
-      var idsInProject = {}; eligible.forEach(function(t){ idsInProject[t.id] = true; });
-
-      var ganttTasks = eligible.map(function(t){
-        var isMilestone = !!t.is_milestone;
-        var start = t.start_date;
-        var end = isMilestone ? t.start_date : t.due_date;
-        var pInfo = computeProgressInfo(t);
-        var eff = effectiveStatus(t);
-        var cls = [];
-        if(eff === 'Completed') cls.push('wm-g-completed');
-        else if(eff === 'Overdue' || eff === 'Urgent') cls.push('wm-g-overdue');
-        if(critical.has(t.id)) cls.push('wm-g-critical');
-        if(isMilestone) cls.push('wm-g-milestone');
-        var deps = (t.predecessors || [])
-          .filter(function(pr){ return pr.type === 'FS' && idsInProject[pr.id]; })
-          .map(function(pr){ return pr.id; }).join(',');
-        return {
-          id: t.id,
-          name: t.task + (isMilestone ? ' ◆' : ''),
-          start: start,
-          end: end,
-          progress: isMilestone ? 100 : pInfo.pct,
-          dependencies: deps,
-          custom_class: cls.join(' ')
-        };
-      });
-
-      var canEdit = !proj.view_only;
-      container.innerHTML = '';
-      try{
-        var chart = new window.Gantt(container, ganttTasks, {
-          view_mode: (byId('pdGanttViewMode') && byId('pdGanttViewMode').value) || 'Week',
-          readonly: !canEdit,
-          readonly_dates: !canEdit,
-          readonly_progress: true,
-          on_date_change: function(task, start, end){
-            var t = STATE.tasks.filter(function(x){ return x.id === task.id; })[0];
-            var patch = { start_date: toDateInputValue(start) };
-            if(!(t && t.is_milestone)) patch.due_date = toDateInputValue(end);
-            TaskAPI.updateTask(task.id, patch).then(function(){
-              showSync('Task dates updated', 'ok');
-              return refreshAllData();
-            }).then(function(){
-              if(STATE.currentProjectDetail === name) renderProjectDetail(name);
-            }).catch(function(err){
-              showSync('Could not update dates: ' + err.message, 'error');
-              renderProjectDetail(name);
-            });
-          },
-          on_progress_change: function(task, progress){
-            // Progress is derived from logged work hours elsewhere in the
-            // app, so it isn't directly editable from the chart — snap
-            // back to the computed value on the next render.
-            renderProjectDetail(name);
-          }
-        });
-      } catch(err){
-        container.innerHTML = '<div class="wm-empty" style="padding:24px;">Could not render the Gantt chart: ' + escapeHtml(err.message) + '</div>';
-        return;
-      }
-
-      if(byId('pdGanttViewMode') && !byId('pdGanttViewMode')._wired){
-        byId('pdGanttViewMode')._wired = true;
-        byId('pdGanttViewMode').addEventListener('change', function(){
-          try{ chart.change_view_mode(byId('pdGanttViewMode').value); } catch(e){}
-        });
-      }
-    }).catch(function(err){
-      container.innerHTML = '<div class="wm-empty" style="padding:24px;">' + escapeHtml(err.message) + '</div>';
-    });
-  }
   function toDateInputValue(d){
     if(typeof d === 'string') return d.slice(0, 10);
     var dt = new Date(d);
@@ -3947,12 +3764,12 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
       '</div>' +
       (admin ? '<div id="orgAddEmployeeForm" style="display:none;background:var(--line-soft);border-radius:10px;padding:14px;margin-bottom:16px;">' +
         '<div class="wm-form-grid">' +
-          '<div class="wm-form-row"><label>Full Name</label><input id="empNewFullName" placeholder="Nguyễn Văn A"></div>' +
+          '<div class="wm-form-row"><label>Full Name</label><input id="empNewFullName" placeholder="Full name"></div>' +
           '<div class="wm-form-row"><label>Email</label><input id="empNewEmail" type="email" placeholder="name@ueh.edu.vn"></div>' +
         '</div>' +
         '<div class="wm-form-grid">' +
-          '<div class="wm-form-row"><label>Position (Chức vụ)</label><input id="empNewPosition" placeholder="Teaching Assistant"></div>' +
-          '<div class="wm-form-row"><label>Department (Phòng ban)</label><input id="empNewDepartment" placeholder="UEH Nexus Campus Nha Trang"></div>' +
+          '<div class="wm-form-row"><label>Position</label><input id="empNewPosition" placeholder="Teaching Assistant"></div>' +
+          '<div class="wm-form-row"><label>Department</label><input id="empNewDepartment" placeholder="UEH Nexus Campus Nha Trang"></div>' +
         '</div>' +
         '<div class="wm-form-row"><label>Role</label>' +
           '<select id="empNewRole"><option value="Member">Member</option><option value="Project Manager">Project Manager</option><option value="System Admin">System Admin</option></select>' +
@@ -7110,6 +6927,8 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
      17. AUTH — gate the whole app behind sign in
      ========================================================= */
   function showAuthScreen(){
+    // Wait for every stylesheet (several load at the end of <body>) so the unstyled legacy login never flashes.
+    if(document.readyState !== 'complete'){ window.addEventListener('load', showAuthScreen, { once: true }); return; }
     byId('wmAuthScreen').classList.remove('hide');
     byId('wmAuthScreen').style.display = 'flex';
     document.querySelector('.wm-app').style.display = 'none';
@@ -7444,6 +7263,7 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
 
   function renderMyAccountPage(){
     var u = STATE.currentUser || {};
+    var selfAdmin = u.role === 'System Admin';   // ACC-03
     var status = u.status || 'Active';
 
     var myTasks = (STATE.tasks || []).filter(function(t){ return t.assignee_id === u.id; });
@@ -7491,13 +7311,20 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
         '<h4 style="margin:0 0 10px;">Account Details</h4>' +
         '<div class="wm-form-grid" style="margin-bottom:10px;">' +
           '<div class="wm-form-row"><label>Full Name</label><input id="wmAccountFullName" value="' + escapeHtml(u.full_name || '') + '"></div>' +
-          '<div class="wm-form-row"><label>Username</label><div class="wm-static-value">' + escapeHtml(u.username || '—') + '</div></div>' +
-          '<div class="wm-form-row"><label>Email</label><div class="wm-static-value">' + escapeHtml(u.email || '—') + '</div></div>' +
+          (selfAdmin
+            ? '<div class="wm-form-row"><label for="wmAccountUsername">Username</label><input id="wmAccountUsername" autocomplete="username" spellcheck="false" value="' + escapeHtml(u.username || '') + '"></div>' +
+              '<div class="wm-form-row"><label for="wmAccountEmail">Email</label><input id="wmAccountEmail" type="email" autocomplete="email" value="' + escapeHtml(u.email || '') + '"></div>'
+            : '<div class="wm-form-row"><label>Username</label><div class="wm-static-value">' + escapeHtml(u.username || '—') + '</div></div>' +
+              '<div class="wm-form-row"><label>Email</label><div class="wm-static-value">' + escapeHtml(u.email || '—') + '</div></div>') +
           '<div class="wm-form-row"><label>Role</label><div class="wm-static-value">' + escapeHtml(u.role || 'Member') + '</div></div>' +
-          '<div class="wm-form-row"><label>Position</label><div class="wm-static-value">' + escapeHtml(u.position || '—') + '</div></div>' +
-          '<div class="wm-form-row"><label>Department</label><div class="wm-static-value">' + escapeHtml(u.department || '—') + '</div></div>' +
+          (selfAdmin
+            ? '<div class="wm-form-row"><label for="wmAccountPosition">Position</label><input id="wmAccountPosition" value="' + escapeHtml(u.position || '') + '"></div>' +
+              '<div class="wm-form-row"><label for="wmAccountDepartment">Department</label><input id="wmAccountDepartment" value="' + escapeHtml(u.department || '') + '"></div>'
+            : '<div class="wm-form-row"><label>Position</label><div class="wm-static-value">' + escapeHtml(u.position || '—') + '</div></div>' +
+              '<div class="wm-form-row"><label>Department</label><div class="wm-static-value">' + escapeHtml(u.department || '—') + '</div></div>') +
         '</div>' +
-        '<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px;">Username, Email, Role, Position and Department are managed by your System Admin.</p>' +
+        '<p class="rx-form-error" id="wmAccountError" role="alert" hidden></p>' +
+        '<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 12px;">' + (selfAdmin ? 'Your role and account status can only be changed by another System Admin.' : 'Username, Email, Role, Position and Department are managed by your System Admin.') + '</p>' +
         '<div style="display:flex;justify-content:flex-end;margin-bottom:24px;">' +
           '<button type="button" class="wm-btn primary" id="wmAccountSaveBtn">Save Changes</button>' +
         '</div>' +
@@ -7531,14 +7358,27 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
 
   function saveMyAccountDetails(){
     var fullName = byId('wmAccountFullName').value.trim();
+    var errEl = byId('wmAccountError'); errEl.hidden = true;
+    if(!fullName){ errEl.textContent = 'Full name is required.'; errEl.hidden = false; byId('wmAccountFullName').focus(); return; }
+    var body = { full_name: fullName, avatar: (STATE.currentUser && STATE.currentUser.avatar) || '' };
+    if(byId('wmAccountUsername')){   // System Admin editing their own identity fields (ACC-03)
+      body.username = byId('wmAccountUsername').value.trim().toLowerCase();
+      body.email = byId('wmAccountEmail').value.trim();
+      body.position = byId('wmAccountPosition').value.trim();
+      body.department = byId('wmAccountDepartment').value.trim();
+      if(!/^[a-z0-9](?:[a-z0-9._-]{1,30})[a-z0-9]$/.test(body.username) && body.username !== (STATE.currentUser.username || '')){
+        errEl.textContent = 'Username must be 3–32 characters: lowercase letters, digits, dot, underscore or hyphen, starting and ending with a letter or digit.'; errEl.hidden = false; byId('wmAccountUsername').focus(); return;
+      }
+    }
+    var btn = byId('wmAccountSaveBtn'); btn.disabled = true;
     showSync('Saving…');
-    apiSendPut('/api/auth/profile', { full_name: fullName, avatar: (STATE.currentUser && STATE.currentUser.avatar) || '' })
+    apiSendPut('/api/auth/profile', body)
       .then(function(user){
         showSync('Profile updated', 'ok');
         hideAuthScreenAndShowApp(user);
-        renderMyAccountPage();
+        return UsersAPI.getUsers().then(function(list){ STATE.allUsers = list; }).catch(function(){}).then(function(){ renderMyAccountPage(); });
       })
-      .catch(function(err){ showSync('Could not update profile: ' + err.message, 'error'); });
+      .catch(function(err){ btn.disabled = false; errEl.textContent = err.message; errEl.hidden = false; showSync('Could not update profile: ' + err.message, 'error'); });
   }
 
   function saveMyAccountPassword(){
@@ -7650,12 +7490,14 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
         '</div>' +
         '<div id="cfgAddEmployeeForm" style="display:none;background:var(--line-soft);border-radius:10px;padding:14px;margin-bottom:16px;">' +
           '<div class="wm-form-grid">' +
-            '<div class="wm-form-row"><label>Full Name</label><input id="cfgEmpNewFullName" placeholder="Nguyễn Văn A"></div>' +
+            '<div class="wm-form-row"><label>Full Name</label><input id="cfgEmpNewFullName" placeholder="Full name"></div>' +
             '<div class="wm-form-row"><label>Email</label><input id="cfgEmpNewEmail" type="email" placeholder="name@ueh.edu.vn"></div>' +
           '</div>' +
+          '<div class="wm-form-row"><label for="cfgEmpNewUsername">Username</label><input id="cfgEmpNewUsername" autocomplete="off" spellcheck="false" placeholder="e.g. nguyen.van.a" aria-describedby="cfgEmpNewUsernameHint">' +
+            '<small id="cfgEmpNewUsernameHint" class="rx-field-hint">3–32 characters: lowercase letters, digits, dot, underscore or hyphen. Used to sign in.</small></div>' +
           '<div class="wm-form-grid">' +
-            '<div class="wm-form-row"><label>Position (Chức vụ)</label><input id="cfgEmpNewPosition" placeholder="Teaching Assistant"></div>' +
-            '<div class="wm-form-row"><label>Department (Phòng ban)</label><input id="cfgEmpNewDepartment" placeholder="UEH Nexus Campus Nha Trang"></div>' +
+            '<div class="wm-form-row"><label>Position</label><input id="cfgEmpNewPosition" placeholder="Teaching Assistant"></div>' +
+            '<div class="wm-form-row"><label>Department</label><input id="cfgEmpNewDepartment" placeholder="UEH Nexus Campus Nha Trang"></div>' +
           '</div>' +
           '<div class="wm-form-row"><label>Role</label>' +
             '<select id="cfgEmpNewRole"><option value="Member">Member</option><option value="Project Manager">Project Manager</option><option value="System Admin">System Admin</option></select>' +
@@ -7666,9 +7508,10 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
             '<button class="wm-btn primary" id="cfgEmpNewSubmit">Create Account</button>' +
           '</div>' +
         '</div>' +
-        '<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;">Click an employee to edit their role, department or status. There is no hard delete — set Status to Inactive to remove their access while keeping their task and work-log history intact.</p>' +
+        '<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 10px;">Click an employee to edit their role, department or status. Inactive accounts cannot sign in; deleted accounts are hidden and locked but their tasks, work logs, documents and history are kept (restorable).</p>' +
         '<div style="display:flex;gap:8px;margin-bottom:12px;">' +
           '<input id="cfgEmpSearch" placeholder="Search name, email, department…" style="flex:1;">' +
+          '<label class="rx-inline-check"><input type="checkbox" id="cfgEmpShowDeleted"> Show deleted accounts</label>' +
         '</div>' +
         '<div id="cfgEmpTableWrap"></div>' +
       '</div>';
@@ -7924,6 +7767,13 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
     });
     byId('cfgEmpNewCancel').addEventListener('click', function(){ byId('cfgAddEmployeeForm').style.display = 'none'; });
     byId('cfgEmpNewSubmit').addEventListener('click', submitCreateEmployeeFromConfig);
+    // ACC-01: suggest a username from the full name until the admin edits it.
+    byId('cfgEmpNewUsername').addEventListener('input', function(){ this.dataset.touched = '1'; });
+    byId('cfgEmpNewFullName').addEventListener('input', function(){
+      var u = byId('cfgEmpNewUsername'); if(u.dataset.touched) return;
+      u.value = this.value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '').slice(0, 32);
+    });
+    if(byId('cfgEmpShowDeleted')) byId('cfgEmpShowDeleted').addEventListener('change', renderCfgEmployeesTable);
     byId('cfgEmpSearch').addEventListener('input', renderCfgEmployeesTable);
     renderCfgEmployeesTable();
   }
@@ -7933,18 +7783,26 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
     var position = byId('cfgEmpNewPosition').value.trim();
     var department = byId('cfgEmpNewDepartment').value.trim();
     var role = byId('cfgEmpNewRole').value;
+    var username = byId('cfgEmpNewUsername').value.trim().toLowerCase();
     var errEl = byId('cfgEmpNewError');
     errEl.style.display = 'none';
-    if(!fullName || !email){
-      errEl.textContent = 'Full name and email are required.';
+    if(!fullName || !email || !username){
+      errEl.textContent = 'Full name, email and username are required.';
       errEl.style.display = 'block';
       return;
     }
+    if(!/^[a-z0-9](?:[a-z0-9._-]{1,30})[a-z0-9]$/.test(username)){
+      errEl.textContent = 'Username must be 3–32 characters: lowercase letters, digits, dot, underscore or hyphen, starting and ending with a letter or digit.';
+      errEl.style.display = 'block'; byId('cfgEmpNewUsername').focus();
+      return;
+    }
     showSync('Creating account…');
-    AdminAPI.createUser({ full_name: fullName, email: email, position: position, department: department, role: role })
+    AdminAPI.createUser({ full_name: fullName, email: email, username: username, position: position, department: department, role: role })
       .then(function(result){
         showSync('Account created', 'ok');
         byId('cfgAddEmployeeForm').style.display = 'none';
+        ['cfgEmpNewFullName','cfgEmpNewEmail','cfgEmpNewUsername','cfgEmpNewPosition','cfgEmpNewDepartment'].forEach(function(id){ byId(id).value = ''; });
+        delete byId('cfgEmpNewUsername').dataset.touched;
         showAlert('Account created for ' + fullName + '.\n\nUsername: ' + result.user.username +
           '\nTemporary password: ' + result.temp_password +
           '\n\nShare these with them securely — they can change the password after logging in.');
@@ -7959,33 +7817,66 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
     var wrap = byId('cfgEmpTableWrap');
     if(!wrap) return;
     var q = (byId('cfgEmpSearch') ? byId('cfgEmpSearch').value : '').trim().toLowerCase();
-    var list = (STATE.allUsers || []).filter(function(u){
+    var showDeleted = byId('cfgEmpShowDeleted') && byId('cfgEmpShowDeleted').checked;
+    var source = showDeleted ? (STATE.deletedUsers || []) : (STATE.allUsers || []);
+    var me = STATE.currentUser || {};
+    var list = source.filter(function(u){
       if(!q) return true;
       var hay = [u.full_name, u.username, u.email, u.department, u.position].filter(Boolean).join(' ').toLowerCase();
       return hay.indexOf(q) !== -1;
     });
     if(!list.length){
-      wrap.innerHTML = '<div class="wm-empty">No employees match.</div>';
+      wrap.innerHTML = '<div class="wm-empty">' + (showDeleted ? 'No deleted accounts.' : 'No employees match.') + '</div>';
       return;
     }
     wrap.innerHTML =
       '<table class="wm-table" style="width:100%;">' +
-        '<thead><tr><th>Name</th><th>Department</th><th>Position</th><th>Role</th><th>Status</th></tr></thead>' +
+        '<thead><tr><th>Name</th><th>Username</th><th>Department</th><th>Position</th><th>Role</th><th>Status</th><th><span class="rx-sr-only">Actions</span></th></tr></thead>' +
         '<tbody>' + list.map(function(u){
-          var status = u.status || 'Active';
-          return '<tr class="wm-cfg-emp-row" data-emp-id="' + u.id + '" style="cursor:pointer;">' +
+          var status = showDeleted ? 'Deleted' : (u.status || 'Active');
+          var action = showDeleted
+            ? '<button type="button" class="wm-btn" data-restore-emp="' + u.id + '">Restore</button>'
+            : (u.id === me.id ? '' : '<button type="button" class="wm-icon-btn" data-delete-emp="' + u.id + '" title="Delete account" aria-label="Delete account ' + escapeHtml(u.full_name || u.username) + '"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg></button>');
+          return '<tr class="wm-cfg-emp-row" data-emp-id="' + u.id + '" style="cursor:' + (showDeleted ? 'default' : 'pointer') + ';">' +
             '<td>' + avatarHtml(u, 24) + ' ' + escapeHtml(u.full_name || u.username) + '</td>' +
+            '<td>' + escapeHtml(u.username || '—') + '</td>' +
             '<td>' + escapeHtml(u.department || '—') + '</td>' +
             '<td>' + escapeHtml(u.position || '—') + '</td>' +
             '<td>' + escapeHtml(u.role || 'Member') + '</td>' +
-            '<td><span class="wm-status-badge' + (status === 'Inactive' ? ' inactive' : '') + '">' + escapeHtml(status) + '</span></td>' +
+            '<td><span class="wm-status-badge' + (status !== 'Active' ? ' inactive' : '') + '">' + escapeHtml(status) + '</span></td>' +
+            '<td class="wm-row-actions">' + action + '</td>' +
           '</tr>';
         }).join('') + '</tbody>' +
       '</table>';
+    function reloadUsers(){ return UsersAPI.getUsers().then(function(l){ STATE.allUsers = l; renderCfgEmployeesTable(); }); }
     wrap.querySelectorAll('.wm-cfg-emp-row').forEach(function(row){
-      row.addEventListener('click', function(){
+      row.addEventListener('click', function(e){
+        if(showDeleted || e.target.closest('button')) return;
         var u = userById(row.getAttribute('data-emp-id'));
         if(u) openEmployeeDetail(u);
+      });
+    });
+    wrap.querySelectorAll('[data-delete-emp]').forEach(function(btn){
+      btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var u = userById(btn.getAttribute('data-delete-emp')); if(!u) return;
+        var R = window.REXUS221;
+        R.dialog({ title: 'Delete account', width: 480, submit: 'Delete account',
+          body: '<p class="rx-confirm-text">Delete <strong>' + escapeHtml(u.full_name || u.username) + '</strong>? The account is locked and hidden immediately and signed out everywhere. ' +
+            'Tasks, work logs, documents, HR records and history are kept, and an admin can restore the account later.</p>' +
+            R.field('Type the username “' + u.username + '” to confirm', '<input name="confirm" autocomplete="off" spellcheck="false" required>', { req: true }),
+          onOpen: function(d){ var b = d.form.querySelector('button[type=submit]'); b.classList.remove('primary'); b.classList.add('danger'); setTimeout(function(){ d.form.elements.confirm.focus(); }, 30); },
+          onSubmit: function(d){
+            if(d.val('confirm').trim() !== u.username) throw new Error('The username does not match.');
+            return AdminAPI.deleteUser(u.id, d.val('confirm').trim()).then(function(){ showSync('Account deleted', 'ok'); return reloadUsers(); });
+          } });
+      });
+    });
+    wrap.querySelectorAll('[data-restore-emp]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        btn.disabled = true;
+        AdminAPI.restoreUser(btn.getAttribute('data-restore-emp')).then(function(){ showSync('Account restored (Inactive — set it Active to allow sign-in)', 'ok'); return reloadUsers(); })
+          .catch(function(err){ btn.disabled = false; showSync('Could not restore: ' + err.message, 'error'); });
       });
     });
   }
@@ -8083,6 +7974,8 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
             if(taskId) openDetailModal(taskId);
           } else if(entityType === 'project' && entityId){
             openProjectDetail(entityId);
+          } else if(entityType === 'schedule_request' && window.REXUS221){
+            window.REXUS221.openSchedule(entityId);
           } else if(['space','folder','page'].includes(entityType) && entityId && window.RexusDocument){
             window.RexusDocument.open(entityId);
             history.replaceState(null,'','#document/'+encodeURIComponent(entityId));
@@ -8202,7 +8095,7 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
 
   </script>
   <script src="/rexus-docx-export.js?v=2.0.6"></script>
-  <script src="/rexus-document.js?v=2.1.2"></script>
+  <script src="/rexus-document.js?v=2.2.2"></script>
   <link rel="stylesheet" href="/rexus-liquid-glass.css?v=2.0.5">
   <link rel="stylesheet" href="/rexus-editor.css?v=2.0.6">
   <link rel="stylesheet" href="/rexus-v205.css?v=2.0.5">
@@ -8211,16 +8104,17 @@ try{var t=localStorage.getItem('rexus-theme');document.documentElement.setAttrib
   <link rel="stylesheet" href="/rexus-v207.css?v=2.0.7">
   <link rel="stylesheet" href="/rexus-v208.css?v=2.0.8">
   <script src="/rexus-v207.js?v=2.2.0"></script>
-  <link rel="stylesheet" href="/rexus-v210.css?v=2.1.2">
+  <link rel="stylesheet" href="/rexus-v210.css?v=2.2.2">
   <link rel="stylesheet" href="/rexus-v211.css?v=2.1.2">
   <link rel="stylesheet" href="/rexus-v213.css?v=2.1.3">
   <!-- v2.2.0 Adaptive Liquid Glass design system: tokens + components. Must stay the LAST stylesheet. -->
-  <link rel="stylesheet" href="/rexus-ui.css?v=2.2.0">
-  <script src="/rexus-v210.js?v=2.1.2"></script>
-  <script src="/rexus-v221.js?v=2.2.1"></script>
+  <link rel="stylesheet" href="/rexus-ui.css?v=2.2.2">
+  <link rel="stylesheet" href="/rexus-dark.css?v=2.2.2">
+  <script src="/rexus-v210.js?v=2.2.2"></script>
+  <script src="/rexus-v221.js?v=2.2.2"></script>
 </section>
 
   <script src="/rexus-v211.js?v=2.1.2" defer></script>
-  <script src="/rexus-ui.js?v=2.2.0" defer></script>
+  <script src="/rexus-ui.js?v=2.2.2" defer></script>
 </body>
 </html>

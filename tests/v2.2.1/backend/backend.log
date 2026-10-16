@@ -154,5 +154,73 @@ PASS M1 Google removed :: no function serves /api/google/*
 PASS M10 Concurrency :: two simultaneous decisions → exactly one succeeds
 PASS M10 Concurrency :: simultaneous identical payments → recorded once
 PASS M10 Concurrency :: concurrent draft saves → a single open declaration
+PASS v2.2.2 GEN-03 Dark mode :: default mode is light
+PASS v2.2.2 GEN-03 Dark mode :: save dark mode
+PASS v2.2.2 GEN-03 Dark mode :: dark mode persists per account; theme untouched
+PASS v2.2.2 GEN-03 Dark mode :: system mode + navy theme together
+PASS v2.2.2 GEN-03 Dark mode :: unknown mode rejected
+PASS v2.2.2 ACC-01 Username :: only admins create accounts
+PASS v2.2.2 ACC-01 Username :: invalid username format rejected with clear message
+PASS v2.2.2 ACC-01 Username :: duplicate username rejected (case-insensitive)
+PASS v2.2.2 ACC-01 Username :: account created with the chosen username
+PASS v2.2.2 ACC-01 Username :: duplicate email rejected
+PASS v2.2.2 ACC-01 Username :: new account signs in with its username
+PASS v2.2.2 ACC-03 Admin self-profile :: admin saves own username / email / position / department
+PASS v2.2.2 ACC-03 Admin self-profile :: changes show after reload; role and status cannot be changed from the profile form
+PASS v2.2.2 ACC-03 Admin self-profile :: admin cannot take another user's username
+PASS v2.2.2 ACC-03 Admin self-profile :: admin username still validated
+PASS v2.2.2 ACC-03 Admin self-profile :: member cannot change username/role via profile
+PASS v2.2.2 ACC-03 Admin self-profile :: member can still change own full name
+PASS v2.2.2 ACC-03 Admin self-profile :: identity change is audit-logged
+PASS v2.2.2 ACC-02 Soft delete :: only admins can delete
+PASS v2.2.2 ACC-02 Soft delete :: cannot delete the signed-in account
+PASS v2.2.2 ACC-02 Soft delete :: confirmation must match the username
+PASS v2.2.2 ACC-02 Soft delete :: (before) account session works
+PASS v2.2.2 ACC-02 Soft delete :: admin deletes (soft)
+PASS v2.2.2 ACC-02 Soft delete :: row kept: Inactive + deleted_at + deleted_by
+PASS v2.2.2 ACC-02 Soft delete :: history kept (work logs still reference the account)
+PASS v2.2.2 ACC-02 Soft delete :: existing session is cut off on every API
+PASS v2.2.2 ACC-02 Soft delete :: auth/me reports signed out
+PASS v2.2.2 ACC-02 Soft delete :: deleted account cannot sign in
+PASS v2.2.2 ACC-02 Soft delete :: hidden from user lists / pickers
+PASS v2.2.2 ACC-02 Soft delete :: still resolvable for names on old records
+PASS v2.2.2 ACC-02 Soft delete :: deleted account cannot be edited
+PASS v2.2.2 ACC-02 Soft delete :: second delete reports not found
+PASS v2.2.2 ACC-02 Soft delete :: delete is audit-logged
+PASS v2.2.2 ACC-02 Soft delete :: admin restores
+PASS v2.2.2 ACC-02 Soft delete :: restored account returns Inactive (re-activation is explicit)
+PASS v2.2.2 ACC-02 Soft delete :: re-activated account works again
+PASS v2.2.2 ACC-02 Soft delete :: deactivation also cuts the session immediately
+PASS v2.2.2 HRM-01 Permissions :: employee cannot read another employee's schedule
+PASS v2.2.2 HRM-01 Permissions :: manager can read a managed employee's schedule
+PASS v2.2.2 HRM-01 Permissions :: non-manager cannot send schedule requests
+PASS v2.2.2 HRM-01 Permissions :: manager cannot request from someone they do not manage
+PASS v2.2.2 HRM-01 Permissions :: only HR admin changes HR settings
+PASS v2.2.2 HRM-01 Permissions :: employee cannot change own minimum / schedule
+PASS v2.2.2 HRM-01 Permissions :: employee team view is empty (no one managed)
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: full-time can open a monthly schedule (schedule-based regular hours)
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: no regular hours on rest days
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: regular = working schedule only; OT kept separate; duplicate day counted once
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: day keeps its note and OT; Saturday was not given regular hours
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: regular + OT over 24 h in a day rejected
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: full-time submits schedule for approval
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: manager receives it in the Approval Center with regular + OT in the title
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: approved OT is reported separately and not added to regular capacity
+PASS v2.2.2 HRM-02/03 Full-time schedule + OT :: manager sees regular capacity and OT per employee for the month
+PASS v2.2.2 HRM-04 Part-time minimum :: HR admin sets the part-time minimum
+PASS v2.2.2 HRM-04 Part-time minimum :: invalid minimum rejected
+PASS v2.2.2 HRM-04 Part-time minimum :: part-time sees the minimum that applies
+PASS v2.2.2 HRM-04 Part-time minimum :: below-minimum schedule is saved with a warning flag (regular 12 h, OT 1 h)
+PASS v2.2.2 HRM-04 Part-time minimum :: manager sees the shortfall against the minimum
+PASS v2.2.2 HRM-04 Part-time minimum :: minimum in force is frozen on the submitted month
+PASS v2.2.2 HRM-04 Part-time minimum :: changing the setting later does not rewrite the approved month
+PASS v2.2.2 HRM-04 Part-time minimum :: personal minimum overrides the company default
+PASS v2.2.2 HRM-05 Schedule requests :: manager requests a month from everyone they manage
+PASS v2.2.2 HRM-05 Schedule requests :: re-sending updates the same request (no duplicate)
+PASS v2.2.2 HRM-05 Schedule requests :: one row per employee-month; send count tracked
+PASS v2.2.2 HRM-05 Schedule requests :: employee sees the request (who, due date) on the form
+PASS v2.2.2 HRM-05 Schedule requests :: employee notified in-app
+PASS v2.2.2 HRM-05 Schedule requests :: manager tracks request + status per person
+PASS v2.2.2 HRM-05 Schedule requests :: invalid month rejected
 
-156/156 backend checks passed
+224/224 backend checks passed

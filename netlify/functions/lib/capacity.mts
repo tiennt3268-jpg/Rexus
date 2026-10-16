@@ -16,7 +16,7 @@ export type Profile = {
 };
 export type DayOff = { user_id: string | null; day: string; kind: string; hours: number | null };
 export type Leave = { user_id: string; start_date: string; end_date: string; unit: 'full' | 'half' | 'hourly'; hours: number | null; status: string };
-export type Declaration = { user_id: string; month: string; status: string; entries: { day: string; hours: number; availability: string }[]; total_hours: number };
+export type Declaration = { user_id: string; month: string; status: string; entries: { day: string; hours: number; ot_hours?: number; availability: string }[]; total_hours: number };
 export type TaskRow = { id: string; task: string; project: string; user_id: string; status: string; estimated_hours: number | null;
   start_date: string | null; due_date: string | null; assignee_id: string | null };
 export type SubtaskRow = { id: string; task_id: string; name: string; status: string; estimated_hours: number | null; due_date: string | null; assignee_id: string | null };
@@ -50,7 +50,7 @@ export function profileOn(history: Profile[], current: Profile, day: string): Pr
   return best || current;
 }
 
-export type DayCell = { day: string; scheduled: number; capacity: number | null; leave: number; holiday: string | null; off: boolean; planned: number; actual: number; source: 'schedule' | 'declaration' };
+export type DayCell = { day: string; scheduled: number; capacity: number | null; leave: number; holiday: string | null; off: boolean; planned: number; actual: number; ot: number; source: 'schedule' | 'declaration' };
 
 /**
  * Daily capacity for one employee.
@@ -79,6 +79,9 @@ export function dailyCapacity(opts: { userId: string; from: string; to: string; 
     const isHoliday = !!hol && (hol.hours === null || hol.hours === undefined);
     let base = 0, source: 'schedule' | 'declaration' = p.capacity_method;
     let confirmed = true;
+    // v2.2.2 HRM-03: approved overtime is tracked per day for every employee, never added to regular capacity.
+    const approvedEntry = approvedDecl.get(monthOf(day))?.entries.find(x => x.day === day);
+    const ot = approvedEntry && approvedEntry.availability !== 'unavailable' ? Math.max(0, Math.min(24, Number(approvedEntry.ot_hours) || 0)) : 0;
     if (p.capacity_method === 'declaration') {
       const decl = approvedDecl.get(monthOf(day));
       if (!decl) { confirmed = false; monthStatus[monthOf(day)] = monthStatus[monthOf(day)] || 'Missing Declaration'; }
@@ -104,7 +107,7 @@ export function dailyCapacity(opts: { userId: string; from: string; to: string; 
       leaveH = Math.max(leaveH, h);
     }
     leaveH = Math.min(leaveH, base);
-    cells.push({ day, scheduled: base, capacity: confirmed ? r2(base - leaveH) : null, leave: r2(leaveH), holiday: isHoliday ? (hol!.kind || 'holiday') : null, off: !!off && !off.hours, planned: 0, actual: 0, source });
+    cells.push({ day, scheduled: base, capacity: confirmed ? r2(base - leaveH) : null, leave: r2(leaveH), holiday: isHoliday ? (hol!.kind || 'holiday') : null, off: !!off && !off.hours, planned: 0, actual: 0, ot, source });
   }
   return { cells, months: monthStatus };
 }
@@ -231,7 +234,7 @@ export async function computeResourcePlan(db: any, opts: { from: string; to: str
   const offRows: DayOff[] = daysOff.map((d: any) => ({ user_id: d.user_id ?? null, day: D(d.day), kind: d.kind || 'unavailable', hours: num(d.hours) }));
   const leaveRows: Leave[] = leaves.map((l: any) => ({ user_id: l.user_id, start_date: D(l.start_date), end_date: D(l.end_date), unit: l.unit, hours: num(l.hours), status: l.status }));
   const declRows: Declaration[] = decls.map((d: any) => ({ user_id: d.user_id, month: d.month, status: d.status, total_hours: Number(d.total_hours) || 0,
-    entries: entries.filter((e: any) => e.declaration_id === d.id).map((e: any) => ({ day: D(e.day), hours: Number(e.hours) || 0, availability: e.availability })) }));
+    entries: entries.filter((e: any) => e.declaration_id === d.id).map((e: any) => ({ day: D(e.day), hours: Number(e.hours) || 0, ot_hours: Number(e.ot_hours) || 0, availability: e.availability })) }));
   const { items, unestimated } = planItems(
     tasks.map((t: any) => ({ ...t, estimated_hours: num(t.estimated_hours) })),
     subtasks.map((s: any) => ({ ...s, estimated_hours: num(s.estimated_hours) })),
@@ -270,6 +273,7 @@ export async function computeResourcePlan(db: any, opts: { from: string; to: str
       month_states: monthStates,
       approved_capacity: capacity, approved_capacity_partial: approvedPart, pending_hours: pendingHours,
       leave_hours: r2(cells.reduce((s, c) => s + c.leave, 0)),
+      ot_hours: r2(cells.reduce((s, c) => s + c.ot, 0)),
       planned_hours: planned, actual_hours: actual,
       remaining_hours: capacity === null ? null : r2(capacity - planned),
       overload_hours: capacity === null ? null : r2(Math.max(0, planned - capacity)),

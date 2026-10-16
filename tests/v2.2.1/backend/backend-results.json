@@ -778,5 +778,345 @@
   "section": "M10 Concurrency",
   "name": "concurrent draft saves → a single open declaration",
   "pass": true
+ },
+ {
+  "section": "v2.2.2 GEN-03 Dark mode",
+  "name": "default mode is light",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 GEN-03 Dark mode",
+  "name": "save dark mode",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 GEN-03 Dark mode",
+  "name": "dark mode persists per account; theme untouched",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 GEN-03 Dark mode",
+  "name": "system mode + navy theme together",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 GEN-03 Dark mode",
+  "name": "unknown mode rejected",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-01 Username",
+  "name": "only admins create accounts",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-01 Username",
+  "name": "invalid username format rejected with clear message",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-01 Username",
+  "name": "duplicate username rejected (case-insensitive)",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-01 Username",
+  "name": "account created with the chosen username",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-01 Username",
+  "name": "duplicate email rejected",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-01 Username",
+  "name": "new account signs in with its username",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-03 Admin self-profile",
+  "name": "admin saves own username / email / position / department",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-03 Admin self-profile",
+  "name": "changes show after reload; role and status cannot be changed from the profile form",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-03 Admin self-profile",
+  "name": "admin cannot take another user's username",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-03 Admin self-profile",
+  "name": "admin username still validated",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-03 Admin self-profile",
+  "name": "member cannot change username/role via profile",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-03 Admin self-profile",
+  "name": "member can still change own full name",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-03 Admin self-profile",
+  "name": "identity change is audit-logged",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "only admins can delete",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "cannot delete the signed-in account",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "confirmation must match the username",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "(before) account session works",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "admin deletes (soft)",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "row kept: Inactive + deleted_at + deleted_by",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "history kept (work logs still reference the account)",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "existing session is cut off on every API",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "auth/me reports signed out",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "deleted account cannot sign in",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "hidden from user lists / pickers",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "still resolvable for names on old records",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "deleted account cannot be edited",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "second delete reports not found",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "delete is audit-logged",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "admin restores",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "restored account returns Inactive (re-activation is explicit)",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "re-activated account works again",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 ACC-02 Soft delete",
+  "name": "deactivation also cuts the session immediately",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-01 Permissions",
+  "name": "employee cannot read another employee's schedule",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-01 Permissions",
+  "name": "manager can read a managed employee's schedule",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-01 Permissions",
+  "name": "non-manager cannot send schedule requests",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-01 Permissions",
+  "name": "manager cannot request from someone they do not manage",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-01 Permissions",
+  "name": "only HR admin changes HR settings",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-01 Permissions",
+  "name": "employee cannot change own minimum / schedule",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-01 Permissions",
+  "name": "employee team view is empty (no one managed)",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "full-time can open a monthly schedule (schedule-based regular hours)",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "no regular hours on rest days",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "regular = working schedule only; OT kept separate; duplicate day counted once",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "day keeps its note and OT; Saturday was not given regular hours",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "regular + OT over 24 h in a day rejected",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "full-time submits schedule for approval",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "manager receives it in the Approval Center with regular + OT in the title",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "approved OT is reported separately and not added to regular capacity",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-02/03 Full-time schedule + OT",
+  "name": "manager sees regular capacity and OT per employee for the month",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-04 Part-time minimum",
+  "name": "HR admin sets the part-time minimum",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-04 Part-time minimum",
+  "name": "invalid minimum rejected",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-04 Part-time minimum",
+  "name": "part-time sees the minimum that applies",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-04 Part-time minimum",
+  "name": "below-minimum schedule is saved with a warning flag (regular 12 h, OT 1 h)",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-04 Part-time minimum",
+  "name": "manager sees the shortfall against the minimum",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-04 Part-time minimum",
+  "name": "minimum in force is frozen on the submitted month",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-04 Part-time minimum",
+  "name": "changing the setting later does not rewrite the approved month",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-04 Part-time minimum",
+  "name": "personal minimum overrides the company default",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-05 Schedule requests",
+  "name": "manager requests a month from everyone they manage",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-05 Schedule requests",
+  "name": "re-sending updates the same request (no duplicate)",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-05 Schedule requests",
+  "name": "one row per employee-month; send count tracked",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-05 Schedule requests",
+  "name": "employee sees the request (who, due date) on the form",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-05 Schedule requests",
+  "name": "employee notified in-app",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-05 Schedule requests",
+  "name": "manager tracks request + status per person",
+  "pass": true
+ },
+ {
+  "section": "v2.2.2 HRM-05 Schedule requests",
+  "name": "invalid month rejected",
+  "pass": true
  }
 ]

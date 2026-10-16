@@ -1,0 +1,207 @@
+/* =============================================================================
+   REXUS v2.2.2 — Dark mode (GEN-02 / GEN-03).
+   Active when <html data-rx-mode="dark"> (Light / Dark / System, saved per account).
+   Loaded after rexus-ui.css. Layer 1 re-points the design tokens; layer 2 covers the
+   legacy stylesheets and inline styles that hard-code light colours.
+   Palette: navy / blue / neutral; accents are used sparingly.
+   ========================================================================== */
+
+/* 1. TOKENS -------------------------------------------------------------- */
+:root[data-rx-mode="dark"]{
+  color-scheme: dark;
+  --rx-wash: 36, 44, 57;
+  --rx-ink-1: #e8ecf2;  --rx-ink-2: #c5ccd6;  --rx-ink-3: #9ea8b5;  --rx-ink-4: #6d7682;
+  --rx-hairline: rgba(255, 255, 255, 0.09);  --rx-hairline-strong: rgba(255, 255, 255, 0.16);
+  --rx-surface: #171c24;  --rx-surface-muted: #1c222c;  --rx-canvas: #0f1319;
+  --rx-accent: #78adff;  --rx-accent-strong: #a3c7ff;  --rx-accent-soft: rgba(120, 173, 255, 0.16);
+  --rx-focus-ring: 0 0 0 2px #0f1319, 0 0 0 4px rgba(120, 173, 255, 0.9);
+  --rx-success: #5fcf98; --rx-success-soft: rgba(95, 207, 152, 0.14); --rx-success-line: rgba(95, 207, 152, 0.34);
+  --rx-warning: #f2bd6b; --rx-warning-soft: rgba(242, 189, 107, 0.14); --rx-warning-line: rgba(242, 189, 107, 0.34);
+  --rx-danger:  #ff8a94; --rx-danger-soft:  rgba(255, 138, 148, 0.14); --rx-danger-line:  rgba(255, 138, 148, 0.36);
+  --rx-info:    #78adff; --rx-info-soft:    rgba(120, 173, 255, 0.14); --rx-info-line:    rgba(120, 173, 255, 0.34);
+  --rx-neutral: #b3bcc8; --rx-neutral-soft: rgba(179, 188, 200, 0.12); --rx-neutral-line: rgba(179, 188, 200, 0.26);
+  --rx-glass-1-bg: rgba(28, 34, 44, 0.62);
+  --rx-glass-2-bg: rgba(30, 37, 48, 0.80);
+  --rx-glass-3-bg: rgba(26, 32, 42, 0.97);
+  --rx-glass-edge: rgba(255, 255, 255, 0.08);
+  --rx-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --rx-glass-bevel: inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+  --rx-glass-hover-bg: rgba(46, 55, 70, 0.92);
+  --rx-glass-press-bg: rgba(38, 46, 60, 0.92);
+  --rx-smoke-bg: #2b63c4;  --rx-smoke-hover-bg: #3672d8;  --rx-smoke-edge: rgba(255, 255, 255, 0.16);
+  --rx-shadow-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --rx-shadow-2: 0 2px 6px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.30);
+  --rx-shadow-3: 0 12px 32px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.35);
+  --rx-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --rx-app-bg:
+    radial-gradient(1100px 600px at 8% -10%, rgba(60, 100, 170, 0.20), transparent 60%),
+    radial-gradient(900px 600px at 100% 0%, rgba(40, 70, 130, 0.16), transparent 60%),
+    linear-gradient(180deg, #11161d 0%, #0d1117 100%);
+  --rx-header-bg: rgba(16, 21, 28, 0.86);
+  --rx-sidebar-bg: rgba(20, 26, 34, 0.72);
+  --rx-table-head-bg: #1e2530;
+  --rx-heading: #f1f4f8;
+  --rx-nav-active-bg: rgba(120, 173, 255, 0.16);
+  --rx-nav-active-ink: #f1f4f8;
+  --rx-footer-bg: #0b0e13;
+}
+/* Navy & Light Blue in dark mode: same structure, navy-tinted surfaces. */
+:root[data-rx-mode="dark"][data-rx-theme="navy"]{
+  --rx-wash: 26, 44, 78;
+  --rx-ink-1: #e6eefb; --rx-ink-2: #c2d1ea; --rx-ink-3: #97aac9; --rx-heading: #eef4ff;
+  --rx-surface: #13203a; --rx-surface-muted: #172644; --rx-canvas: #0b1426;
+  --rx-glass-1-bg: rgba(22, 36, 64, 0.62); --rx-glass-2-bg: rgba(22, 37, 66, 0.82); --rx-glass-3-bg: rgba(18, 31, 56, 0.97);
+  --rx-glass-hover-bg: rgba(34, 54, 92, 0.94); --rx-glass-press-bg: rgba(28, 46, 80, 0.94);
+  --rx-glass-edge: rgba(150, 190, 255, 0.12);
+  --rx-hairline: rgba(150, 190, 255, 0.12); --rx-hairline-strong: rgba(150, 190, 255, 0.20);
+  --rx-app-bg:
+    radial-gradient(1100px 600px at 10% -10%, rgba(60, 110, 200, 0.28), transparent 60%),
+    radial-gradient(900px 600px at 100% 0%, rgba(40, 90, 180, 0.22), transparent 60%),
+    linear-gradient(180deg, #0c1629 0%, #091121 100%);
+  --rx-header-bg: rgba(11, 22, 42, 0.88); --rx-sidebar-bg: rgba(14, 27, 52, 0.74);
+  --rx-table-head-bg: #182a4b; --rx-nav-active-bg: rgba(120, 173, 255, 0.20); --rx-nav-active-ink: #eef4ff;
+  --rx-footer-bg: #07101f;
+}
+
+/* 2. BASE + LEGACY VARIABLE REMAP ---------------------------------------- */
+:root[data-rx-mode="dark"], :root[data-rx-mode="dark"] body{ background: var(--rx-canvas); color: var(--rx-ink-1); }
+:root[data-rx-mode="dark"] .wm-app{
+  --line: rgba(255, 255, 255, 0.10); --line-soft: rgba(255, 255, 255, 0.06);
+  --navy: #e8ecf2; --navy-deep: #f1f4f8;
+  --c-deepblue: #e8ecf2; --c-deepblue-tint: rgba(255, 255, 255, 0.06);
+}
+:root[data-rx-mode="dark"] #rexusDocsShell{ --rd-border: rgba(255, 255, 255, 0.10); }
+:root[data-rx-mode="dark"] .wm-app ::selection{ background: rgba(120, 173, 255, 0.32); }
+
+/* 3. SURFACES that legacy CSS / inline styles paint white ---------------- */
+:root[data-rx-mode="dark"] .wm-app [style*="background:#fff"],
+:root[data-rx-mode="dark"] .wm-app [style*="background: #fff"],
+:root[data-rx-mode="dark"] .wm-app [style*="background:#FFF"],
+:root[data-rx-mode="dark"] .wm-app [style*="background:white"],
+:root[data-rx-mode="dark"] .wm-app [style*="background: white"],
+:root[data-rx-mode="dark"] .wm-app [style*="background:#ffffff"],
+:root[data-rx-mode="dark"] .wm-app [style*="background-color:#fff"],
+:root[data-rx-mode="dark"] .wm-app [style*="background:#f"],
+:root[data-rx-mode="dark"] .wm-app [style*="background: #f"],
+:root[data-rx-mode="dark"] .wm-app [style*="background:var(--surface)"]{ background: var(--rx-surface) !important; }
+:root[data-rx-mode="dark"] .wm-app [style*="color:#0"], :root[data-rx-mode="dark"] .wm-app [style*="color: #0"],
+:root[data-rx-mode="dark"] .wm-app [style*="color:#1"], :root[data-rx-mode="dark"] .wm-app [style*="color: #1"],
+:root[data-rx-mode="dark"] .wm-app [style*="color:#2"], :root[data-rx-mode="dark"] .wm-app [style*="color: #2"],
+:root[data-rx-mode="dark"] .wm-app [style*="color:#3"], :root[data-rx-mode="dark"] .wm-app [style*="color:#4"]{ color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] .wm-app [style*="color:#5"], :root[data-rx-mode="dark"] .wm-app [style*="color:#6"],
+:root[data-rx-mode="dark"] .wm-app [style*="color: #5"], :root[data-rx-mode="dark"] .wm-app [style*="color: #6"]{ color: var(--rx-ink-3) !important; }
+:root[data-rx-mode="dark"] .wm-app [style*="border:1px solid #"], :root[data-rx-mode="dark"] .wm-app [style*="border-bottom:1px solid #"],
+:root[data-rx-mode="dark"] .wm-app [style*="border-top:1px solid #"]{ border-color: var(--rx-hairline-strong) !important; }
+
+/* Cards, panels and list rows */
+:root[data-rx-mode="dark"] .wm-app :is(.wm-card, .wm-panel, .wm-stat, .wm-stat-card, .wm-project-card, .wm-task-row, .wm-task-item, .wm-list-item,
+  .wm-cal-day, .wm-cal-cell, .wm-detail, .wm-detail-card, .wm-section, .wm-box, .rx-card, .rx-metric, .rx-panel, .rx-connected, .rx-theme-card,
+  .wm-empty, .wm-org-node, .wm-comment, .wm-notif-item, .wm-kpi-card, .wm-payroll-card, .rx-cal-cell, .rx-wbs-row, .rx-gt-row){
+  background-color: var(--rx-glass-2-bg) !important; color: var(--rx-ink-1);
+  border-color: var(--rx-hairline) !important;
+}
+:root[data-rx-mode="dark"] .wm-app .rx-metric{ background: var(--rx-glass-2-bg) !important; }
+
+/* Tables */
+:root[data-rx-mode="dark"] .wm-app table, :root[data-rx-mode="dark"] #rexusDocsShell table{ background: transparent !important; color: var(--rx-ink-1); }
+:root[data-rx-mode="dark"] .wm-app :is(th, thead td), :root[data-rx-mode="dark"] #rexusDocsShell th{ background: var(--rx-table-head-bg) !important; color: var(--rx-ink-2) !important; border-color: var(--rx-hairline) !important; }
+:root[data-rx-mode="dark"] .wm-app td, :root[data-rx-mode="dark"] #rexusDocsShell td{ border-color: var(--rx-hairline) !important; }
+:root[data-rx-mode="dark"] .wm-app tbody tr, :root[data-rx-mode="dark"] #rexusDocsShell tbody tr{ background: transparent !important; }
+:root[data-rx-mode="dark"] .wm-app tbody tr:hover, :root[data-rx-mode="dark"] #rexusDocsShell tbody tr:hover{ background: rgba(255, 255, 255, 0.04) !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-table-wrap, :root[data-rx-mode="dark"] .wm-app .rx-table-wrap{ background: var(--rx-glass-2-bg) !important; border-color: var(--rx-hairline) !important; }
+
+/* Form controls */
+:root[data-rx-mode="dark"] .wm-app :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]), select, textarea),
+:root[data-rx-mode="dark"] #rexusDocsShell :is(input:not([type=checkbox]):not([type=radio]), select, textarea),
+:root[data-rx-mode="dark"] .wm-modal-overlay :is(input:not([type=checkbox]):not([type=radio]), select, textarea),
+:root[data-rx-mode="dark"] .wm-auth-screen :is(input:not([type=checkbox]), select){
+  background-color: #10151c !important; color: var(--rx-ink-1) !important;
+  border-color: var(--rx-hairline-strong) !important; -webkit-text-fill-color: var(--rx-ink-1);
+}
+:root[data-rx-mode="dark"][data-rx-theme="navy"] :is(.wm-app, #rexusDocsShell, .wm-modal-overlay) :is(input:not([type=checkbox]):not([type=radio]), select, textarea){ background-color: #0c1830 !important; }
+:root[data-rx-mode="dark"] :is(input, textarea)::placeholder{ color: var(--rx-ink-4) !important; -webkit-text-fill-color: var(--rx-ink-4); }
+:root[data-rx-mode="dark"] :is(input, select, textarea):disabled{ color: var(--rx-ink-4) !important; -webkit-text-fill-color: var(--rx-ink-4); opacity: 1; }
+:root[data-rx-mode="dark"] option, :root[data-rx-mode="dark"] optgroup{ background: #1c222c; color: var(--rx-ink-1); }
+:root[data-rx-mode="dark"] .wm-app .wm-static-value{ background: rgba(255, 255, 255, 0.04) !important; color: var(--rx-ink-1) !important; }
+
+/* Buttons: secondary (glass) buttons pick up tokens; keep text readable on any legacy white button. */
+:root[data-rx-mode="dark"] .wm-app :is(.wm-btn:not(.primary):not(.danger), .rx210-btn:not(.primary), .rd-button:not(.primary), .wm-icon-btn, .wm-chip, .wm-filter-chip){
+  background-color: var(--rx-glass-2-bg) !important; color: var(--rx-ink-1) !important; border-color: var(--rx-hairline-strong) !important;
+}
+:root[data-rx-mode="dark"] :is(.wm-app, #rexusDocsShell, .wm-modal-overlay) :is(.wm-btn:not(.primary):not(.danger), .rd-button:not(.primary)):hover{ background-color: var(--rx-glass-hover-bg) !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-btn.danger{ background-color: rgba(255, 138, 148, 0.14) !important; color: var(--rx-danger) !important; border-color: var(--rx-danger-line) !important; }
+
+/* Menus, dropdowns, popovers, notifications, launcher */
+:root[data-rx-mode="dark"] :is(.wm-dropdown, .wm-menu, .wm-user-menu, .wm-notif-panel, .wm-popover, .rx-launcher, .rx-launcher-menu, .wm-autocomplete,
+  .wm-search-results, .rd-menu, .rd-dropdown, .rd-popover, .wm-context-menu, .rx-menu){
+  background: var(--rx-glass-3-bg) !important; color: var(--rx-ink-1) !important; border-color: var(--rx-glass-edge) !important;
+}
+
+/* Modals and dialogs */
+:root[data-rx-mode="dark"] :is(.wm-modal, .wm-modal-box, .wm-modal-content, .wm-confirm-popup, .rx-dialog, .rd-modal, .rd-dialog, .wm-confirm-box){
+  background: var(--rx-glass-3-bg) !important; color: var(--rx-ink-1) !important; border-color: var(--rx-glass-edge) !important;
+}
+:root[data-rx-mode="dark"] :is(.wm-modal-head, .wm-modal-foot, .wm-modal-header, .wm-modal-footer){ background: transparent !important; border-color: var(--rx-hairline) !important; color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] .wm-modal-overlay{ background: rgba(0, 0, 0, 0.55) !important; }
+
+/* Status / priority chips keep their meaning on dark tints */
+:root[data-rx-mode="dark"] .wm-app [class*="rx-chip-"], :root[data-rx-mode="dark"] .wm-app .wm-badge{ border-color: currentColor; }
+
+/* Login screen */
+:root[data-rx-mode="dark"] .wm-auth-screen{ background: linear-gradient(160deg, #0f141b, #141b26) !important; }
+:root[data-rx-mode="dark"][data-rx-theme="navy"] .wm-auth-screen{ background: linear-gradient(160deg, #0b1426, #10203d) !important; }
+:root[data-rx-mode="dark"] .wm-auth-card{ background: var(--rx-glass-3-bg) !important; border-color: var(--rx-glass-edge) !important; color: var(--rx-ink-1); }
+:root[data-rx-mode="dark"] .wm-auth-card :is(h1, label, p, span, a){ color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] .wm-auth-card p{ color: var(--rx-ink-3) !important; }
+:root[data-rx-mode="dark"] .wm-auth-card a{ color: var(--rx-accent) !important; }
+
+/* Navy-theme component overrides that hard-code white */
+:root[data-rx-mode="dark"][data-rx-theme="navy"] .wm-app .wm-tab.active :is(.rx-glass-icon, .wm-tab-icon > svg){ color: #eef4ff !important; background: rgba(120, 173, 255, 0.22) !important; }
+:root[data-rx-mode="dark"][data-rx-theme="navy"] .wm-app .wm-title{ color: var(--rx-heading) !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-tab.active :is(.rx-glass-icon, .wm-tab-icon > svg){ color: var(--rx-ink-1) !important; background: rgba(255, 255, 255, 0.10) !important; }
+
+/* Icon tiles */
+:root[data-rx-mode="dark"] .wm-app :is(.rx-glass-icon, .wm-tab-icon > svg, .rx-app-emoji){ background-color: rgba(255, 255, 255, 0.06) !important; color: var(--rx-ink-2) !important; border-color: var(--rx-hairline) !important; }
+
+/* Calendar */
+:root[data-rx-mode="dark"] .wm-app :is(.wm-cal-today, .rx-cal-today){ box-shadow: inset 0 0 0 2px var(--rx-accent) !important; }
+
+/* Gantt / heatmap — darker track, readable bars */
+:root[data-rx-mode="dark"] .wm-app .rx-gt-bar{ background: #2f5fa8 !important; color: #eef4ff !important; }
+:root[data-rx-mode="dark"] .wm-app .rx-gt-bar.is-sub{ background: #3a4f72 !important; }
+:root[data-rx-mode="dark"] .wm-app .rx-gt-bar.is-done{ background: #2c7a56 !important; }
+:root[data-rx-mode="dark"] .wm-app .rx-gt-bar.is-late{ background: #9a3a46 !important; }
+:root[data-rx-mode="dark"] .wm-app .rx-gt-h.is-weekend{ background: rgba(255, 255, 255, 0.04) !important; }
+
+/* REXUS Document workspace + editor */
+:root[data-rx-mode="dark"] #rexusDocsShell{ background: transparent !important; color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-sidebar, .rd-main, .rd-card, .rd-panel, .rd-toolbar, .rd-quick-card, .rd-file-row, .rd-space-switch, .rd-editor-toolbar, .rd-header){
+  background-color: var(--rx-glass-2-bg) !important; color: var(--rx-ink-1) !important; border-color: var(--rx-hairline) !important;
+}
+:root[data-rx-mode="dark"] :is(.wm-rte-editor, .wm-rich-content, .rd-editor, .rd-page, .rd-doc-page, [contenteditable="true"]){
+  background-color: var(--rx-surface) !important; color: var(--rx-ink-1) !important; border-color: var(--rx-hairline) !important;
+}
+:root[data-rx-mode="dark"] :is(.wm-rte-toolbar, .rd-toolbar) :is(button, select){ color: var(--rx-ink-1) !important; }
+
+/* Footer is already dark; keep it distinct from the canvas */
+:root[data-rx-mode="dark"] .wm-app .wm-footer{ border-top: 1px solid var(--rx-hairline) !important; }
+
+/* Scrollbars */
+:root[data-rx-mode="dark"] *{ scrollbar-color: rgba(255, 255, 255, 0.22) transparent; }
+
+/* REXUS Document editor content (its own stylesheets use ID selectors, so these need #rexusDocsShell). */
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-rich-surface, .rd-content, .rd-rich-display, .rd-paper-title){ color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-rich-surface, .rd-rich-display) :is(h1, h2, h3, h4, h5, h6){ color: var(--rx-heading) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-rich-surface, .rd-rich-display) a{ color: var(--rx-accent) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-rich-surface, .rd-rich-display) blockquote{ background: rgba(120, 173, 255, 0.10) !important; color: var(--rx-ink-2) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-rich-surface, .rd-rich-display) :is(th, td){ border-color: var(--rx-hairline-strong) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-rich-surface, .rd-rich-display) th{ background: var(--rx-table-head-bg) !important; color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-rich-surface, .rd-rich-display) :is(.rd-callout, nav.rd-toc){ background: rgba(120, 173, 255, 0.08) !important; border-color: var(--rx-info-line) !important; color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell .rd-rich-surface:empty:before{ color: var(--rx-ink-4) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-section-title, .rd-switch-section){ color: var(--rx-ink-3) !important; }
+:root[data-rx-mode="dark"] :is(#rexusDocsShell, body) .rd-dialog{ background: var(--rx-glass-3-bg) !important; color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] .rd-dialog :is(h3, label){ color: var(--rx-ink-1) !important; }
+:root[data-rx-mode="dark"] .rd-dialog :is(input, select, textarea){ background-color: #10151c !important; color: var(--rx-ink-1) !important; border-color: var(--rx-hairline-strong) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-paper, .rd-editor) input.rd-paper-title{ background: transparent !important; border-color: transparent !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-paper, .rd-editor) input.rd-paper-title:focus{ border-bottom-color: var(--rx-accent) !important; }
+:root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-hero, .rd-edit-top, .rd-toolbar){ border-color: var(--rx-hairline) !important; }

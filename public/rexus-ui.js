@@ -209,7 +209,7 @@
   // shared table styling and a horizontal scroll wrapper.
   function adoptBareTables(){
     doc.querySelectorAll('.wm-app .wm-body table:not(.wm-table):not(.rx210-table):not(.wm-worklog-grid):not([border]):not(.rx-table), .wm-app .wm-modal-body table:not(.wm-table):not([border]):not(.rx-table)').forEach(function(t){
-      if (t.closest('.wm-rte-editor, .wm-rich-content, #pdGanttChart, #orgChartCanvas, [contenteditable]')) return;
+      if (t.closest('.wm-rte-editor, .wm-rich-content, #orgChartCanvas, [contenteditable]')) return;
       t.classList.add('rx-table');
       var p = t.parentElement, scrolls = false;
       for (var a = p; a && a !== doc.body; a = a.parentElement) {
@@ -241,6 +241,59 @@
     });
   }
 
+  /* ---------------------------------------------------------------- 4c */
+  // GEN-07 (v2.2.2): drag a header edge to resize a column, in every data table of REXUS and
+  // REXUS Document. Widths are remembered per browser (localStorage) per table; double-click
+  // an edge to reset. Keyboard: focus the edge, Arrow Left/Right. Touch keeps the normal table.
+  var MIN_COL = 56;
+  function tableKey(t){
+    var view = t.closest('[id^="view-"], #rexusDocsShell, .wm-modal-overlay, [id]');
+    var heads = Array.prototype.map.call(t.tHead.rows[0].cells, function(th){ return (th.textContent || '').replace(/[▲▼↑↓⇅]/g, '').trim().slice(0, 24); });
+    return 'rx-colw:' + (t.id || (view ? view.id || view.className.split(' ')[0] : '')) + '|' + heads.join('|');
+  }
+  function readW(k){ try { var v = JSON.parse(localStorage.getItem(k) || 'null'); return Array.isArray(v) ? v : null; } catch (e) { return null; } }
+  function writeW(k, v){ try { v ? localStorage.setItem(k, JSON.stringify(v)) : localStorage.removeItem(k); } catch (e) {} }
+  function applyW(t, ws){
+    var cells = t.tHead.rows[0].cells, sum = 0;
+    for (var i = 0; i < cells.length; i++) { cells[i].style.width = ws[i] + 'px'; sum += ws[i]; }
+    t.style.tableLayout = 'fixed'; t.style.width = sum + 'px'; t.classList.add('rx-resized');
+  }
+  function freeze(t){
+    var ws = Array.prototype.map.call(t.tHead.rows[0].cells, function(th){ return Math.max(MIN_COL, Math.round(th.getBoundingClientRect().width)); });
+    applyW(t, ws); return ws;
+  }
+  function resizableTables(){
+    doc.querySelectorAll('.wm-app table, #rexusDocsShell table').forEach(function(t){
+      if (t.dataset.rxResize || !t.tHead || !t.tHead.rows[0] || t.closest('.wm-rte-editor, .wm-rich-content, [contenteditable], .rd-editor, .wm-worklog-grid')) return;
+      var cells = t.tHead.rows[0].cells; if (cells.length < 2 || Array.prototype.some.call(cells, function(c){ return c.colSpan > 1; })) return;
+      t.dataset.rxResize = '1';
+      var key = tableKey(t), saved = readW(key);
+      if (saved && saved.length === cells.length) applyW(t, saved);
+      Array.prototype.forEach.call(cells, function(th, i){
+        var h = doc.createElement('span');
+        h.className = 'rx-col-resizer'; h.setAttribute('role', 'separator'); h.setAttribute('aria-orientation', 'vertical');
+        h.setAttribute('tabindex', '0'); h.setAttribute('aria-label', 'Resize column ' + ((th.textContent || '').trim() || (i + 1)));
+        h.addEventListener('click', function(e){ e.stopPropagation(); });   // never trigger header sorting
+        h.addEventListener('dblclick', function(e){ e.stopPropagation(); writeW(key, null); t.style.tableLayout = ''; t.style.width = ''; t.classList.remove('rx-resized'); Array.prototype.forEach.call(cells, function(c){ c.style.width = ''; }); });
+        h.addEventListener('keydown', function(e){
+          if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+          e.preventDefault(); var ws = t.classList.contains('rx-resized') ? readW(key) || freeze(t) : freeze(t);
+          ws[i] = Math.max(MIN_COL, ws[i] + (e.key === 'ArrowRight' ? 16 : -16)); applyW(t, ws); writeW(key, ws);
+        });
+        h.addEventListener('pointerdown', function(e){
+          if (e.button !== 0) return; e.preventDefault(); e.stopPropagation();
+          var ws = freeze(t), x0 = e.clientX, w0 = ws[i];
+          h.setPointerCapture(e.pointerId); doc.body.classList.add('rx-col-resizing');
+          function move(ev){ ws[i] = Math.max(MIN_COL, Math.round(w0 + ev.clientX - x0)); applyW(t, ws); }
+          function up(){ h.removeEventListener('pointermove', move); h.removeEventListener('pointerup', up); h.removeEventListener('pointercancel', up); doc.body.classList.remove('rx-col-resizing'); writeW(key, ws); }
+          h.addEventListener('pointermove', move); h.addEventListener('pointerup', up); h.addEventListener('pointercancel', up);
+        });
+        if (getComputedStyle(th).position === 'static') th.style.position = 'relative';   // keep sticky headers sticky
+        th.appendChild(h); th.classList.add('rx-th-resizable');
+      });
+    });
+  }
+
   /* ---------------------------------------------------------------- 5 */
   function liveRegions(){
     [['wmSync', 'status'], ['wmConfirmPopup', 'status']].forEach(function(p){
@@ -252,9 +305,9 @@
 
   /* ---------------------------------------------------------------- boot */
   var scheduled = false;
-  function run(){ scheduled = false; enhanceControls(); syncDialogs(); liveRegions(); tidyTables(); }
+  function run(){ scheduled = false; enhanceControls(); syncDialogs(); liveRegions(); tidyTables(); resizableTables(); }
   function schedule(){ if (!scheduled) { scheduled = true; requestAnimationFrame(run); } }
   new MutationObserver(schedule).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
   run();
-  window.REXUSui = { refresh: run, version: '2.2.0' };
+  window.REXUSui = { refresh: run, version: '2.2.2' };
 })();

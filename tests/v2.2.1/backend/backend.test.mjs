@@ -313,6 +313,126 @@ const lr = await Promise.all([1, 2].map(() => call(MEM2, 'POST', '/api/hr/capaci
 const openCount = (await q("SELECT COUNT(*)::int n FROM rexus_capacity_declarations WHERE user_id=$1 AND month='2027-01'", [MEM2]))[0].n;
 ok('concurrent draft saves → a single open declaration', openCount === 1, { openCount, lr: lr.map(x => x.status) });
 
+/* ================================================================ v2.2.2 (Requirement V2.1.2) */
+S('v2.2.2 GEN-03 Dark mode');
+r = await call(PT, 'GET', '/api/preferences'); ok('default mode is light', r.json.mode === 'light', r.json);
+r = await call(PT, 'PUT', '/api/preferences', { mode: 'dark' }); ok('save dark mode', r.status === 200 && r.json.mode === 'dark', r.json);
+r = await call(PT, 'GET', '/api/preferences'); ok('dark mode persists per account; theme untouched', r.json.mode === 'dark' && r.json.theme === 'mono', r.json);
+r = await call(PT, 'PUT', '/api/preferences', { mode: 'system', theme: 'navy' }); ok('system mode + navy theme together', r.json.mode === 'system' && r.json.theme === 'navy', r.json);
+r = await call(PT, 'PUT', '/api/preferences', { mode: 'neon' }); ok('unknown mode rejected', r.status === 400, r.json);
+
+S('v2.2.2 ACC-01 Username');
+r = await call(MEM, 'POST', '/api/admin/users', { full_name: 'X', email: 'x@ueh.edu.vn', username: 'xx.yy' }); ok('only admins create accounts', r.status === 403, r.json);
+r = await call(ADMIN, 'POST', '/api/admin/users', { full_name: 'QA Tester', email: 'qa.tester@ueh.edu.vn', username: 'QA Tester!' }); ok('invalid username format rejected with clear message', r.status === 400 && r.json.field === 'username' && /3–32 characters/.test(r.json.error), r.json);
+const takenName = (await q('SELECT username FROM users WHERE id=$1', [MEM]))[0].username;
+r = await call(ADMIN, 'POST', '/api/admin/users', { full_name: 'QA Tester', email: 'qa.tester@ueh.edu.vn', username: takenName.toUpperCase() }); ok('duplicate username rejected (case-insensitive)', r.status === 409 && /already taken/.test(r.json.error), r.json);
+r = await call(ADMIN, 'POST', '/api/admin/users', { full_name: 'QA Tester', email: 'qa.tester@ueh.edu.vn', username: 'qa.tester' });
+ok('account created with the chosen username', r.status === 200 && r.json.user.username === 'qa.tester' && r.json.temp_password, r.json);
+const QA = r.json.user.id, QAPW = r.json.temp_password;
+r = await call(ADMIN, 'POST', '/api/admin/users', { full_name: 'QA Two', email: 'QA.TESTER@ueh.edu.vn', username: 'qa.two' }); ok('duplicate email rejected', r.status === 409 && r.json.field === 'email', r.json);
+r = await call(null, 'POST', '/api/auth/login', { username: 'qa.tester', password: QAPW }); ok('new account signs in with its username', r.status === 200 && r.json.id === QA, r.json);
+
+S('v2.2.2 ACC-03 Admin self-profile');
+r = await call(ADMIN, 'PUT', '/api/auth/profile', { full_name: 'Ngo Trong Tien', username: 'tienadmin', email: 'tien.admin@ueh.edu.vn', position: 'Lecturer', department: 'Academic Affairs', role: 'Member', status: 'Inactive' });
+ok('admin saves own username / email / position / department', r.status === 200 && r.json.username === 'tienadmin' && r.json.position === 'Lecturer' && r.json.department === 'Academic Affairs', r.json);
+r = await call(ADMIN, 'GET', '/api/auth/me'); const adminRow = (await q('SELECT role, status FROM users WHERE id=$1', [ADMIN]))[0];
+ok('changes show after reload; role and status cannot be changed from the profile form', r.json.user.username === 'tienadmin' && r.json.user.email === 'tien.admin@ueh.edu.vn' && adminRow.role === 'System Admin' && adminRow.status === 'Active', { me: r.json, adminRow });
+r = await call(ADMIN, 'PUT', '/api/auth/profile', { full_name: 'Ngo Trong Tien', username: takenName }); ok('admin cannot take another user\'s username', r.status === 409, r.json);
+r = await call(ADMIN, 'PUT', '/api/auth/profile', { full_name: 'Ngo Trong Tien', username: 'bad name' }); ok('admin username still validated', r.status === 400, r.json);
+r = await call(MEM, 'PUT', '/api/auth/profile', { full_name: 'Truong P N', username: 'iamboss', role: 'System Admin' }); ok('member cannot change username/role via profile', r.status === 403, r.json);
+r = await call(MEM, 'PUT', '/api/auth/profile', { full_name: 'Phạm Nhật Trường' }); ok('member can still change own full name', r.status === 200 && r.json.role !== 'System Admin', r.json);
+ok('identity change is audit-logged', (await q("SELECT 1 FROM rexus_audit_log WHERE action='profile_identity_change' AND entity_id=$1", [ADMIN])).length === 1);
+
+S('v2.2.2 ACC-02 Soft delete');
+await call(ADMIN, 'POST', '/api/tasks', { task: 'QA owned task', project: 'QA', status: 'Not Started', assignee_id: QA }).catch(() => {});
+await q("INSERT INTO worklogs(id,user_id,logged_by,date,hours,description,status) VALUES ('WLQA',$1,$1,CURRENT_DATE,2,'QA','submitted')", [QA]);
+const qaRefs = async () => (await q('SELECT (SELECT COUNT(*) FROM worklogs WHERE logged_by=$1)::int w', [QA]))[0].w;
+const refsBefore = await qaRefs();
+r = await call(MEM, 'DELETE', '/api/admin/users/' + QA, { confirm_username: 'qa.tester' }); ok('only admins can delete', r.status === 403, r.json);
+r = await call(ADMIN, 'DELETE', '/api/admin/users/' + ADMIN, { confirm_username: 'tienadmin' }); ok('cannot delete the signed-in account', r.status === 400, r.json);
+r = await call(ADMIN, 'DELETE', '/api/admin/users/' + QA, { confirm_username: 'wrong' }); ok('confirmation must match the username', r.status === 400, r.json);
+r = await call(QA, 'GET', '/api/preferences'); ok('(before) account session works', r.status === 200, r);
+r = await call(ADMIN, 'DELETE', '/api/admin/users/' + QA, { confirm_username: 'qa.tester' }); ok('admin deletes (soft)', r.status === 200, r.json);
+const qaRow = (await q('SELECT status, deleted_at, deleted_by FROM users WHERE id=$1', [QA]))[0];
+ok('row kept: Inactive + deleted_at + deleted_by', qaRow && qaRow.status === 'Inactive' && qaRow.deleted_at && qaRow.deleted_by === ADMIN, qaRow);
+ok('history kept (work logs still reference the account)', (await qaRefs()) === refsBefore && refsBefore >= 1, { refsBefore });
+r = await call(QA, 'GET', '/api/preferences'); ok('existing session is cut off on every API', r.status === 401, r);
+r = await call(QA, 'GET', '/api/auth/me'); ok('auth/me reports signed out', r.json.user === null, r.json);
+r = await call(null, 'POST', '/api/auth/login', { username: 'qa.tester', password: QAPW }); ok('deleted account cannot sign in', r.status === 403, r.json);
+r = await call(ADMIN, 'GET', '/api/users'); ok('hidden from user lists / pickers', !r.json.users.some(u => u.id === QA), r.json.users.length);
+r = await call(ADMIN, 'GET', '/api/users?include_deleted=1'); ok('still resolvable for names on old records', r.json.users.some(u => u.id === QA && u.deleted), '');
+r = await call(ADMIN, 'PUT', '/api/admin/users/' + QA, { role: 'System Admin' }); ok('deleted account cannot be edited', r.status === 409, r.json);
+r = await call(ADMIN, 'DELETE', '/api/admin/users/' + QA, { confirm_username: 'qa.tester' }); ok('second delete reports not found', r.status === 404, r.json);
+ok('delete is audit-logged', (await q("SELECT 1 FROM rexus_audit_log WHERE action='account_delete' AND entity_id=$1", [QA])).length === 1);
+r = await call(ADMIN, 'POST', '/api/admin/users/' + QA, { action: 'restore' }); ok('admin restores', r.status === 200, r.json);
+const qaRow2 = (await q('SELECT status, deleted_at FROM users WHERE id=$1', [QA]))[0];
+ok('restored account returns Inactive (re-activation is explicit)', qaRow2.deleted_at === null && qaRow2.status === 'Inactive', qaRow2);
+r = await call(ADMIN, 'PUT', '/api/admin/users/' + QA, { status: 'Active' }); r = await call(QA, 'GET', '/api/preferences'); ok('re-activated account works again', r.status === 200, r);
+r = await call(ADMIN, 'PUT', '/api/admin/users/' + QA, { status: 'Inactive' }); r = await call(QA, 'GET', '/api/preferences'); ok('deactivation also cuts the session immediately', r.status === 401, r);
+
+S('v2.2.2 HRM-01 Permissions');
+r = await call(MEM2, 'GET', '/api/hr/capacity?month=2027-02&user_id=' + MEM); ok('employee cannot read another employee\'s schedule', r.status === 403, r.json);
+r = await call(PM, 'GET', '/api/hr/capacity?month=2027-02&user_id=' + MEM); ok('manager can read a managed employee\'s schedule', r.status === 200, r.json);
+r = await call(MEM2, 'POST', '/api/hr/requests', { month: '2027-05', scope: 'all' }); ok('non-manager cannot send schedule requests', r.status === 403, r.json);
+r = await call(PM, 'POST', '/api/hr/requests', { month: '2027-05', scope: 'selected', user_ids: [MEM2] }); ok('manager cannot request from someone they do not manage', r.status === 403, r.json);
+r = await call(MEM, 'PUT', '/api/hr/settings', { part_time_min_monthly_hours: 1 }); ok('only HR admin changes HR settings', r.status === 403, r.json);
+r = await call(PT, 'PUT', '/api/hr/profile', { user_id: PT, employment_type: 'Part-time', capacity_method: 'declaration', hours_per_day: 4, workdays: [1], min_monthly_hours: 0 }); ok('employee cannot change own minimum / schedule', r.status === 403, r.json);
+r = await call(MEM, 'GET', '/api/hr/team?month=2027-02'); ok('employee team view is empty (no one managed)', r.status === 200 && r.json.employees.length === 0, r.json.employees?.length);
+
+S('v2.2.2 HRM-02/03 Full-time schedule + OT');
+let cap = await call(MEM, 'GET', '/api/hr/capacity?month=2027-02');
+const schedTotal = Object.values(cap.json.schedule_hours).reduce((a, b) => a + b, 0);
+ok('full-time can open a monthly schedule (schedule-based regular hours)', cap.status === 200 && cap.json.method === 'schedule' && schedTotal > 0, cap.json.method);
+ok('no regular hours on rest days', cap.json.schedule_hours['2027-02-06'] === 0 && cap.json.schedule_hours['2027-02-07'] === 0, cap.json.schedule_hours);
+r = await call(MEM, 'POST', '/api/hr/capacity', { action: 'save', month: '2027-02', entries: [{ day: '2027-02-03', ot_hours: 2, note: 'Release' }, { day: '2027-02-03', ot_hours: 3, note: 'Release night' }, { day: '2027-02-06', hours: 8 }] });
+ok('regular = working schedule only; OT kept separate; duplicate day counted once', r.status === 201 && r.json.total_hours === schedTotal && r.json.ot_total_hours === 3, { r: r.json, schedTotal });
+cap = await call(MEM, 'GET', '/api/hr/capacity?month=2027-02');
+const febOpen = cap.json.versions.find(v => v.status === 'Draft');
+ok('day keeps its note and OT; Saturday was not given regular hours', febOpen.entries.find(e => e.day === '2027-02-03').note === 'Release night' && !febOpen.entries.some(e => e.day === '2027-02-06' && e.hours > 0), febOpen.entries.slice(0, 4));
+r = await call(MEM, 'POST', '/api/hr/capacity', { action: 'save', month: '2027-02', entries: [{ day: '2027-02-03', ot_hours: 25 - cap.json.schedule_hours['2027-02-03'] }] }); ok('regular + OT over 24 h in a day rejected', r.status === 400, r.json);
+r = await call(MEM, 'POST', '/api/hr/capacity', { action: 'submit', month: '2027-02', entries: [{ day: '2027-02-03', ot_hours: 3, note: 'Release night' }] }); ok('full-time submits schedule for approval', r.json.status === 'Pending Approval', r.json);
+let ap = await call(PM, 'GET', '/api/approval-center?tab=pending');
+const febReq = (ap.json.requests || ap.json.items || []).find(x => x.request_type === 'capacity_declaration' && /2027-02/.test(x.title));
+ok('manager receives it in the Approval Center with regular + OT in the title', !!febReq && /3 h OT/.test(febReq.title), (ap.json.requests || []).map(x => x.title));
+r = await call(PM, 'POST', '/api/approval-center', { action: 'decide', id: febReq.id, decision: 'Approved' });
+plan = await call(PM, 'GET', '/api/resource-planning?from=2027-02-01&to=2027-02-28&user_id=' + MEM); e = plan.json.employees[0];
+ok('approved OT is reported separately and not added to regular capacity', e.ot_hours === 3 && e.approved_capacity === schedTotal, { ot: e.ot_hours, cap: e.approved_capacity, schedTotal });
+let teamv = await call(PM, 'GET', '/api/hr/team?month=2027-02'); let tm = teamv.json.employees.find(x => x.id === MEM);
+ok('manager sees regular capacity and OT per employee for the month', tm && tm.regular_capacity === schedTotal && tm.ot_hours === 3 && tm.status === 'Approved', tm);
+
+S('v2.2.2 HRM-04 Part-time minimum');
+r = await call(ADMIN, 'PUT', '/api/hr/settings', { part_time_min_monthly_hours: 40 }); ok('HR admin sets the part-time minimum', r.status === 200 && r.json.part_time_min_monthly_hours === 40, r.json);
+r = await call(ADMIN, 'PUT', '/api/hr/settings', { part_time_min_monthly_hours: -1 }); ok('invalid minimum rejected', r.status === 400, r.json);
+cap = await call(PT, 'GET', '/api/hr/capacity?month=2027-03'); ok('part-time sees the minimum that applies', cap.json.minimum && cap.json.minimum.hours === 40 && cap.json.minimum.source === 'company', cap.json.minimum);
+r = await call(PT, 'POST', '/api/hr/capacity', { action: 'save', month: '2027-03', entries: [{ day: '2027-03-01', hours: 4, ot_hours: 1 }, { day: '2027-03-03', hours: 4 }, { day: '2027-03-05', hours: 4 }] });
+ok('below-minimum schedule is saved with a warning flag (regular 12 h, OT 1 h)', r.status === 201 && r.json.below_minimum === true && r.json.total_hours === 12 && r.json.ot_total_hours === 1, r.json);
+teamv = await call(PM, 'GET', '/api/hr/team?month=2027-03'); tm = teamv.json.employees.find(x => x.id === PT);
+ok('manager sees the shortfall against the minimum', tm && tm.below_minimum === true && tm.minimum_hours === 40 && tm.declared_ot_hours === 1, tm);
+r = await call(PT, 'POST', '/api/hr/capacity', { action: 'submit', month: '2027-03', entries: [{ day: '2027-03-01', hours: 4, ot_hours: 1 }, { day: '2027-03-03', hours: 4 }, { day: '2027-03-05', hours: 4 }] });
+ap = await call(PM, 'GET', '/api/approval-center?tab=pending');
+const marReq = (ap.json.requests || []).find(x => x.request_type === 'capacity_declaration' && /2027-03/.test(x.title));
+await call(PM, 'POST', '/api/approval-center', { action: 'decide', id: marReq.id, decision: 'Approved' });
+ok('minimum in force is frozen on the submitted month', (await q("SELECT min_hours_snapshot::float m FROM rexus_capacity_declarations WHERE user_id=$1 AND month='2027-03' AND status='Approved'", [PT]))[0].m === 40);
+await call(ADMIN, 'PUT', '/api/hr/settings', { part_time_min_monthly_hours: 60 });
+teamv = await call(PM, 'GET', '/api/hr/team?month=2027-03'); tm = teamv.json.employees.find(x => x.id === PT);
+ok('changing the setting later does not rewrite the approved month', tm.minimum_hours === 40, tm);
+r = await call(ADMIN, 'PUT', '/api/hr/profile', { user_id: PT, employment_type: 'Part-time', capacity_method: 'declaration', hours_per_day: 4, workdays: [1, 3, 5], capacity_approver_id: PM, min_monthly_hours: 10, effective_from: '2027-04-01' });
+cap = await call(PT, 'GET', '/api/hr/capacity?month=2027-04'); ok('personal minimum overrides the company default', r.status === 200 && cap.json.minimum.hours === 10 && cap.json.minimum.source === 'personal', cap.json.minimum);
+
+S('v2.2.2 HRM-05 Schedule requests');
+teamv = await call(PM, 'GET', '/api/hr/team?month=2027-05'); const managed = teamv.json.employees.map(x => x.id);
+r = await call(PM, 'POST', '/api/hr/requests', { month: '2027-05', scope: 'all', note: 'Please plan May', due_date: '2027-04-25' });
+ok('manager requests a month from everyone they manage', r.status === 200 && r.json.created === managed.length && managed.length >= 2, { r: r.json, managed });
+r = await call(PM, 'POST', '/api/hr/requests', { month: '2027-05', scope: 'selected', user_ids: [MEM] });
+ok('re-sending updates the same request (no duplicate)', r.json.created === 0 && r.json.resent === 1, r.json);
+const reqRows = await q("SELECT user_id, send_count FROM rexus_schedule_requests WHERE month='2027-05'");
+ok('one row per employee-month; send count tracked', reqRows.length === managed.length && reqRows.find(x => x.user_id === MEM).send_count === 2, reqRows);
+cap = await call(MEM, 'GET', '/api/hr/capacity?month=2027-05'); ok('employee sees the request (who, due date) on the form', cap.json.requests.some(x => x.month === '2027-05' && x.due_date === '2027-04-25' && x.requested_by_name), cap.json.requests);
+ok('employee notified in-app', (await q("SELECT COUNT(*)::int n FROM notifications WHERE user_id=$1 AND entity_type='schedule_request'", [MEM]))[0].n === 2);
+teamv = await call(PM, 'GET', '/api/hr/team?month=2027-05'); tm = teamv.json.employees.find(x => x.id === MEM);
+ok('manager tracks request + status per person', tm.request && tm.request.send_count === 2 && tm.status === 'Schedule-based', tm);
+r = await call(PM, 'POST', '/api/hr/requests', { month: '2027-5', scope: 'all' }); ok('invalid month rejected', r.status === 400, r.json);
+
 /* ---------------------------------------------------------------- summary */
 const failed = results.filter(x => !x.pass);
 console.log(`\n${results.length - failed.length}/${results.length} backend checks passed`);
