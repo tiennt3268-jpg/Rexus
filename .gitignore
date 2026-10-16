@@ -1,0 +1,4 @@
+node_modules/
+.netlify/
+.env*
+tests/v2.2.1/backend/functions/
