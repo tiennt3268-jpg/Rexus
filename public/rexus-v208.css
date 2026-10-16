@@ -1,0 +1,48 @@
+/* REXUS v2.0.8 | polished Liquid Glass + collaboration UI */
+#rexusDocsShell{--rd-ui-size:15.5px}
+#rexusDocsShell .rd-main{font-size:var(--rd-ui-size);}
+#rexusDocsShell .rd-nav-row,#rexusDocsShell .rd-list-row,#rexusDocsShell .rd-button,#rexusDocsShell .rd-breadcrumb button,#rexusDocsShell .rd-tag,
+#rexusDocsShell .rd-drive-table,#rexusDocsShell .rd-drive-table th,#rexusDocsShell .rd-drive-controls select,#rexusDocsShell .rd-folder-side p,#rexusDocsShell .rd-details-panel p,
+#rexusDocsShell .rd-home-action,#rexusDocsShell .rd-home-space,#rexusDocsShell .rd-row-meta,#rexusDocsShell .rd-note{font-size:15px!important;line-height:1.5;}
+#rexusDocsShell .rd-hero h2{font-size:clamp(25px,2vw,31px)!important}
+#rexusDocsShell .rd-path{font-size:15px}
+#rexusDocsShell .rd-side-head,#rexusDocsShell .rd-section-title{font-size:16px}
+#rexusDocsShell .rd-drive-overflow{border-radius:17px;overflow-x:auto;border:1px solid rgba(177,210,252,.62);background:rgba(255,255,255,.66);box-shadow:0 15px 34px rgba(17,67,130,.06);}
+#rexusDocsShell .rd-drive-table{border-collapse:separate;border-spacing:0;}
+#rexusDocsShell .rd-drive-table thead th{background:linear-gradient(130deg,rgba(13,65,134,.92),rgba(38,120,206,.84),rgba(83,176,242,.77))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.45),inset 0 -1px 0 rgba(189,227,255,.7);color:#fff!important;letter-spacing:.018em;backdrop-filter:blur(22px) saturate(150%);padding:14px 12px!important;border-right:1px solid rgba(255,255,255,.09);}
+#rexusDocsShell .rd-drive-table tbody td{border-bottom:1px solid rgba(191,215,242,.55);background:rgba(249,252,255,.32);transition:background .18s;}
+#rexusDocsShell .rd-drive-table tbody tr:hover td{background:rgba(208,237,255,.65)!important}
+#rexusDocsShell .rd-drive-table tbody tr.rd-row-selected td{background:rgba(181,223,255,.66)!important}
+#rexusDocsShell .rd-drive-table .rd-check-col{width:45px;min-width:45px;text-align:center;padding-left:12px!important;padding-right:5px!important;}
+#rexusDocsShell .rd-drive-table input[type="checkbox"]{width:17px;height:17px;accent-color:#1782d9;cursor:pointer;vertical-align:middle;}
+#rexusDocsShell .rd-drive-table td:nth-child(2){min-width:200px;max-width:400px;}
+#rexusDocsShell .rd-drive-table td:first-child{min-width:0;max-width:none;}
+#rexusDocsShell .rd-drive-controls{border-radius:16px;padding:11px 13px;border:1px solid rgba(183,218,249,.65);background:linear-gradient(125deg,rgba(255,255,255,.84),rgba(225,241,255,.64));box-shadow:0 9px 23px #124d8620;backdrop-filter:blur(16px)}
+#rexusDocsShell .rd-bulk-bar{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:11px 15px;margin:0 0 15px;border:1px solid rgba(97,173,238,.7);border-radius:16px;background:linear-gradient(135deg,rgba(215,238,255,.93),rgba(249,253,255,.80));backdrop-filter:blur(20px);box-shadow:0 8px 23px #2f83cb19;}
+#rexusDocsShell .rd-bulk-bar strong{margin-right:auto;color:#164879;white-space:nowrap}
+#rexusDocsShell .rd-bulk-bar .rd-button.danger{color:#a52240;border-color:#f2b4c2;background:rgba(255,240,245,.76)}
+#rexusDocsShell .rd-thread-panel{width:320px;flex:0 0 320px;padding:18px;border-radius:21px;background:linear-gradient(155deg,rgba(255,255,255,.91),rgba(219,238,255,.83));border:1px solid rgba(159,202,243,.71);box-shadow:0 15px 40px #12487b1a;backdrop-filter:blur(19px);max-height:calc(100vh - 105px);overflow:auto;position:sticky;top:100px;}
+#rexusDocsShell .rd-thread-panel .rd-note{font-size:13px!important;color:#667c98}
+#rexusDocsShell .rd-thread{border:1px solid #cbdff3;border-radius:13px;padding:13px;margin:12px 0;background:rgba(255,255,255,.82);box-shadow:0 3px 11px #1a4f8510}
+#rexusDocsShell .rd-thread.active{border-color:#1989de;box-shadow:0 0 0 3px rgba(38,147,245,.14)}
+#rexusDocsShell .rd-thread.resolved{opacity:.73}
+#rexusDocsShell .rd-thread-quote{display:block;border:none;border-left:3px solid #1e8be6;background:#e6f4ff;color:#123f6d;text-align:left;padding:9px 10px;width:100%;font-weight:650;white-space:normal;border-radius:3px 7px 7px 3px;cursor:pointer;font-size:14px;}
+#rexusDocsShell .rd-thread p{display:grid;gap:3px;line-height:1.5;overflow-wrap:anywhere}
+#rexusDocsShell .rd-thread p span{display:block}
+#rexusDocsShell .rd-annotation{cursor:pointer;background:linear-gradient(130deg,rgba(102,200,255,.4),rgba(158,223,255,.68));box-shadow:inset 0 -2px #1e83d9;padding:0 2px;border-radius:3px;color:inherit}
+#rexusDocsShell .rd-annotation:hover{background:#abdfff}
+#rexusDocsShell .rd-share-dialog{max-height:85vh;overflow:auto;min-width:min(520px,94vw)}
+#rexusDocsShell .rd-share-dialog label{display:grid;gap:7px;margin:12px 0}
+#rexusDocsShell .rd-share-dialog select{width:100%;padding:11px;border-radius:10px;border:1px solid #c3ddf4;background:#f8fcff;color:#183f66;font-size:15px}
+#rexusDocsShell .rd-person{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid #e2edf7}
+#rexusDocsShell .rd-person span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#rexusDocsShell .rd-person strong{font-size:13px}
+/* Work Management tables use the same restrained, translucent navy ocean header. */
+.wm-app .wm-table-wrap{border:1px solid rgba(172,212,245,.68)!important;border-radius:18px!important;background:rgba(252,254,255,.78);box-shadow:0 13px 30px rgba(24,67,117,.08);overflow-x:auto;}
+.wm-app table.wm-table{border-collapse:separate!important;border-spacing:0!important;}
+.wm-app table.wm-table thead th{background:linear-gradient(125deg,rgba(13,59,118,.94),rgba(27,108,195,.87))!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(180,219,255,.48);border-right:1px solid rgba(255,255,255,.13);color:#fff!important;letter-spacing:.015em;font-weight:650!important;backdrop-filter:blur(20px);}
+.wm-app table.wm-table tbody td{background:rgba(255,255,255,.3);border-bottom:1px solid rgba(190,217,242,.54)!important;transition:background .15s;}
+.wm-app table.wm-table tbody tr:hover td{background:rgba(214,237,255,.57)!important}
+@media(max-width:1200px){#rexusDocsShell .rd-thread-panel{width:270px;flex-basis:270px;}}
+@media(max-width:850px){#rexusDocsShell .rd-document-layout{flex-wrap:wrap}#rexusDocsShell .rd-thread-panel{order:3;width:100%;flex-basis:100%;position:static;max-height:none}#rexusDocsShell .rd-bulk-bar{gap:6px}#rexusDocsShell .rd-drive-table td:nth-child(4),#rexusDocsShell .rd-drive-table th:nth-child(4){display:none}}
+@media(max-width:500px){#rexusDocsShell{--rd-ui-size:15px}#rexusDocsShell .rd-bulk-bar .rd-button{padding:7px 9px!important;font-size:13px!important}}

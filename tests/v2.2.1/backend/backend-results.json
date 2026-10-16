@@ -1,0 +1,782 @@
+[
+ {
+  "section": "Migrations",
+  "name": "table rexus_user_preferences exists",
+  "pass": true
+ },
+ {
+  "section": "Migrations",
+  "name": "table rexus_leave_requests exists",
+  "pass": true
+ },
+ {
+  "section": "Migrations",
+  "name": "table rexus_capacity_declarations exists",
+  "pass": true
+ },
+ {
+  "section": "Migrations",
+  "name": "table rexus_capacity_entries exists",
+  "pass": true
+ },
+ {
+  "section": "Migrations",
+  "name": "table rexus_approval_delegations exists",
+  "pass": true
+ },
+ {
+  "section": "Migrations",
+  "name": "table rexus_approval_routing_rules exists",
+  "pass": true
+ },
+ {
+  "section": "Migrations",
+  "name": "table rexus_workflow_templates exists",
+  "pass": true
+ },
+ {
+  "section": "Migrations",
+  "name": "table rexus_resource_settings_history exists",
+  "pass": true
+ },
+ {
+  "section": "Migrations",
+  "name": "existing users / tasks / projects untouched by 033",
+  "pass": true
+ },
+ {
+  "section": "M9 Preferences",
+  "name": "default theme is mono (unsaved)",
+  "pass": true
+ },
+ {
+  "section": "M9 Preferences",
+  "name": "save navy",
+  "pass": true
+ },
+ {
+  "section": "M9 Preferences",
+  "name": "navy persists (server-side, per user id)",
+  "pass": true
+ },
+ {
+  "section": "M9 Preferences",
+  "name": "other user independent",
+  "pass": true
+ },
+ {
+  "section": "M9 Preferences",
+  "name": "unknown theme rejected",
+  "pass": true
+ },
+ {
+  "section": "M9 Preferences",
+  "name": "unauthenticated rejected",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "member cannot change own schedule",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "admin sets employment profile",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "first change records prior schedule (1900-01-01) + new row",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "self can read own profile",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "unrelated member cannot read profile",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "manager can read report profile",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "admin adds holiday (Nov 20 weekday=5)",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "duplicate company-wide day rejected",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "member cannot add holiday",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "leave draft saved, duration 16h",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "leave submitted → Pending Approval, routed to profile manager",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "approver = manager (U_MINCT)",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "overlapping leave refused",
+  "pass": true
+ },
+ {
+  "section": "M4 HR",
+  "name": "multi-day half-day refused",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "requester cannot decide own leave",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "reject without reason refused",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "pending tab shows leave for manager",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "manager approves leave",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "duplicate decision prevented",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "leave source updated to Approved",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "requester notified of decision",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "sequential request created",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "stage 2 cannot act before stage 1",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "stage 1 approves → still Pending",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "stage 2 notified only after stage 1",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "stage 2 approves → Approved",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "parallel: one approval keeps Pending",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "changes requested ends request",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "self-approval refused at creation",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "source-backed types cannot be created directly",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "reassign requires reason",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "unrelated user cannot reassign",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "cannot reassign to requester",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "current approver hands off (non-finance)",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "reassignment recorded with previous/new approver",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "previous approver can no longer decide",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "delegation created (Project Management only)",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "all-category delegation (incl. finance) to a Member refused",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "delegated tab lists delegator requests",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "delegate approves on behalf",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "step keeps approver, records acted_by",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "expired delegation does not apply",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "delegate cannot revoke",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "delegator revokes",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "no manager / head / rule → actionable routing error",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "routing rules are admin-only",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "admin creates routing rule",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "rule routes leave to configured approver",
+  "pass": true
+ },
+ {
+  "section": "M3 Approvals",
+  "name": "admin \"All\" tab with category filter + pagination",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "no declaration → Missing Declaration, capacity not treated as 0",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "draft saved 20h",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "submitted → Pending Approval (routed to capacity approver)",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "pending month cannot be edited",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "pending is not confirmed capacity",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "approver approves declaration",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "approved capacity = 20h",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "revision creates version 2 draft",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "v1 stays effective while v2 is draft",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "v1 Superseded, v2 Approved (history preserved)",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "capacity now 26h",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "copy previous month by weekday",
+  "pass": true
+ },
+ {
+  "section": "M2 Capacity declarations",
+  "name": "manager team view shows declaration status",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "full-time capacity = workdays×8 − holiday − approved leave = 144h",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "weekend days have 0 capacity",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "no double deduction (holiday + overlapping leave)",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "later schedule change does not rewrite November",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "December uses the new 6h schedule (Tue–Fri = 24h)",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "planned = 16 + 12 (rollup not double-counted) + 20 + 10 (allocation) = 58h",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "allocation split does not multiply the 30h total",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "unestimated task listed (not zero effort)",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "undated estimate reported as unscheduled, not in this month",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "actual = worklogs (task+subtask row counted once) = 5h",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "variance = actual − planned",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "utilization = planned / approved capacity",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "allocation preview shows overload impact",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "member sees only self/managed",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "availability search returns confirmed remaining ≥ 100h",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "member cannot set estimates",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "owner fills missing estimate",
+  "pass": true
+ },
+ {
+  "section": "M2 Resource planning",
+  "name": "advisory: estimate fill did not change status/assignee/dates",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "A→C added",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "B→C added (multiple predecessors)",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "duplicate dependency rejected",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "self dependency rejected",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "circular dependency rejected",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "successor can start before predecessors (no blocking)",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "dependency state independent of status",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "A done, B pending → no ready notification",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "both done → notify C assignee + PM (2 recipients, once each)",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "successor status untouched",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "repeated save → no duplicate notification",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "reopen → Waiting again",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "genuine new transition → new notification",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "settings saved",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "disabling notifications keeps dependencies",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "template saved",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "cyclic template rejected",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "template applied → 3 new tasks",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "new tasks Not Started, scheduled by offsets",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "template dependencies created",
+  "pass": true
+ },
+ {
+  "section": "M5 Workflow",
+  "name": "member cannot apply template",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "registered projects appear",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "task-only (unregistered) projects appear with zero totals",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "member sees only accessible projects",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "owner + name resolves duplicates",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "legacy name-only call reports ambiguity clearly",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "income draft created",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "duplicate reference rejected",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "draft does not affect cash",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "income confirmed",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "double confirmation prevented",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "expense submitted for approval",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "pending expense cannot be confirmed",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "finance approval → Approved",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "approval alone is not cash movement",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "balances: received 30M, expenses 5M, net 25M, utilization 10%",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "approved budget stays separate from cash",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "reversal requires reason",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "reversal entry created",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "cannot reverse twice",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "reversed expense no longer counts; original kept",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "currencies are not summed together (grouped)",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "converted base amount stored",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "finance approver must be PM/Admin",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "failed routing leaves no orphan disbursement",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "disbursement + approval request created atomically",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "payment before approval refused",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "payment 1 → Partially Disbursed",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "duplicate payment reference prevented",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "payment above remaining approved refused",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "payment 3 → Fully Disbursed",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "total disbursed 30M, remaining budget 20M, payments kept separately",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "disbursement is not counted as an expense",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "release beyond approved budget refused",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "audit trail: request, approval events, payments",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "non-member cannot post transactions",
+  "pass": true
+ },
+ {
+  "section": "M7 Finance",
+  "name": "unregistered project without budget cannot release funds",
+  "pass": true
+ },
+ {
+  "section": "M1 Google removed",
+  "name": "no function serves /api/google/*",
+  "pass": true
+ },
+ {
+  "section": "M10 Concurrency",
+  "name": "two simultaneous decisions → exactly one succeeds",
+  "pass": true
+ },
+ {
+  "section": "M10 Concurrency",
+  "name": "simultaneous identical payments → recorded once",
+  "pass": true
+ },
+ {
+  "section": "M10 Concurrency",
+  "name": "concurrent draft saves → a single open declaration",
+  "pass": true
+ }
+]

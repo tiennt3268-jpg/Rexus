@@ -1,0 +1,61 @@
+/* REXUS v2.0.4 — Confluence/Word inspired in-app document editor.
+   Shares the navy / ocean / azure Liquid Glass visual tokens. */
+#rexusDocsShell .rd-search-wrap{display:flex;align-items:stretch;gap:10px;max-width:760px;margin:0 0 21px}
+#rexusDocsShell .rd-search-wrap .rd-search{flex:1;max-width:none;margin:0;min-width:0}
+#rexusDocsShell .rd-search-scope{min-width:144px;padding:0 12px;background:rgba(255,255,255,.84);border:1px solid #cce1f8;border-radius:12px;color:#225581;font-size:13px;font-weight:700}
+#rexusDocsShell .rd-search-results{overflow:hidden}
+#rexusDocsShell .rd-result-body{display:grid;gap:4px;flex:1;min-width:0}
+#rexusDocsShell .rd-result-body small{font-size:11px;color:#3276ba}
+#rexusDocsShell .rd-result-excerpt{color:#6d829d;font-size:12px;max-width:72ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rexusDocsShell .rd-page-view{background:rgba(238,246,255,.75);padding:21px;overflow:visible}
+#rexusDocsShell .rd-page-paper{width:min(870px,100%);margin:0 auto;min-height:340px;background:rgba(255,255,255,.92);border:1px solid #d7e7f7;border-radius:15px;padding:46px clamp(22px,6vw,68px) 42px;box-shadow:0 12px 35px #0b447a0c}
+#rexusDocsShell .rd-page-meta{font-size:11px;color:#7890ad;letter-spacing:.07em;font-weight:750}
+#rexusDocsShell .rd-content.rd-rich-display{white-space:normal;line-height:1.75;font-size:15px;color:#1f3657;min-height:160px;padding:20px 0 0;overflow-wrap:anywhere}
+#rexusDocsShell .rd-page-placeholder{color:#8598b2}
+#rexusDocsShell .rd-page-tags{display:flex;flex-wrap:wrap;gap:5px;margin:32px 0 0}
+#rexusDocsShell .rd-page-tags .rd-tag{cursor:pointer;margin:0}
+#rexusDocsShell .rd-page-tags .rd-tag:hover{background:#c8e5ff}
+#rexusDocsShell .rd-editor-breadcrumb{margin:2px 0 13px}
+#rexusDocsShell .rd-editor-shell{border:1px solid rgba(255,255,255,.88);background:rgba(237,246,255,.68);box-shadow:var(--rx-shadow);border-radius:19px;overflow:hidden}
+#rexusDocsShell .rd-editor{display:block;padding:0}
+#rexusDocsShell .rd-edit-top{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:13px 18px;background:linear-gradient(125deg,rgba(246,251,255,.97),rgba(220,237,255,.76));border-bottom:1px solid #d6e7fa}
+#rexusDocsShell .rd-edit-meta{font-size:12px;font-weight:750;letter-spacing:.02em;color:#426993}
+#rexusDocsShell .rd-draft-status{font-size:12px;font-weight:700;color:#4c9870;padding-right:5px}
+#rexusDocsShell .rd-draft-status.dirty{color:#b46a17}
+#rexusDocsShell .rd-toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;padding:10px 16px;background:rgba(255,255,255,.77);border-bottom:1px solid #dce9f9;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);position:sticky;top:var(--wm-header-h,72px);z-index:5}
+#rexusDocsShell .rd-tools{display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px;border-right:1px solid #dbe6f7;padding-right:9px}
+#rexusDocsShell .rd-tools:last-child{border:0}
+#rexusDocsShell .rd-tool{display:grid;place-items:center;cursor:pointer;min-width:32px;height:32px;border:1px solid transparent;border-radius:9px;background:transparent;color:#235283;font-size:14px;font-weight:650;padding:0 7px;transition:background .15s}
+#rexusDocsShell .rd-tool:hover,#rexusDocsShell .rd-tool:focus-visible{background:#e0eeff;border-color:#bad8fa;outline:none}
+#rexusDocsShell .rd-block-select{color:#1d456f;font-size:13px;font-weight:700;background:#ffffffc8;border:1px solid #d0e1f6;border-radius:8px;padding:7px 6px;min-width:123px;height:34px}
+#rexusDocsShell .rd-paper{width:min(850px,calc(100% - 26px));min-height:690px;margin:22px auto 29px;padding:58px clamp(24px,6vw,66px) 50px;background:rgba(255,255,255,.95);border:1px solid #dfebf7;border-radius:13px;box-shadow:0 10px 37px #104b8813;}
+#rexusDocsShell .rd-paper-title{background:transparent!important;border:0!important;border-radius:0!important;padding:0!important;box-shadow:none!important;color:#102e57;font-size:31px!important;line-height:1.3;font-weight:800;letter-spacing:-.03em;outline:none!important;width:100%;font-family:Inter,'Segoe UI',sans-serif}
+#rexusDocsShell .rd-paper-byline{font-size:12px;color:#8296b1;padding:14px 0 27px;border-bottom:1px solid #e8eff8}
+#rexusDocsShell .rd-rich-surface{outline:none;min-height:420px;padding-top:22px;line-height:1.75;font-size:15px;color:#263e60;overflow-wrap:anywhere;white-space:normal;}
+#rexusDocsShell .rd-rich-surface:empty:before{content:attr(data-placeholder);color:#9baec4;pointer-events:none}
+#rexusDocsShell .rd-rich-surface:focus-visible{outline:none}
+#rexusDocsShell .rd-label-editor{margin-top:25px;border-top:1px solid #e8eef7;padding-top:17px}
+#rexusDocsShell .rd-label-editor label{display:grid;gap:9px;color:#4e6a8c;font-size:12px;font-weight:700}
+#rexusDocsShell .rd-label-editor input{max-width:100%;font-weight:400}
+#rexusDocsShell .rd-editor-bottom{font-size:12px;color:#667e9d;padding:10px 22px 19px}
+#rexusDocsShell .rd-rich-surface h1,#rexusDocsShell .rd-rich-display h1{font-size:29px!important;color:#10315f!important;margin:24px 0 14px!important;line-height:1.3}
+#rexusDocsShell .rd-rich-surface h2,#rexusDocsShell .rd-rich-display h2{font-size:23px!important;color:#123967!important;margin:24px 0 12px!important;line-height:1.35}
+#rexusDocsShell .rd-rich-surface h3,#rexusDocsShell .rd-rich-display h3{font-size:18px!important;color:#245383!important;margin:19px 0 10px!important}
+#rexusDocsShell .rd-rich-surface p,#rexusDocsShell .rd-rich-display p{margin:0 0 15px}
+#rexusDocsShell .rd-rich-surface a,#rexusDocsShell .rd-rich-display a{color:#1275d4;text-decoration:underline;text-underline-offset:3px}
+#rexusDocsShell .rd-rich-surface ul,#rexusDocsShell .rd-rich-display ul,#rexusDocsShell .rd-rich-surface ol,#rexusDocsShell .rd-rich-display ol{padding-left:27px;margin:0 0 14px}
+#rexusDocsShell .rd-rich-surface li,#rexusDocsShell .rd-rich-display li{margin:5px 0}
+#rexusDocsShell .rd-rich-surface blockquote,#rexusDocsShell .rd-rich-display blockquote{border-left:4px solid #3194ed;padding:7px 17px;margin:20px 0;background:#e9f4ff;color:#315b88;border-radius:0 10px 10px 0}
+#rexusDocsShell .rd-rich-surface pre,#rexusDocsShell .rd-rich-display pre{background:#0d294d;color:#e4f4ff;overflow:auto;white-space:pre-wrap;border-radius:12px;padding:15px 19px;font:13px/1.7 ui-monospace,Consolas,monospace}
+#rexusDocsShell .rd-rich-surface code,#rexusDocsShell .rd-rich-display code{font-family:ui-monospace,Consolas,monospace}
+#rexusDocsShell .rd-rich-surface table,#rexusDocsShell .rd-rich-display table{border-collapse:collapse;width:100%;margin:23px 0;table-layout:fixed}
+#rexusDocsShell .rd-rich-surface th,#rexusDocsShell .rd-rich-surface td,#rexusDocsShell .rd-rich-display th,#rexusDocsShell .rd-rich-display td{border:1px solid #cddff3;padding:10px 12px;text-align:left;vertical-align:top;min-width:60px;word-break:break-word}
+#rexusDocsShell .rd-rich-surface th,#rexusDocsShell .rd-rich-display th{background:#e8f2ff;font-weight:800;color:#1b4d80}
+#rexusDocsShell .rd-rich-surface hr,#rexusDocsShell .rd-rich-display hr{height:1px;border:0;background:#d3e5f8;margin:25px 0}
+#rexusDocsShell .rd-rich-surface img,#rexusDocsShell .rd-rich-display img{display:block;max-width:100%;height:auto;border-radius:10px;margin:15px auto;box-shadow:0 8px 20px #052d5c16}
+#rexusDocsShell .rd-rich-surface .rd-callout,#rexusDocsShell .rd-rich-display .rd-callout{background:linear-gradient(110deg,#e6f3ff,#f2f9ff);border:1px solid #c9e1fc;border-left:4px solid #2082e6;border-radius:12px;padding:17px 19px;margin:20px 0}
+#rexusDocsShell .rd-rich-surface .rd-checklist,#rexusDocsShell .rd-rich-display .rd-checklist{list-style:none;padding-left:5px}
+#rexusDocsShell .rd-rich-surface .rd-checklist input,#rexusDocsShell .rd-rich-display .rd-checklist input{width:16px;height:16px;accent-color:#1685e5;vertical-align:middle}
+#rexusDocsShell .rd-share-intro{color:#536e91;line-height:1.6;font-size:14px}
+@media(max-width:1050px){#rexusDocsShell .rd-toolbar{top:var(--wm-header-h,72px)}#rexusDocsShell .rd-paper{min-height:540px}}
+@media(max-width:650px){#rexusDocsShell .rd-search-wrap{flex-direction:column}#rexusDocsShell .rd-search-scope{min-height:40px}#rexusDocsShell .rd-tools{border:0}#rexusDocsShell .rd-toolbar{gap:5px;padding:8px}#rexusDocsShell .rd-paper{width:calc(100% - 12px);padding:25px 16px;min-height:400px}#rexusDocsShell .rd-paper-title{font-size:23px!important}#rexusDocsShell .rd-page-view{padding:7px}#rexusDocsShell .rd-page-paper{padding:26px 20px}#rexusDocsShell .rd-edit-top{padding:12px}}

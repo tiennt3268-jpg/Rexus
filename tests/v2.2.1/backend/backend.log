@@ -1,0 +1,158 @@
+PASS Migrations :: table rexus_user_preferences exists
+PASS Migrations :: table rexus_leave_requests exists
+PASS Migrations :: table rexus_capacity_declarations exists
+PASS Migrations :: table rexus_capacity_entries exists
+PASS Migrations :: table rexus_approval_delegations exists
+PASS Migrations :: table rexus_approval_routing_rules exists
+PASS Migrations :: table rexus_workflow_templates exists
+PASS Migrations :: table rexus_resource_settings_history exists
+PASS Migrations :: existing users / tasks / projects untouched by 033
+PASS M9 Preferences :: default theme is mono (unsaved)
+PASS M9 Preferences :: save navy
+PASS M9 Preferences :: navy persists (server-side, per user id)
+PASS M9 Preferences :: other user independent
+PASS M9 Preferences :: unknown theme rejected
+PASS M9 Preferences :: unauthenticated rejected
+PASS M4 HR :: member cannot change own schedule
+PASS M4 HR :: admin sets employment profile
+PASS M4 HR :: first change records prior schedule (1900-01-01) + new row
+PASS M4 HR :: self can read own profile
+PASS M4 HR :: unrelated member cannot read profile
+PASS M4 HR :: manager can read report profile
+PASS M4 HR :: admin adds holiday (Nov 20 weekday=5)
+PASS M4 HR :: duplicate company-wide day rejected
+PASS M4 HR :: member cannot add holiday
+PASS M4 HR :: leave draft saved, duration 16h
+PASS M4 HR :: leave submitted → Pending Approval, routed to profile manager
+PASS M4 HR :: approver = manager (U_MINCT)
+PASS M4 HR :: overlapping leave refused
+PASS M4 HR :: multi-day half-day refused
+PASS M3 Approvals :: requester cannot decide own leave
+PASS M3 Approvals :: reject without reason refused
+PASS M3 Approvals :: pending tab shows leave for manager
+PASS M3 Approvals :: manager approves leave
+PASS M3 Approvals :: duplicate decision prevented
+PASS M3 Approvals :: leave source updated to Approved
+PASS M3 Approvals :: requester notified of decision
+PASS M3 Approvals :: sequential request created
+PASS M3 Approvals :: stage 2 cannot act before stage 1
+PASS M3 Approvals :: stage 1 approves → still Pending
+PASS M3 Approvals :: stage 2 notified only after stage 1
+PASS M3 Approvals :: stage 2 approves → Approved
+PASS M3 Approvals :: parallel: one approval keeps Pending
+PASS M3 Approvals :: changes requested ends request
+PASS M3 Approvals :: self-approval refused at creation
+PASS M3 Approvals :: source-backed types cannot be created directly
+PASS M3 Approvals :: reassign requires reason
+PASS M3 Approvals :: unrelated user cannot reassign
+PASS M3 Approvals :: cannot reassign to requester
+PASS M3 Approvals :: current approver hands off (non-finance)
+PASS M3 Approvals :: reassignment recorded with previous/new approver
+PASS M3 Approvals :: previous approver can no longer decide
+PASS M3 Approvals :: delegation created (Project Management only)
+PASS M3 Approvals :: all-category delegation (incl. finance) to a Member refused
+PASS M3 Approvals :: delegated tab lists delegator requests
+PASS M3 Approvals :: delegate approves on behalf
+PASS M3 Approvals :: step keeps approver, records acted_by
+PASS M3 Approvals :: expired delegation does not apply
+PASS M3 Approvals :: delegate cannot revoke
+PASS M3 Approvals :: delegator revokes
+PASS M3 Approvals :: no manager / head / rule → actionable routing error
+PASS M3 Approvals :: routing rules are admin-only
+PASS M3 Approvals :: admin creates routing rule
+PASS M3 Approvals :: rule routes leave to configured approver
+PASS M3 Approvals :: admin "All" tab with category filter + pagination
+PASS M2 Capacity declarations :: no declaration → Missing Declaration, capacity not treated as 0
+PASS M2 Capacity declarations :: draft saved 20h
+PASS M2 Capacity declarations :: submitted → Pending Approval (routed to capacity approver)
+PASS M2 Capacity declarations :: pending month cannot be edited
+PASS M2 Capacity declarations :: pending is not confirmed capacity
+PASS M2 Capacity declarations :: approver approves declaration
+PASS M2 Capacity declarations :: approved capacity = 20h
+PASS M2 Capacity declarations :: revision creates version 2 draft
+PASS M2 Capacity declarations :: v1 stays effective while v2 is draft
+PASS M2 Capacity declarations :: v1 Superseded, v2 Approved (history preserved)
+PASS M2 Capacity declarations :: capacity now 26h
+PASS M2 Capacity declarations :: copy previous month by weekday
+PASS M2 Capacity declarations :: manager team view shows declaration status
+PASS M2 Resource planning :: full-time capacity = workdays×8 − holiday − approved leave = 144h
+PASS M2 Resource planning :: weekend days have 0 capacity
+PASS M2 Resource planning :: no double deduction (holiday + overlapping leave)
+PASS M2 Resource planning :: later schedule change does not rewrite November
+PASS M2 Resource planning :: December uses the new 6h schedule (Tue–Fri = 24h)
+PASS M2 Resource planning :: planned = 16 + 12 (rollup not double-counted) + 20 + 10 (allocation) = 58h
+PASS M2 Resource planning :: allocation split does not multiply the 30h total
+PASS M2 Resource planning :: unestimated task listed (not zero effort)
+PASS M2 Resource planning :: undated estimate reported as unscheduled, not in this month
+PASS M2 Resource planning :: actual = worklogs (task+subtask row counted once) = 5h
+PASS M2 Resource planning :: variance = actual − planned
+PASS M2 Resource planning :: utilization = planned / approved capacity
+PASS M2 Resource planning :: allocation preview shows overload impact
+PASS M2 Resource planning :: member sees only self/managed
+PASS M2 Resource planning :: availability search returns confirmed remaining ≥ 100h
+PASS M2 Resource planning :: member cannot set estimates
+PASS M2 Resource planning :: owner fills missing estimate
+PASS M2 Resource planning :: advisory: estimate fill did not change status/assignee/dates
+PASS M5 Workflow :: A→C added
+PASS M5 Workflow :: B→C added (multiple predecessors)
+PASS M5 Workflow :: duplicate dependency rejected
+PASS M5 Workflow :: self dependency rejected
+PASS M5 Workflow :: circular dependency rejected
+PASS M5 Workflow :: successor can start before predecessors (no blocking)
+PASS M5 Workflow :: dependency state independent of status
+PASS M5 Workflow :: A done, B pending → no ready notification
+PASS M5 Workflow :: both done → notify C assignee + PM (2 recipients, once each)
+PASS M5 Workflow :: successor status untouched
+PASS M5 Workflow :: repeated save → no duplicate notification
+PASS M5 Workflow :: reopen → Waiting again
+PASS M5 Workflow :: genuine new transition → new notification
+PASS M5 Workflow :: settings saved
+PASS M5 Workflow :: disabling notifications keeps dependencies
+PASS M5 Workflow :: template saved
+PASS M5 Workflow :: cyclic template rejected
+PASS M5 Workflow :: template applied → 3 new tasks
+PASS M5 Workflow :: new tasks Not Started, scheduled by offsets
+PASS M5 Workflow :: template dependencies created
+PASS M5 Workflow :: member cannot apply template
+PASS M7 Finance :: registered projects appear
+PASS M7 Finance :: task-only (unregistered) projects appear with zero totals
+PASS M7 Finance :: member sees only accessible projects
+PASS M7 Finance :: owner + name resolves duplicates
+PASS M7 Finance :: legacy name-only call reports ambiguity clearly
+PASS M7 Finance :: income draft created
+PASS M7 Finance :: duplicate reference rejected
+PASS M7 Finance :: draft does not affect cash
+PASS M7 Finance :: income confirmed
+PASS M7 Finance :: double confirmation prevented
+PASS M7 Finance :: expense submitted for approval
+PASS M7 Finance :: pending expense cannot be confirmed
+PASS M7 Finance :: finance approval → Approved
+PASS M7 Finance :: approval alone is not cash movement
+PASS M7 Finance :: balances: received 30M, expenses 5M, net 25M, utilization 10%
+PASS M7 Finance :: approved budget stays separate from cash
+PASS M7 Finance :: reversal requires reason
+PASS M7 Finance :: reversal entry created
+PASS M7 Finance :: cannot reverse twice
+PASS M7 Finance :: reversed expense no longer counts; original kept
+PASS M7 Finance :: currencies are not summed together (grouped)
+PASS M7 Finance :: converted base amount stored
+PASS M7 Finance :: finance approver must be PM/Admin
+PASS M7 Finance :: failed routing leaves no orphan disbursement
+PASS M7 Finance :: disbursement + approval request created atomically
+PASS M7 Finance :: payment before approval refused
+PASS M7 Finance :: payment 1 → Partially Disbursed
+PASS M7 Finance :: duplicate payment reference prevented
+PASS M7 Finance :: payment above remaining approved refused
+PASS M7 Finance :: payment 3 → Fully Disbursed
+PASS M7 Finance :: total disbursed 30M, remaining budget 20M, payments kept separately
+PASS M7 Finance :: disbursement is not counted as an expense
+PASS M7 Finance :: release beyond approved budget refused
+PASS M7 Finance :: audit trail: request, approval events, payments
+PASS M7 Finance :: non-member cannot post transactions
+PASS M7 Finance :: unregistered project without budget cannot release funds
+PASS M1 Google removed :: no function serves /api/google/*
+PASS M10 Concurrency :: two simultaneous decisions → exactly one succeeds
+PASS M10 Concurrency :: simultaneous identical payments → recorded once
+PASS M10 Concurrency :: concurrent draft saves → a single open declaration
+
+156/156 backend checks passed

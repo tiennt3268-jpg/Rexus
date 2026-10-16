@@ -1,0 +1,50 @@
+PASS M4 sidebar renamed to Human Resources Management
+PASS M4 HR page title + section tabs
+PASS M4 search-first: no org chart / no directory before searching
+PASS M4 employee search returns results
+PASS M4 keyboard selection opens profile; results hidden
+PASS M4 own profile shows employment & capacity
+PASS M4 leave submitted through UI (routed to manager)
+PASS M4 leave appears as Pending Approval
+PASS M4 leave calendar renders month grid
+PASS M1 Google linking removed (no login button, no Connected Accounts)
+PASS M9 Appearance with two themes
+PASS M9 theme applies immediately (no reload)
+PASS M9 theme persists across devices/logins (server-side per user)
+PASS M9 other users keep their own theme
+PASS M3 pending tab lists the leave request
+PASS M3 detail shows related record + steps + history
+PASS M3 reject requires a reason (client validation)
+PASS M3 approve via UI
+PASS M3 delegations tab
+PASS M10 direct URL #/approval-center survives refresh
+PASS M10 browser Back returns to previous view
+PASS M2 capacity calendar for declaration-based employee
+PASS M2 apply weekly availability fills matching weekdays
+PASS M2 declaration submitted → Pending Approval
+PASS M2 pending month locked for editing
+PASS M2 accessible list alternative
+PASS M2 resource dashboard summary cards
+PASS M2 pending declaration shown as not confirmed
+PASS M2 timeline/heatmap renders cells
+PASS M2 weekly heatmap scale
+PASS M4 holidays admin list shows seeded holiday
+PASS M7 Project Finance lists registered + task-only projects
+PASS M7 project finance overview metrics
+PASS M7 income added through dialog (draft)
+PASS M7 confirmed income updates cash received
+PASS M6 WBS section replaces flat task list
+PASS M6 hierarchical WBS numbering (1, 1.1, …)
+PASS M6 WBS + Gantt rows aligned (same count)
+PASS M6 collapse updates both WBS and Gantt
+PASS M6 selecting a Gantt bar highlights its WBS row
+PASS M6 no nested vertical scrollbar on the task list
+PASS M5 dependency line drawn
+PASS M7 project financials section inside project detail
+PASS M5 dependency dialog opens
+PASS M10 Escape closes v2.2.1 dialogs
+PASS No JavaScript page errors in any flow
+PASS Responsive: no page-level horizontal overflow on new screens (6 widths × 5 screens)
+PASS Responsive: no JS errors in sweep
+
+48/48 e2e checks passed

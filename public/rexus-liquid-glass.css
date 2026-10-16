@@ -1,0 +1,222 @@
+/* REXUS 2.0.3 — shared Liquid Glass visual system.
+   Presentation-only overrides: no business rules, API calls or database changes. */
+:root{color-scheme:light;--rx-blue:#1162db;--rx-blue-light:#37a6f5;--rx-navy:#092751;--rx-deep:#061e40;--rx-ink:#142d51;--rx-muted:#627997;--rx-glass:rgba(255,255,255,.70);--rx-glass-strong:rgba(255,255,255,.87);--rx-border:rgba(255,255,255,.76);--rx-shadow:0 12px 32px rgba(15,58,113,.085),inset 0 1px 0 rgba(255,255,255,.9)}
+html{background:#e7f2ff}
+body{font-family:Inter,'Segoe UI',Roboto,Arial,sans-serif}
+.wm-app{
+  --wm-sidebar-w:250px;
+  --navy:#0b3267;--navy-deep:#061f48;--navy-mid:#1a63cb;
+  --gold:#3997ec;--gold-deep:#155ac4;
+  --ink:#152c4e;--ink-soft:#667994;
+  --line:#dce9f8;--line-soft:#edf3fb;
+  --bg:#eaf3ff;--surface:#ffffff;
+  --c-deepblue:#0f4b91;--c-green:#286fa9;--c-yellow:#63a6e9;--c-orange:#3d82da;--c-redorange:#315fa7;
+  --c-deepblue-tint:#e9f4ff;--c-green-tint:#edf7ff;--c-yellow-tint:#f0f8ff;--c-orange-tint:#e7f1fd;--c-redorange-tint:#e7efff;--c-navymid-tint:#e4f2ff;
+  font-family:Inter,'Segoe UI',Roboto,Arial,sans-serif;
+  font-size:15px;line-height:1.5;
+  background:radial-gradient(ellipse at 8% 5%,rgba(123,192,255,.48),transparent 42%),radial-gradient(ellipse at 93% 48%,rgba(135,178,246,.3),transparent 38%),linear-gradient(145deg,#dceaff 0%,#f3f8ff 50%,#e3f1ff 100%);
+  color:var(--ink)
+}
+.wm-app h1,.wm-app h2,.wm-app h3,.wm-project-name,.wm-stat-num,.wm-cal-title,.wm-footer-title,.wm-loader-number{font-family:Inter,'Segoe UI',Roboto,Arial,sans-serif!important;letter-spacing:-.45px}
+.wm-app h1,.wm-app h2,.wm-app h3{font-weight:780}
+/* Shared navy top bar with translucent shine */
+.wm-app .wm-header{
+  background:linear-gradient(105deg,rgba(5,26,59,.97),rgba(12,57,119,.96) 70%,rgba(15,79,148,.95));
+  border-bottom:1px solid rgba(255,255,255,.24);
+  box-shadow:0 7px 25px rgba(8,39,81,.18),inset 0 1px 0 rgba(255,255,255,.12);
+  backdrop-filter:blur(20px) saturate(170%);-webkit-backdrop-filter:blur(20px) saturate(170%);
+  padding:12px 22px;min-height:72px
+}
+.wm-header-top{flex-wrap:nowrap;gap:18px}
+.wm-brand{
+  gap:8px; width:calc(var(--wm-sidebar-w) - 22px);min-width:0;
+  padding-right:12px; border-right:1px solid rgba(218,238,255,.2);align-items:center
+}
+.wm-brand-mark{display:inline-flex;align-items:center;justify-content:center;width:31px;height:31px;flex:0 0 31px;background:linear-gradient(150deg,#58cbff,#1679e8 60%,#06499d);border:1px solid rgba(255,255,255,.52);box-shadow:0 3px 12px #021c4660,inset 0 1px 2px #ffffff80;border-radius:10px}
+.wm-brand-mark svg{width:20px;height:20px;stroke:#fff;stroke-width:1.65;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.wm-title{font-family:Inter,'Segoe UI',sans-serif;font-weight:820;font-size:16px;letter-spacing:-.3px;white-space:nowrap;min-width:0}
+/* Only the compact app-grid switch is visible beside the brand. */
+.wm-brand .rexus-app-switch{display:inline-flex;width:auto;order:initial;justify-content:flex-start;padding:0;margin:0 0 0 auto;border:0;background:transparent;border-radius:10px;flex-shrink:0}
+.wm-brand .rexus-app-switch .rexus-switch-trigger{width:33px;height:33px;min-width:33px;padding:7px;display:grid;place-items:center;background:rgba(191,222,255,.13);color:#eaf5ff;border:1px solid rgba(220,239,255,.25);border-radius:10px;box-shadow:inset 0 1px 0 #ffffff21;transition:background .18s ease,transform .18s ease}
+.wm-brand .rexus-switch-trigger:hover{background:rgba(156,211,255,.28);transform:translateY(-1px)}
+.wm-brand .rexus-switch-trigger:focus-visible{outline:2px solid #b5e8ff;outline-offset:3px}
+.wm-brand .rexus-switch-trigger svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.wm-gsearch{max-width:560px;min-width:100px}
+.wm-gsearch-scope{background:rgba(184,220,255,.10);border-color:#ffffff30;min-height:38px}
+.wm-gsearch-input{background:rgba(185,220,255,.11);border-color:#ffffff30;min-height:38px}
+.wm-gsearch-input:focus{background:rgba(222,239,255,.2);border-color:#a5d6ff}
+.wm-glass-chip{border-color:rgba(232,245,255,.26);background:rgba(188,219,255,.11);box-shadow:inset 0 1px 0 #ffffff18}
+.wm-glass-chip:hover{background:rgba(183,219,255,.23)}
+.wm-header-controls{gap:10px}
+/* Matching light-glass navigation in both applications */
+.wm-shell{background:transparent}
+.wm-app .wm-sidebar{
+  background:linear-gradient(170deg,rgba(255,255,255,.80),rgba(229,243,255,.66));
+  border-right:1px solid rgba(201,225,252,.9);
+  box-shadow:inset -1px 0 0 #fff8;
+  padding:16px 10px;gap:5px;backdrop-filter:blur(26px) saturate(160%);-webkit-backdrop-filter:blur(26px) saturate(160%)
+}
+.wm-tabs-pill{display:none!important}
+.wm-app .wm-tab{display:flex;gap:11px;padding:11px 12px;color:#486486;font-size:14px;font-weight:650;border:1px solid transparent;border-radius:12px;transition:color .17s,background .17s,box-shadow .17s}
+.wm-app .wm-tab-icon{display:flex;order:-1;flex:0 0 19px;width:19px;justify-content:center}
+.wm-tab-icon svg{width:18px;height:18px}
+.wm-app .wm-tab:hover{color:#074a9c;background:rgba(217,235,255,.7)}
+.wm-app .wm-tab.active{color:#0757bf;background:linear-gradient(120deg,rgba(229,243,255,.95),rgba(207,229,255,.88));border-color:rgba(173,211,255,.85);box-shadow:0 5px 13px rgba(30,100,202,.08),inset 0 1px 0 white}
+.wm-app .wm-tabs-toggle{color:#24579b;border-color:rgba(173,207,241,.78);background:#ffffffa3;align-self:flex-end;margin:0 4px 9px}
+.wm-app .wm-tabs-toggle:hover{background:#e4f2ff}
+.wm-app .wm-sidebar.collapsed{width:66px}
+.wm-app .wm-sidebar.collapsed .wm-tab-label{display:none}
+.wm-app .wm-sidebar.collapsed .wm-tab-icon{display:flex}
+/* Ambient blue backdrop with floating white cards */
+.wm-app .wm-body{
+  background:radial-gradient(ellipse at 90% 5%,rgba(170,216,255,.45),transparent 40%),radial-gradient(ellipse at 8% 85%,rgba(174,196,255,.28),transparent 38%),linear-gradient(142deg,#edf6ff,#f6faff 49%,#eaf4ff);
+  border:0;padding:26px 30px 48px;min-height:calc(100vh - 72px)
+}
+.wm-stat-card,.wm-project-card,.wm-pd-header,.wm-task-row,.wm-page-modal,.wm-modal,.wm-table-wrap{
+  border:1px solid rgba(255,255,255,.85)!important;
+  background:linear-gradient(130deg,rgba(255,255,255,.87),rgba(242,248,255,.74))!important;
+  backdrop-filter:blur(19px) saturate(155%);-webkit-backdrop-filter:blur(19px) saturate(155%);
+  box-shadow:var(--rx-shadow);
+  border-radius:16px
+}
+.wm-stat-card{padding:20px 18px;position:relative;overflow:hidden}
+.wm-stat-card:after{content:"";position:absolute;right:-25px;top:-36px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,#c0e5ff70,transparent 75%);pointer-events:none}
+.wm-stat-num{font-weight:820;font-size:29px}
+.wm-stat-label{font-size:13px;font-weight:650}
+.wm-section-title{border-bottom:1px solid #d6e6f6;font-size:19px;color:#0b3162;padding-bottom:10px}
+.wm-project-card{padding:21px}
+.wm-project-card:hover,.wm-task-row:hover{border-color:#a9d6ff!important;box-shadow:0 12px 26px #185fb124;transform:translateY(-1px)}
+.wm-task-row{border-radius:13px!important;padding:13px 15px}
+.wm-task-name{font-size:14px}
+.wm-task-project,.wm-project-meta{font-size:13px}
+.wm-progress-track{background:#dcecfb;height:7px}
+.wm-progress-fill{background:linear-gradient(90deg,#1473f1,#40b2ff)}
+.wm-app .wm-table-wrap{overflow-x:auto}
+.wm-app table.wm-table th{background:linear-gradient(110deg,#0b3777,#1762b6);color:white;font-size:13px;padding:12px 13px}
+.wm-app table.wm-table td{border-color:#e3effa}
+.wm-app table.wm-table tbody tr:hover td{background:rgba(222,238,255,.57)}
+.wm-app .wm-group-head{color:#1361bb}
+.wm-app .wm-cal-grid{border-color:#d5e6f7}
+.wm-app .wm-cal-cell{background:rgba(255,255,255,.82);border-color:#deebfa;min-width:0;overflow:hidden}
+.wm-app .wm-cal-cell.other-month{background:rgba(230,242,255,.58)}
+.wm-app .wm-cal-dow{background:linear-gradient(120deg,#104280,#1b6bd1);border-color:#3973ae}
+.wm-app .wm-cal-chip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;border-radius:6px}
+.wm-app .wm-cal-nav button{border-radius:10px;background:rgba(255,255,255,.85);border-color:#cadff4;color:#245685}
+.wm-app .wm-input,.wm-app .wm-select,.wm-form-row input,.wm-form-row select,.wm-form-row textarea{
+  background:rgba(255,255,255,.85);border:1px solid #d0e1f5;border-radius:10px;color:#1b3556
+}
+.wm-app .wm-input:focus,.wm-app .wm-select:focus,.wm-app input:focus-visible,.wm-app select:focus-visible,.wm-app textarea:focus-visible{outline:2px solid #55a7f2;outline-offset:1px}
+.wm-app .wm-btn{border:1px solid #cddff2;background:rgba(255,255,255,.83);border-radius:11px;color:#205285;box-shadow:0 4px 11px #184d8711;font-size:14px;padding:9px 15px}
+.wm-app .wm-btn.primary{background:linear-gradient(120deg,#115ddd,#148ee9)!important;border-color:#157be5!important;color:#fff;box-shadow:0 6px 17px #1677e535}
+.wm-app .wm-btn.primary:hover{background:linear-gradient(120deg,#084bb5,#0b71d7)!important;box-shadow:0 8px 20px #147bec55}
+.wm-app .wm-period-btn.active{background:#155fc1;border-color:#155fc1;color:#fff}
+.wm-app .wm-modal-overlay,.rd-dialog-wrap{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.wm-app .wm-modal-head{background:linear-gradient(105deg,#0b3269,#1560ba);border-radius:16px 16px 0 0}
+.wm-app .wm-page-modal{border-radius:18px;overflow:hidden}
+.wm-app .wm-page-modal .wm-modal-head{border-radius:18px 18px 0 0}
+.wm-app .wm-detail-tab.active{color:#0d6ae0;border-bottom-color:#0d6ae0}
+.wm-app .wm-modal-footer,.wm-app .wm-page-modal .wm-modal-footer{background:rgba(243,249,255,.91)}
+.wm-app .wm-rte-btn.active{color:#075fc7;background:#c9e6ff;border-color:#a8d3ff}
+.wm-app .wm-footer{background:linear-gradient(110deg,#061f45,#0c366b);border-top:1px solid #184780}
+.wm-app .wm-footer a{color:#84d1ff}
+.wm-app .wm-footer-title{font-size:16px}
+/* Authentication — same watery backdrop */
+.wm-auth-screen{--a-navy:#0b3267;--a-navy-deep:#051d43;--a-gold:#157fe9;--a-gold-deep:#0958af;--a-line:#d6e5f7;--a-ink:#122a4c;--a-ink-soft:#677e99;
+  background:radial-gradient(circle at 10% 15%,#81cbffb0,transparent 35%),radial-gradient(circle at 88% 80%,#5e8ce68a,transparent 35%),linear-gradient(140deg,#d9ebff,#e9f5ff 55%,#c7e1ff)!important
+}
+.wm-auth-screen .wm-auth-card{background:rgba(255,255,255,.75);border:1px solid #fff;box-shadow:0 22px 60px #0b418a2b;border-radius:20px}
+.wm-auth-screen .wm-auth-head{background:linear-gradient(120deg,#073266,#1569c5)}
+.wm-auth-screen .wm-auth-head h1{font-family:Inter,'Segoe UI',sans-serif;font-size:27px}
+.wm-auth-screen .wm-auth-tab.active{border-bottom-color:#1f7de2}
+.wm-auth-screen .wm-auth-submit{background:linear-gradient(120deg,#1157c2,#148de6);border-radius:11px}
+.wm-auth-screen .wm-auth-row input{background:rgba(255,255,255,.86);border:1px solid #d2e4f7}
+/* REXUS Document shares the same glass, palette, shadows and navigation rhythm. */
+.wm-app.rexus-document-mode{background:linear-gradient(140deg,#e7f2ff,#f3f9ff 55%,#dfedff)}
+#rexusDocsShell{--rd-navy:#0b3267;--rd-blue:#126cdb;--rd-border:#dce9f8;--rd-ink:#142d4e;--rd-muted:#667d9a;min-height:calc(100vh - 72px)}
+#rexusDocsShell .rd-layout{grid-template-columns:var(--wm-sidebar-w) minmax(0,1fr);min-height:calc(100vh - var(--wm-header-h,72px));background:radial-gradient(ellipse at 78% 10%,#c8e8ff78,transparent 40%),linear-gradient(135deg,#edf6ff,#f8fbff 55%,#e5f1ff)}
+#rexusDocsShell .rd-sidebar{background:linear-gradient(170deg,rgba(255,255,255,.8),rgba(229,243,255,.66));border-color:#d0e4f8;backdrop-filter:blur(26px) saturate(170%);-webkit-backdrop-filter:blur(26px) saturate(170%);padding:19px 12px 35px}
+#rexusDocsShell .rd-side-head strong{font-size:15px;color:#183f73}
+#rexusDocsShell .rd-icon-btn{border-radius:10px;background:#ffffffb8;color:#126cdb;border-color:#cbdff6}
+#rexusDocsShell .rd-nav-row{font-size:13px;font-weight:630;border-radius:11px;padding:10px 11px;gap:10px;color:#526a8a}
+#rexusDocsShell .rd-nav-row:hover{background:#dfedff;color:#0a60c9}
+#rexusDocsShell .rd-nav-row.active{background:linear-gradient(100deg,#e6f3ff,#cfe6ff);color:#0859bc;box-shadow:inset 0 1px 0 #fff;border:1px solid #beddfb;padding:9px 10px}
+#rexusDocsShell .rd-main{max-width:1500px;padding:29px 32px 65px}
+#rexusDocsShell .rd-hero h2{font-family:Inter,'Segoe UI',sans-serif!important;font-weight:820!important;letter-spacing:-.75px;font-size:28px!important;color:#0c3266!important}
+#rexusDocsShell .rd-overline{color:#4379b9;letter-spacing:1px}
+#rexusDocsShell .rd-panel,#rexusDocsShell .rd-home-space,#rexusDocsShell .rd-home-action{background:linear-gradient(133deg,rgba(255,255,255,.9),rgba(240,248,255,.79));border:1px solid rgba(255,255,255,.9);box-shadow:var(--rx-shadow);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-radius:17px}
+#rexusDocsShell .rd-panel{overflow:hidden}
+#rexusDocsShell .rd-search{background:rgba(255,255,255,.81);border-color:#cde1f7;border-radius:12px;box-shadow:0 4px 12px #144c9011;max-width:520px}
+#rexusDocsShell .rd-button{background:#ffffffdc;border-color:#cee0f3;border-radius:10px;color:#22598e;font-size:13px;box-shadow:0 2px 9px #1757a610;padding:9px 14px}
+#rexusDocsShell .rd-button.primary{background:linear-gradient(110deg,#1262d7,#1191eb);border-color:#177adb;color:white;box-shadow:0 5px 14px #116be22c}
+#rexusDocsShell .rd-button.primary:hover{background:linear-gradient(110deg,#084fb8,#117bd8)}
+#rexusDocsShell .rd-button.danger{color:#ab354a;border-color:#eed2df;background:#fff8fa}
+#rexusDocsShell .rd-list-row{background:transparent;border-color:#e4eefb}
+#rexusDocsShell .rd-list-row:hover{background:rgba(219,237,255,.65)}
+#rexusDocsShell .rd-list-icon{background:linear-gradient(140deg,#e0f1ff,#cfe7ff);color:#155ac5;border:1px solid #c5e1ff;border-radius:12px}
+#rexusDocsShell .rd-row-name{color:#163a68}
+#rexusDocsShell .rd-row-meta{color:#758baa}
+#rexusDocsShell .rd-subhead{background:#f7fbff80}
+#rexusDocsShell .rd-tag{background:#e2efff;color:#205ba8;border-color:#cde2fc}
+#rexusDocsShell .rd-content{line-height:1.8;color:#304868}
+#rexusDocsShell .rd-dialog{border-radius:18px;background:rgba(248,252,255,.95);backdrop-filter:blur(20px);border:1px solid #ffffffb8;box-shadow:0 22px 50px #0e3f7d38}
+#rexusDocsShell .rd-dialog h3{color:#0c3671;font-family:Inter,'Segoe UI',sans-serif}
+#rexusDocsShell .rd-editor input,#rexusDocsShell .rd-editor textarea,#rexusDocsShell .rd-dialog input,#rexusDocsShell .rd-dialog textarea,#rexusDocsShell .rd-dialog select{border-color:#cde1f7;background:#ffffffdc}
+#rexusDocsShell .rd-home-banner{background:linear-gradient(116deg,#082956,#135cb2 66%,#1f91e7);color:white;border-radius:19px;padding:27px 29px;margin:0 0 21px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 14px 32px #105db12a;position:relative;overflow:hidden}
+#rexusDocsShell .rd-home-banner:after{content:"";position:absolute;right:-64px;top:-124px;width:340px;height:280px;border-radius:50%;border:48px solid #bce7ff19;pointer-events:none}
+#rexusDocsShell .rd-home-banner h2{color:#fff!important;margin:4px 0 8px!important;font-size:29px!important}
+#rexusDocsShell .rd-home-banner p{font-size:13px;margin:0;max-width:530px;color:#d8eaff}
+#rexusDocsShell .rd-home-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:25px}
+#rexusDocsShell .rd-home-action{display:flex;align-items:center;gap:12px;padding:19px 16px;color:#163f72;text-align:left;cursor:pointer;font-size:14px;font-weight:750;min-height:85px}
+#rexusDocsShell .rd-home-action:hover{border-color:#a7d7ff;transform:translateY(-1px)}
+#rexusDocsShell .rd-home-action span.rd-home-icon{font-size:22px;border-radius:12px;display:grid;place-items:center;flex:0 0 44px;height:44px;background:#dbeeff;color:#1167c9}
+#rexusDocsShell .rd-home-action small{font-size:12px;font-weight:450;color:#67809c;display:block;margin-top:4px}
+#rexusDocsShell .rd-home-columns{display:grid;grid-template-columns:1.4fr 1fr;gap:17px;align-items:start}
+#rexusDocsShell .rd-home-section-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 10px;gap:10px}
+#rexusDocsShell .rd-home-section-head h3{font-size:16px;color:#183d71;margin:0}
+#rexusDocsShell .rd-home-space{display:flex;align-items:center;gap:10px;padding:15px;border:0;border-bottom:1px solid #e2efff;width:100%;border-radius:0;cursor:pointer;text-align:left}
+#rexusDocsShell .rd-home-space:hover{background:#e1f1ff}
+#rexusDocsShell .rd-home-space .rd-home-icon{background:#d9ecff;color:#1266c6;width:38px;height:38px;border-radius:10px;display:grid;place-items:center;flex-shrink:0}
+#rexusDocsShell .rd-home-space strong{color:#1a426f;font-size:13px}
+#rexusDocsShell .rd-home-space small{display:block;color:#7790a9;margin-top:3px}
+@media(max-width:1050px){
+  .wm-app .wm-stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .wm-header-top{gap:11px}
+  .wm-brand{flex:0 0 calc(var(--wm-sidebar-w) - 22px)}
+  #rexusDocsShell .rd-main{padding:23px 19px}
+}
+@media(max-width:760px){
+  .wm-app{--wm-sidebar-w:66px}
+  .wm-header-top{flex-wrap:nowrap}
+  .wm-brand{width:auto;flex:0 0 auto;border-right:0;padding-right:0}
+  .wm-title{font-size:14px}
+  .wm-app .wm-sidebar{width:66px;padding:14px 7px}
+  .wm-app .wm-sidebar .wm-tab-label{display:none}
+  .wm-app .wm-sidebar .wm-tab-icon{display:flex}
+  .wm-app .wm-tab{justify-content:center;padding:11px 4px}
+  .wm-app .wm-body{padding:18px 14px}
+  .wm-app .wm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .wm-app .wm-task-row{padding:11px}
+  #rexusDocsShell .rd-layout{grid-template-columns:66px minmax(0,1fr);display:grid}
+  #rexusDocsShell .rd-sidebar{min-height:calc(100vh - 72px);max-height:calc(100vh - 72px);position:sticky;top:var(--wm-header-h,72px);padding:14px 6px}
+  #rexusDocsShell .rd-side-head{padding:0 0 8px;justify-content:center}
+  #rexusDocsShell .rd-side-head strong,#rexusDocsShell .rd-section-title,#rexusDocsShell .rd-nav-row span:last-child,#rexusDocsShell .rd-spaces-tree .rd-subnav{display:none}
+  #rexusDocsShell .rd-nav-row{justify-content:center;font-size:18px;padding:9px 4px}
+  #rexusDocsShell .rd-nav-row.active{padding:8px 3px}
+  #rexusDocsShell .rd-main{padding:18px 13px}
+  #rexusDocsShell .rd-home-actions{grid-template-columns:1fr}
+  #rexusDocsShell .rd-home-columns{grid-template-columns:1fr}
+}
+@media(max-width:480px){
+  .wm-app .wm-header{padding:10px 12px;min-height:62px}
+  .wm-brand-mark{width:26px;height:26px;flex-basis:26px}
+  .wm-title{font-size:13px}
+  .wm-brand{gap:5px}
+  .wm-brand .rexus-app-switch .rexus-switch-trigger{height:30px;width:30px;min-width:30px}
+  .wm-header-controls{gap:5px}
+  #wmUserMenuBtn{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;padding:8px}
+  #rexusDocsShell .rd-hero h2{font-size:24px!important}
+  #rexusDocsShell .rd-home-banner{padding:20px}
+  #rexusDocsShell .rd-home-banner h2{font-size:22px!important}
+  #rexusDocsShell .rd-fileline{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){.wm-app *{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

@@ -1,0 +1,48 @@
+/* REXUS 2.1.0 — unified glass system and original white-stroke pictograms */
+:root{--rx210-navy:#082750;--rx210-ocean:#0d72cb;--rx210-azure:#39b9ec;--rx210-line:rgba(150,204,248,.58);--rx210-glass:rgba(250,253,255,.82)}
+.rx210-title{display:flex;justify-content:space-between;gap:20px;align-items:center;margin:6px 0 21px}
+.rx210-title h2{color:#0e325e;font-size:clamp(26px,2.5vw,34px);margin:0 0 6px;font-weight:760;letter-spacing:-.025em}
+.rx210-title p{margin:0;color:#5e7895;font-size:15px}
+.rx210-glass,.rx210-metrics article{padding:21px 23px;border:1px solid var(--rx210-line);border-radius:22px;background:linear-gradient(130deg,rgba(255,255,255,.92),rgba(225,242,255,.62));box-shadow:0 10px 35px rgba(13,74,139,.08),inset 0 1px 0 white;backdrop-filter:blur(24px) saturate(140%);margin-bottom:18px;color:#15375e}
+.rx210-filters{display:flex;flex-wrap:wrap;align-items:end;gap:14px}
+.rx210-field{display:flex;flex-direction:column;gap:7px;min-width:160px;flex:1;font-size:13px;font-weight:660;color:#496688}
+.rx210-field input,.rx210-field select,.rx210-search input{width:100%;min-height:43px;padding:9px 13px;border:1px solid #c4d8ec;border-radius:13px;background:rgba(255,255,255,.86);font:inherit;font-size:15px;color:#133859;outline:none}
+.rx210-field input:focus,.rx210-field select:focus,.rx210-search input:focus{border-color:#1788e6;box-shadow:0 0 0 3px rgba(23,136,230,.14)}
+.rx210-btn{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;min-height:40px;border-radius:13px;border:1px solid #c1d7f1;background:linear-gradient(140deg,#fafdff,#e3f0fc);color:#164c88;cursor:pointer;font-size:14px;font-weight:700;box-shadow:inset 0 1px 0 #fff,0 3px 9px #124d8620}
+.rx210-btn:hover{border-color:#76b6ee;background:#d9eeff}
+.rx210-glyph{display:inline-flex;align-items:center;justify-content:center;flex:none;width:31px;height:31px;border-radius:11px;border:1px solid rgba(238,249,255,.78);background:linear-gradient(145deg,rgba(85,185,255,.85),rgba(2,60,131,.97));box-shadow:inset 0 1px 2px #ffffffaa,inset 0 -4px 9px #001e4c30,0 3px 7px #0c74c830}
+.rx210-glyph svg{width:19px;height:19px}
+.rx210-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:14px;margin-bottom:15px}
+.rx210-metrics article{margin:0;display:grid;gap:7px;padding:18px}
+.rx210-metrics article small{font-size:13px;color:#587797}
+.rx210-metrics article strong{font-size:26px;color:#103c70;font-variant-numeric:tabular-nums}
+.rx210-table-wrap{max-width:100%;overflow:auto;border:1px solid var(--rx210-line);border-radius:18px;background:rgba(255,255,255,.67);box-shadow:0 8px 20px #103e7110}
+.rx210-table{width:100%;border-collapse:separate;border-spacing:0;text-align:left;white-space:normal}
+.rx210-table th{background:linear-gradient(135deg,#103e72,#1e75b9);color:white;letter-spacing:.02em;font-size:13px;font-weight:700;padding:14px}
+.rx210-table td{border-top:1px solid #dce9f6;padding:13px 14px;color:#28486a;font-size:14px;vertical-align:middle}
+.rx210-table tbody tr:hover td{background:rgba(192,232,255,.32)}
+.rx210-status{font-size:12px;font-weight:680;padding:5px 9px;border-radius:999px;border:1px solid #bfdbf3;color:#285b8d;background:#e4f3ff;white-space:nowrap}
+.rx210-status.success{color:#16664a;background:#e6f6eb;border-color:#a5dec0}.rx210-status.warning{color:#86531f;background:#fff4da;border-color:#f2d9aa}.rx210-status.danger{color:#983a48;background:#ffe5e9;border-color:#f1adb8}
+.rx210-alert{padding:17px;color:#96324c;border:1px solid #f1b2c4;border-radius:13px;background:#fff0f4}
+.rx210-search{display:flex;align-items:center;gap:12px}.rx210-search input{flex:1}
+.rx210-person{display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:0;border-bottom:1px solid #e1edf9;background:transparent;padding:14px;cursor:pointer;color:#163f6c}
+.rx210-person:hover{background:rgba(214,236,255,.55)}.rx210-person span:nth-child(2){display:grid;gap:4px}.rx210-person small{color:#64809d}
+.rx210-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px;padding-top:10px}
+.rx210-details>div{display:grid;gap:6px}.rx210-details small{color:#69829b}.rx210-details strong{font-size:16px}
+.rexus210-linked-account{border-top:1px solid #dceaf8;padding-top:15px}
+#rexusDocsShell .rd-side-head{position:relative}
+#rexusDocsShell .rd-space-switch{display:flex;flex-wrap:wrap;gap:3px 8px;align-items:center;flex:1;min-width:0;text-align:left;border:1px solid transparent;background:transparent;border-radius:11px;padding:7px;cursor:pointer;color:#174370;font-size:15px;font-weight:760}
+#rexusDocsShell .rd-space-switch:hover{border-color:#b8d6f0;background:#eaf5ff}
+#rexusDocsShell .rd-space-switch small{font-size:12px;font-weight:560;color:#547ca0;display:block;flex:0 0 100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rexusDocsShell .rd-chevron{font-size:18px;color:#267bd0}
+#rexusDocsShell .rd-space-dropdown{position:absolute;z-index:60;top:calc(100% - 1px);left:10px;right:10px;padding:13px;background:linear-gradient(155deg,rgba(255,255,255,.98),rgba(225,243,255,.96));border:1px solid #b8d5f0;border-radius:17px;box-shadow:0 15px 45px #14477226;backdrop-filter:blur(22px)}
+#rexusDocsShell .rd-space-dropdown label{display:grid;gap:4px;color:#607ea0;font-size:12px;font-weight:700}
+#rexusDocsShell .rd-space-dropdown input{min-width:0;width:100%;padding:9px;border-radius:10px;border:1px solid #bdd9f4;outline:none;background:white}
+#rexusDocsShell .rd-space-option-list{max-height:250px;overflow:auto;margin:7px 0}
+#rexusDocsShell .rd-space-option-list button,#rexusDocsShell .rd-space-add{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;border-radius:9px;color:#183f6c;padding:10px 8px;cursor:pointer;text-align:left}
+#rexusDocsShell .rd-space-option-list button span:nth-child(2){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#rexusDocsShell .rd-space-option-list button:hover,#rexusDocsShell .rd-space-option-list button[aria-selected=true]{background:#d7edff}
+#rexusDocsShell .rd-space-add{border-top:1px solid #bedaf1;font-weight:740}
+@media(max-width:700px){.rx210-title{display:block}.rx210-filters{display:grid;grid-template-columns:1fr}.rx210-table th,.rx210-table td{padding:10px 9px}.rx210-glass{padding:14px}}
+/* [v2.2.0] removed: gradient nav tiles + white strokes — superseded by rexus-ui.css */
+

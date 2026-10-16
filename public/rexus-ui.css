@@ -1,0 +1,1622 @@
+/* =============================================================================
+   REXUS v2.2.0 — Adaptive Liquid Glass design system
+   -----------------------------------------------------------------------------
+   Single source of truth for tokens and component styling. Loaded LAST so it
+   supersedes the historical patch layers (rexus-liquid-glass.css, v205…v213).
+   Presentation only: no business rules, API contracts or data flows live here.
+
+   Sections
+     1. Design tokens          9. Menus, dropdowns, popovers
+     2. Legacy variable remap 10. Modals & dialogs
+     3. Base & typography     11. Toasts, sync pill, loader
+     4. Glass material        12. REXUS Document workspace
+     5. App shell             13. v2.1 modules (approvals, resources, finance)
+     6. Buttons               14. Authentication
+     7. Icon tiles            15. Responsive
+     8. Forms, data display   16. Accessibility & fallbacks
+   ========================================================================== */
+
+/* 1. DESIGN TOKENS ----------------------------------------------------------- */
+:root{
+  /* Typography */
+  --rx-font: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --rx-font-mono: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
+  --rx-text-xs: 12px;   --rx-lh-xs: 16px;   /* captions, table headers   */
+  --rx-text-sm: 13px;   --rx-lh-sm: 18px;   /* labels, helper, meta      */
+  --rx-text-md: 14px;   --rx-lh-md: 21px;   /* body, buttons, table cells*/
+  --rx-text-lg: 16px;   --rx-lh-lg: 24px;   /* card titles, lead text    */
+  --rx-text-xl: 18px;   --rx-lh-xl: 26px;   /* section headings          */
+  --rx-text-2xl: 22px;  --rx-lh-2xl: 30px;  /* modal titles, metrics     */
+  --rx-text-3xl: 28px;  --rx-lh-3xl: 36px;  /* page titles               */
+  --rx-weight-regular: 400; --rx-weight-medium: 500; --rx-weight-semibold: 600; --rx-weight-bold: 700;
+  --rx-tracking-tight: -0.015em; --rx-tracking-caps: 0.04em;
+
+  /* Spacing scale (4 / 8 / 12 / 16 / 24 / 32 / 48 / 64) */
+  --rx-space-1: 4px;  --rx-space-2: 8px;  --rx-space-3: 12px; --rx-space-4: 16px;
+  --rx-space-5: 24px; --rx-space-6: 32px; --rx-space-7: 48px; --rx-space-8: 64px;
+
+  /* Radius */
+  --rx-radius-xs: 6px; --rx-radius-sm: 8px; --rx-radius-md: 10px; --rx-radius-lg: 14px;
+  --rx-radius-xl: 20px; --rx-radius-pill: 999px;
+
+  /* Neutral ink (achromatic — glass never carries a hue of its own) */
+  --rx-ink-1: #14171c;   /* primary text            16.9:1 on white */
+  --rx-ink-2: #444b56;   /* secondary text           9.0:1          */
+  --rx-ink-3: #636b77;   /* tertiary / placeholder   5.4:1          */
+  --rx-ink-4: #9aa1ab;   /* disabled                                 */
+  --rx-hairline: rgba(20, 23, 28, 0.10);
+  --rx-hairline-strong: rgba(20, 23, 28, 0.16);
+  --rx-surface: #ffffff;              /* solid reading surface   */
+  --rx-surface-muted: #f6f7f9;
+  --rx-canvas: #eef0f3;
+
+  /* Accent: used for focus, links, selection and progress — never as a glass fill */
+  --rx-accent: #1a5fd0;
+  --rx-accent-strong: #134aa6;
+  --rx-accent-soft: rgba(26, 95, 208, 0.10);
+  --rx-focus-ring: 0 0 0 2px #fff, 0 0 0 4px rgba(26, 95, 208, 0.85);
+
+  /* Semantic colours (text-on-tint pairs all ≥ 4.5:1) */
+  --rx-success: #17734a; --rx-success-soft: #e3f4ea; --rx-success-line: rgba(23,115,74,.28);
+  --rx-warning: #8f5200; --rx-warning-soft: #fdf0d9; --rx-warning-line: rgba(143,82,0,.28);
+  --rx-danger:  #b4232f; --rx-danger-soft:  #fce8ea; --rx-danger-line:  rgba(180,35,47,.30);
+  --rx-info:    #1a5fd0; --rx-info-soft:    #e6effc; --rx-info-line:    rgba(26,95,208,.26);
+  --rx-neutral: #4b5360; --rx-neutral-soft: #eceef1; --rx-neutral-line: rgba(75,83,96,.22);
+
+  /* Glass material — three levels, colourless, background-adaptive */
+  --rx-glass-1-bg: rgba(255, 255, 255, 0.46);
+  --rx-glass-2-bg: rgba(255, 255, 255, 0.62);
+  --rx-glass-3-bg: rgba(255, 255, 255, 0.86);
+  --rx-glass-1-blur: 12px; --rx-glass-2-blur: 18px; --rx-glass-3-blur: 30px;
+  --rx-glass-saturate: 165%;
+  --rx-glass-edge: rgba(255, 255, 255, 0.62);         /* soft edge reflection   */
+  --rx-glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.75);  /* inner highlight */
+  --rx-glass-bevel: inset 0 -1px 0 rgba(20, 23, 28, 0.04);       /* gentle bevel     */
+  --rx-glass-hover-bg: rgba(255, 255, 255, 0.78);
+  --rx-glass-press-bg: rgba(255, 255, 255, 0.56);
+
+  /* Dark (smoked) glass for primary actions and on-dark contexts — still achromatic */
+  --rx-smoke-bg: rgba(20, 23, 28, 0.86);
+  --rx-smoke-hover-bg: rgba(20, 23, 28, 0.94);
+  --rx-smoke-edge: rgba(255, 255, 255, 0.14);
+
+  /* Elevation */
+  --rx-shadow-1: 0 1px 2px rgba(20, 23, 28, 0.06);
+  --rx-shadow-2: 0 2px 6px rgba(20, 23, 28, 0.06), 0 8px 24px rgba(20, 23, 28, 0.06);
+  --rx-shadow-3: 0 12px 32px rgba(20, 23, 28, 0.14), 0 2px 8px rgba(20, 23, 28, 0.06);
+  --rx-shadow-hover: 0 4px 12px rgba(20, 23, 28, 0.10);
+
+  /* Motion */
+  --rx-duration-fast: 160ms; --rx-duration: 220ms; --rx-duration-slow: 280ms;
+  --rx-ease: cubic-bezier(.2, .7, .2, 1);
+
+  /* Component dimensions */
+  --rx-control-h-sm: 32px; --rx-control-h: 38px; --rx-control-h-lg: 44px;
+  --rx-icon-btn: 36px; --rx-icon-btn-sm: 32px; --rx-icon: 18px; --rx-icon-sm: 16px;
+  --rx-header-h: 64px; --rx-sidebar-w: 232px; --rx-sidebar-w-collapsed: 68px;
+
+  /* Themeable surfaces (Module 9). Overridden per theme below. */
+  --rx-app-bg:
+    radial-gradient(1200px 600px at 8% -10%, rgba(120, 160, 230, 0.20), transparent 60%),
+    radial-gradient(900px 500px at 100% 10%, rgba(230, 190, 150, 0.16), transparent 60%),
+    radial-gradient(900px 700px at 50% 110%, rgba(150, 200, 180, 0.14), transparent 60%),
+    linear-gradient(180deg, #f3f4f6 0%, #eceef2 100%);
+  --rx-header-bg: rgba(248, 249, 251, 0.72);
+  --rx-sidebar-bg: rgba(255, 255, 255, 0.38);
+  --rx-table-head-bg: #f4f5f7;
+  --rx-heading: var(--rx-ink-1);
+  --rx-nav-active-bg: var(--rx-glass-hover-bg);
+  --rx-nav-active-ink: var(--rx-ink-1);
+  --rx-footer-bg: #1b2029;
+
+  /* Density (Module 9 compact layout ≈ 15–25% less padding than v2.2.0; readable sizes unchanged) */
+  --rx-pad-page-y: 20px; --rx-pad-page-x: 24px;
+  --rx-pad-card: 14px; --rx-gap: 12px; --rx-gap-sm: 8px;
+  --rx-cell-y: 9px; --rx-cell-x: 10px;
+  --rx-nav-item-h: 36px; --rx-section-gap: 24px; --rx-modal-pad: 18px;
+
+  /* Z-index scale — the ONLY stacking values used by the UI */
+  --rx-z-base: 0;
+  --rx-z-raised: 10;          /* sticky table headers, cards on hover */
+  --rx-z-sticky: 100;         /* sticky toolbars inside pages        */
+  --rx-z-sidebar: 150;
+  --rx-z-header: 200;         /* app header + its own menus           */
+  --rx-z-dropdown: 1000;      /* selects, pickers, search results     */
+  --rx-z-popover: 1100;       /* portaled popovers, context menus     */
+  --rx-z-tooltip: 1200;
+  --rx-z-modal: 1300;         /* modal backdrop + dialog              */
+  --rx-z-modal-nested: 1400;  /* modal opened from inside a modal     */
+  --rx-z-confirm: 1500;       /* confirmation above any modal         */
+  --rx-z-toast: 1600;
+  --rx-z-loader: 1700;
+  --rx-z-auth: 1800;
+  --rx-z-critical: 1900;
+}
+
+/* 2. LEGACY VARIABLE REMAP ---------------------------------------------------
+   The app's ~500 inline styles reference these variables. Remapping them here
+   moves every legacy screen onto the neutral system without touching markup. */
+.wm-app{
+  --wm-sidebar-w: var(--rx-sidebar-w);
+  --navy: #1e2530; --navy-deep: #141a22; --navy-mid: var(--rx-accent);
+  --gold: var(--rx-accent); --gold-deep: var(--rx-accent-strong);
+  --ink: var(--rx-ink-1); --ink-soft: var(--rx-ink-3);
+  --line: #e2e5ea; --line-soft: #eef0f3;
+  --bg: var(--rx-canvas); --surface: var(--rx-surface);
+  --ok: var(--rx-success); --warn: var(--rx-warning); --danger: var(--rx-danger);
+  --p-high: var(--rx-danger); --p-medium: var(--rx-warning); --p-low: var(--rx-success);
+  --s-notstarted: var(--rx-neutral); --s-inprogress: var(--rx-info); --s-completed: var(--rx-success);
+  --s-overdue: var(--rx-danger); --s-review: var(--rx-warning); --s-cancelled: var(--rx-neutral); --s-urgent: var(--rx-danger);
+  --c-deepblue:#1e2530; --c-green:var(--rx-success); --c-yellow:var(--rx-warning); --c-orange:var(--rx-warning); --c-redorange:var(--rx-danger);
+  --c-deepblue-tint:#eceef1; --c-green-tint:var(--rx-success-soft); --c-yellow-tint:var(--rx-warning-soft); --c-orange-tint:var(--rx-warning-soft); --c-redorange-tint:var(--rx-danger-soft); --c-navymid-tint:var(--rx-info-soft);
+  --rx-shadow: var(--rx-shadow-2);
+}
+#rexusDocsShell{ --rd-navy: var(--rx-ink-1); --rd-blue: var(--rx-accent); --rd-border: #e2e5ea; --rd-ink: var(--rx-ink-1); --rd-muted: var(--rx-ink-3); --rd-ocean: var(--rx-accent); --rd-sky: var(--rx-accent); --rd-ui-size: var(--rx-text-md); }
+
+/* 3. BASE & TYPOGRAPHY ------------------------------------------------------- */
+html{ background: var(--rx-canvas); -webkit-text-size-adjust: 100%; }
+body{ font-family: var(--rx-font); color: var(--rx-ink-1); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+.wm-app{
+  font-family: var(--rx-font);
+  font-size: var(--rx-text-md); line-height: var(--rx-lh-md); letter-spacing: 0;
+  color: var(--rx-ink-1);
+  padding: 0 !important;                      /* removes stray band below the footer */
+  /* Ambient backdrop: the only source of colour the glass picks up. Deliberately
+     low-saturation so text on glass keeps its contrast. */
+  background:
+    radial-gradient(1200px 600px at 8% -10%, rgba(120, 160, 230, 0.20), transparent 60%),
+    radial-gradient(900px 500px at 100% 10%, rgba(230, 190, 150, 0.16), transparent 60%),
+    radial-gradient(900px 700px at 50% 110%, rgba(150, 200, 180, 0.14), transparent 60%),
+    linear-gradient(180deg, #f3f4f6 0%, #eceef2 100%);
+  background: var(--rx-app-bg) !important;
+  background-attachment: fixed !important;
+}
+.wm-app h1, .wm-app h2, .wm-app h3,
+.wm-app .wm-project-name, .wm-app .wm-stat-num, .wm-app .wm-cal-title, .wm-app .wm-footer-title, .wm-app .wm-loader-number{
+  font-family: var(--rx-font) !important; letter-spacing: var(--rx-tracking-tight) !important;
+}
+.wm-app h1, .wm-app h2, .wm-app h3{ color: var(--rx-heading); font-weight: var(--rx-weight-bold); margin: 0; }
+.wm-app h1{ font-size: var(--rx-text-3xl); line-height: var(--rx-lh-3xl); }
+.wm-app h2{ font-size: var(--rx-text-2xl); line-height: var(--rx-lh-2xl); }
+.wm-app h3{ font-size: var(--rx-text-xl); line-height: var(--rx-lh-xl); }
+.wm-app p{ margin-top: 0; }
+.wm-app a{ color: var(--rx-accent); text-underline-offset: 2px; }
+.wm-app a:hover{ color: var(--rx-accent-strong); }
+.wm-app strong, .wm-app b{ font-weight: var(--rx-weight-semibold); }
+.wm-app small{ font-size: var(--rx-text-sm); }
+.wm-app ::selection{ background: rgba(26, 95, 208, 0.18); }
+.wm-app img, .wm-app svg, .wm-app video{ max-width: 100%; }
+.wm-app svg{ flex-shrink: 0; }
+/* Long unbroken strings (URLs, IDs) wrap instead of escaping their container. */
+.wm-app .wm-body, .wm-app .wm-modal-body, #rexusDocsShell .rd-main{ overflow-wrap: break-word; }
+
+.wm-app .wm-section-title{
+  font-size: var(--rx-text-xl) !important; line-height: var(--rx-lh-xl);
+  font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-1) !important;
+  margin: var(--rx-section-gap) 0 var(--rx-space-3) !important; padding: 0 0 var(--rx-space-2) !important;
+  border-bottom: 1px solid var(--rx-hairline) !important;
+}
+.wm-app .wm-section-title:first-child{ margin-top: 0 !important; }
+.wm-app .wm-group-head{
+  font-size: var(--rx-text-xs) !important; line-height: var(--rx-lh-xs); font-weight: var(--rx-weight-semibold);
+  letter-spacing: var(--rx-tracking-caps) !important; text-transform: uppercase; color: var(--rx-ink-3) !important;
+  margin: var(--rx-space-5) 0 var(--rx-space-2) !important;
+}
+.wm-app .wm-group-head:first-child{ margin-top: 0 !important; }
+.wm-app .wm-empty{
+  padding: var(--rx-space-6) var(--rx-space-4); color: var(--rx-ink-3); font-style: normal; font-size: var(--rx-text-md);
+  text-align: center; border: 1px dashed var(--rx-hairline-strong); border-radius: var(--rx-radius-lg);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+/* 4. GLASS MATERIAL -----------------------------------------------------------
+   Use the utility classes in new markup; legacy selectors are mapped below.
+   Level 1 = subtle (toolbar, icon buttons), 2 = standard (buttons, cards,
+   navigation, dropdowns), 3 = elevated (modals, popovers, menus).            */
+.rx-glass-1, .rx-glass-2, .rx-glass-3{ border: 1px solid var(--rx-glass-edge); }
+.rx-glass-1{ background: var(--rx-glass-1-bg); box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1); }
+.rx-glass-2{ background: var(--rx-glass-2-bg); box-shadow: var(--rx-glass-highlight), var(--rx-glass-bevel), var(--rx-shadow-2);
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)); backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)); }
+.rx-glass-3{ background: var(--rx-glass-3-bg); box-shadow: var(--rx-glass-highlight), var(--rx-shadow-3);
+  -webkit-backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)); backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)); }
+.rx-surface{ background: var(--rx-surface); border: 1px solid var(--rx-hairline); box-shadow: var(--rx-shadow-1); }
+
+/* 5. APP SHELL --------------------------------------------------------------- */
+/* Header — Level 2 glass, the content scrolls underneath and tints it. */
+.wm-app .wm-header{
+  position: sticky; top: 0; z-index: var(--rx-z-header) !important; isolation: isolate;
+  min-height: var(--rx-header-h); padding: var(--rx-space-3) var(--rx-space-5) !important;
+  color: var(--rx-ink-1);
+  background: var(--rx-header-bg) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate));
+  backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate));
+  border-bottom: 1px solid var(--rx-hairline) !important;
+  box-shadow: var(--rx-glass-highlight) !important;
+}
+.wm-app .wm-header-top{ display: flex; align-items: center; flex-wrap: nowrap; gap: var(--rx-space-4) !important; min-height: 40px; }
+.wm-app .wm-brand{
+  display: flex; align-items: center; gap: var(--rx-space-2) !important; flex: 0 0 auto;
+  width: calc(var(--wm-sidebar-w) - var(--rx-space-5)); min-width: 0; padding-right: var(--rx-space-3);
+  border-right: 1px solid var(--rx-hairline) !important;
+}
+.wm-app .wm-title{
+  color: var(--rx-ink-1) !important; font-size: var(--rx-text-lg) !important; line-height: var(--rx-lh-lg);
+  font-weight: var(--rx-weight-bold) !important; letter-spacing: var(--rx-tracking-tight) !important; white-space: nowrap;
+}
+.wm-app .wm-title .rx-doc-word{
+  background: none !important; -webkit-text-fill-color: currentColor !important; color: var(--rx-ink-3) !important;
+  font-weight: var(--rx-weight-semibold) !important; font-size: 1em !important;
+}
+.wm-app .wm-header-controls{ display: flex; align-items: center; gap: var(--rx-space-2) !important; margin-left: auto; flex: 0 0 auto; }
+
+/* Header search: one joined Level-1 glass field */
+.wm-app .wm-gsearch{ flex: 1 1 280px; min-width: 120px; max-width: 560px; height: var(--rx-control-h); }
+.wm-app .wm-gsearch-scope{
+  height: var(--rx-control-h); min-height: 0 !important; padding: 0 var(--rx-space-2) 0 var(--rx-space-3) !important;
+  border: 1px solid var(--rx-hairline-strong) !important; border-right: 0 !important;
+  border-radius: var(--rx-radius-md) 0 0 var(--rx-radius-md) !important;
+  background-color: var(--rx-glass-1-bg) !important; color: var(--rx-ink-2) !important;
+  font-size: var(--rx-text-sm) !important; font-weight: var(--rx-weight-medium); max-width: 120px; cursor: pointer;
+}
+.wm-app .wm-gsearch-input-wrap{ height: var(--rx-control-h); }
+.wm-app .wm-gsearch-input{
+  height: var(--rx-control-h); min-height: 0 !important; padding: 0 var(--rx-space-3) 0 38px !important;
+  border: 1px solid var(--rx-hairline-strong) !important; border-radius: 0 var(--rx-radius-md) var(--rx-radius-md) 0 !important;
+  background: var(--rx-glass-1-bg) !important; color: var(--rx-ink-1) !important; font-size: var(--rx-text-md) !important;
+  box-shadow: var(--rx-glass-highlight);
+  transition: background var(--rx-duration) var(--rx-ease), border-color var(--rx-duration) var(--rx-ease), box-shadow var(--rx-duration) var(--rx-ease);
+}
+.wm-app .wm-gsearch-input::placeholder{ color: var(--rx-ink-3) !important; }
+.wm-app .wm-gsearch-input:focus{ background: rgba(255,255,255,.92) !important; border-color: var(--rx-accent) !important; box-shadow: 0 0 0 3px var(--rx-accent-soft) !important; outline: none !important; }
+.wm-app .wm-gsearch-icon, .wm-app .wm-gsearch-input-wrap .rx-search-icon{
+  position: absolute; left: 10px !important; top: 50% !important; transform: translateY(-50%) !important;
+  width: 20px !important; height: 20px !important; color: var(--rx-ink-3) !important; stroke: currentColor !important; pointer-events: none; z-index: 1;
+}
+.wm-app .wm-gsearch-input-wrap .rx-search-icon{ background: none !important; border: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; display: grid; place-items: center; }
+.wm-app .wm-gsearch-input-wrap .rx-search-icon svg{ width: 16px !important; height: 16px !important; stroke: currentColor !important; }
+.wm-app #rdHeaderSearchWrap .rx-doc-search-clear{ color: var(--rx-ink-3) !important; width: 28px; height: 28px; right: 5px !important; border-radius: var(--rx-radius-sm) !important; display: grid; place-items: center; padding: 0 !important; }
+.wm-app #rdHeaderSearchWrap .rx-doc-search-clear:hover{ background: rgba(20,23,28,.06) !important; color: var(--rx-ink-1) !important; }
+
+/* Sidebar — Level 1 glass rail with Level 2 active item */
+.wm-app .wm-shell{ background: transparent !important; align-items: stretch; }
+.wm-app .wm-sidebar{
+  z-index: var(--rx-z-sidebar);
+  top: var(--wm-header-h, var(--rx-header-h)) !important;
+  align-self: flex-start; height: calc(100vh - var(--wm-header-h, var(--rx-header-h))); height: calc(100dvh - var(--wm-header-h, var(--rx-header-h)));
+  overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: thin;
+  width: var(--wm-sidebar-w); gap: 2px !important; padding: var(--rx-space-3) var(--rx-space-3) var(--rx-space-5) !important;
+  background: var(--rx-sidebar-bg) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-1-blur)) saturate(var(--rx-glass-saturate)) !important;
+  backdrop-filter: blur(var(--rx-glass-1-blur)) saturate(var(--rx-glass-saturate)) !important;
+  border-right: 1px solid var(--rx-hairline) !important; box-shadow: inset -1px 0 0 rgba(255,255,255,.6) !important;
+}
+.wm-app .wm-sidebar.collapsed{ width: var(--rx-sidebar-w-collapsed) !important; }
+.wm-app .wm-tabs-pill{ display: none !important; }
+.wm-app .wm-tabs-toggle{
+  align-self: flex-end; width: var(--rx-icon-btn-sm) !important; height: var(--rx-icon-btn-sm) !important; margin: 0 0 var(--rx-space-2) !important;
+  border-radius: var(--rx-radius-md) !important; color: var(--rx-ink-2) !important; font-size: 16px; line-height: 1;
+  background: var(--rx-glass-1-bg) !important; border: 1px solid var(--rx-hairline-strong) !important; box-shadow: var(--rx-glass-highlight) !important;
+}
+.wm-app .wm-tabs-toggle:hover{ background: var(--rx-glass-hover-bg) !important; color: var(--rx-ink-1) !important; }
+.wm-app .wm-sidebar.collapsed .wm-tabs-toggle{ align-self: center; }
+.wm-app .wm-tab{
+  display: flex !important; align-items: center; gap: var(--rx-space-3) !important;
+  min-height: var(--rx-nav-item-h); padding: 2px var(--rx-space-2) !important; border-radius: var(--rx-radius-md) !important;
+  color: var(--rx-ink-2) !important; font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-medium) !important; line-height: var(--rx-lh-md);
+  border: 1px solid transparent !important; white-space: nowrap; cursor: pointer; user-select: none;
+  transition: background var(--rx-duration) var(--rx-ease), color var(--rx-duration) var(--rx-ease), box-shadow var(--rx-duration) var(--rx-ease), border-color var(--rx-duration) var(--rx-ease);
+}
+.wm-app .wm-tab-label{ min-width: 0; white-space: normal; line-height: 1.25; overflow-wrap: break-word; }
+.wm-app .wm-tab:hover{ color: var(--rx-ink-1) !important; background: rgba(255, 255, 255, 0.55) !important; }
+.wm-app .wm-tab.active{
+  color: var(--rx-nav-active-ink) !important; font-weight: var(--rx-weight-semibold) !important;
+  background: var(--rx-nav-active-bg) !important; border-color: var(--rx-glass-edge) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1) !important;
+}
+.wm-app .wm-tab-icon{ display: flex !important; order: -1; flex: 0 0 30px !important; width: 30px !important; height: 30px !important; align-items: center; justify-content: center; }
+.wm-app .wm-sidebar.collapsed .wm-tab{ justify-content: center; padding: var(--rx-space-1) !important; }
+.wm-app .wm-sidebar.collapsed .wm-tab-label{ display: none; }
+
+/* Content column */
+.wm-app .wm-body{
+  background: transparent !important; border: 0 !important; overflow-x: clip;
+  padding: var(--rx-pad-page-y) var(--rx-pad-page-x) var(--rx-space-7) !important;
+  min-height: calc(100vh - var(--wm-header-h, var(--rx-header-h)));
+}
+.wm-app .wm-view > h2:first-child, .wm-app .wm-view > div > h2:first-child{ margin-bottom: var(--rx-space-4); }
+
+/* Footer — calm solid band, not glass */
+.wm-app .wm-footer{
+  background: var(--rx-footer-bg) !important; color: #c3c8d0 !important; border-top: 1px solid rgba(255,255,255,.06) !important;
+  padding: var(--rx-space-5) var(--rx-space-6) !important; gap: var(--rx-space-5) !important;
+  font-size: var(--rx-text-sm) !important; line-height: 1.7 !important;
+}
+.wm-app .wm-footer-title{ color: #fff !important; font-size: var(--rx-text-lg) !important; font-weight: var(--rx-weight-semibold) !important; margin-bottom: var(--rx-space-1); }
+.wm-app .wm-footer a{ color: #a9c4f5 !important; }
+.wm-app .wm-footer-copyright{ color: #8a919c !important; font-size: var(--rx-text-xs) !important; }
+
+/* 6. BUTTONS -------------------------------------------------------------------
+   Every legacy button family maps onto one geometry and one state model.
+   Variants: default (glass), .primary (smoked glass), .danger, .success,
+   .ghost; sizes: .rx-btn-sm, .rx-btn-lg; shapes: icon (rounded square).     */
+.wm-app .wm-btn, .wm-app .rx-btn, .wm-app .rx210-btn, .wm-app .rx-audit-btn, .rx-audit-screen .rx-audit-btn,
+.wm-app .rx211-bulk-tools button, #rexusDocsShell .rd-button, .wm-app .wm-cal-nav button, .wm-app .wm-period-btn,
+.wm-app .wm-new-btn, .wm-auth-screen .wm-auth-submit, .wm-app .rx213-subnav button, .wm-app #finModeToggle button{
+  position: relative;
+  display: inline-flex !important; align-items: center; justify-content: center; gap: var(--rx-space-2);
+  min-height: var(--rx-control-h) !important; height: auto; padding: var(--rx-space-2) var(--rx-space-4) !important;
+  border-radius: var(--rx-radius-md) !important;
+  font-family: var(--rx-font); font-size: var(--rx-text-md) !important; line-height: 20px !important;
+  font-weight: var(--rx-weight-semibold) !important; letter-spacing: 0; text-align: center; white-space: nowrap;
+  color: var(--rx-ink-1) !important;
+  background: var(--rx-glass-2-bg) !important; background-image: none !important;
+  border: 1px solid var(--rx-hairline-strong) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-glass-bevel), var(--rx-shadow-1) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-1-blur)) saturate(var(--rx-glass-saturate));
+  backdrop-filter: blur(var(--rx-glass-1-blur)) saturate(var(--rx-glass-saturate));
+  cursor: pointer; user-select: none; text-decoration: none; vertical-align: middle; max-width: 100%;
+  transition: background-color var(--rx-duration) var(--rx-ease), border-color var(--rx-duration) var(--rx-ease),
+              box-shadow var(--rx-duration) var(--rx-ease), color var(--rx-duration) var(--rx-ease),
+              transform var(--rx-duration-fast) var(--rx-ease), opacity var(--rx-duration) var(--rx-ease);
+  filter: none !important;
+}
+/* Hover — subtle elevation, never moves surrounding layout */
+.wm-app .wm-btn:hover, .wm-app .rx-btn:hover, .wm-app .rx210-btn:hover, .rx-audit-screen .rx-audit-btn:hover,
+.wm-app .rx211-bulk-tools button:hover, #rexusDocsShell .rd-button:hover, .wm-app .wm-cal-nav button:hover, .wm-app .wm-period-btn:hover,
+.wm-app .rx213-subnav button:hover, .wm-app #finModeToggle button:hover{
+  background: var(--rx-glass-hover-bg) !important; border-color: rgba(20,23,28,.22) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-shadow-hover) !important; transform: translateY(-1px);
+}
+/* Active / pressed */
+.wm-app .wm-btn:active, .wm-app .rx-btn:active, .wm-app .rx210-btn:active, .rx-audit-screen .rx-audit-btn:active,
+.wm-app .rx211-bulk-tools button:active, #rexusDocsShell .rd-button:active, .wm-app .wm-cal-nav button:active, .wm-app .wm-period-btn:active,
+.wm-app .wm-new-btn:active, .wm-auth-screen .wm-auth-submit:active, .wm-app .rx213-subnav button:active, .wm-app #finModeToggle button:active{
+  transform: translateY(0) scale(0.985); background: var(--rx-glass-press-bg) !important; box-shadow: inset 0 1px 2px rgba(20,23,28,.10) !important;
+}
+/* Primary — smoked achromatic glass with white label */
+.wm-app .wm-btn.primary, .wm-app .rx-btn.primary, #rexusDocsShell .rd-button.primary, .wm-app .wm-new-btn,
+.wm-auth-screen .wm-auth-submit, .wm-app .rx210-btn.primary{
+  color: #fff !important; background: var(--rx-smoke-bg) !important; background-image: none !important;
+  border-color: var(--rx-smoke-edge) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 1px 2px rgba(20,23,28,.18), 0 6px 16px rgba(20,23,28,.14) !important;
+}
+.wm-app .wm-btn.primary:hover, .wm-app .rx-btn.primary:hover, #rexusDocsShell .rd-button.primary:hover, .wm-app .wm-new-btn:hover,
+.wm-auth-screen .wm-auth-submit:hover, .wm-app .rx210-btn.primary:hover{
+  background: var(--rx-smoke-hover-bg) !important; color: #fff !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 2px 4px rgba(20,23,28,.2), 0 10px 22px rgba(20,23,28,.18) !important; transform: translateY(-1px);
+}
+/* Danger — semantic colour, used intentionally */
+.wm-app .wm-btn.danger, .wm-app .rx-btn.danger, #rexusDocsShell .rd-button.danger, .wm-app .rx210-btn.danger{
+  color: var(--rx-danger) !important; border-color: var(--rx-danger-line) !important; background: rgba(255,255,255,.62) !important;
+}
+.wm-app .wm-btn.danger:hover, .wm-app .rx-btn.danger:hover, #rexusDocsShell .rd-button.danger:hover, .wm-app .rx210-btn.danger:hover{
+  color: #fff !important; background: var(--rx-danger) !important; border-color: var(--rx-danger) !important;
+}
+.wm-app .wm-btn.success, .wm-app .rx-btn.success{ color: var(--rx-success) !important; border-color: var(--rx-success-line) !important; }
+.wm-app .wm-btn.ghost, .wm-app .rx-btn.ghost{ background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
+/* Sizes */
+.wm-app .rx-btn-sm, #rexusDocsShell .rd-fileline .rd-button, #rexusDocsShell .rd-folder-comment .rd-button, .wm-app .rx211-bulk-tools button,
+.wm-app .wm-cal-nav button{ min-height: var(--rx-control-h-sm) !important; padding: var(--rx-space-1) var(--rx-space-3) !important; font-size: var(--rx-text-sm) !important; border-radius: var(--rx-radius-sm) !important; }
+.wm-app .rx-btn-lg, .wm-auth-screen .wm-auth-submit{ min-height: var(--rx-control-h-lg) !important; }
+.wm-auth-screen .wm-auth-submit{ width: 100%; }
+/* Selected (toggle groups, segmented controls, sub-navigation) */
+.wm-app .wm-period-btn.active, .wm-app .rx213-subnav button[aria-selected="true"], .wm-app #finModeToggle button.active,
+.wm-app .wm-btn[aria-pressed="true"], .wm-app .wm-btn.active, #rexusDocsShell .rd-button[aria-pressed="true"]{
+  color: var(--rx-ink-1) !important; background: #fff !important; border-color: rgba(20,23,28,.22) !important;
+  box-shadow: inset 0 0 0 1px rgba(20,23,28,.06), 0 1px 2px rgba(20,23,28,.08), 0 0 0 3px var(--rx-accent-soft) !important;
+}
+/* Segmented groups share one Level-1 track */
+.wm-app .wm-period-toggle, .wm-app .rx213-subnav, .wm-app #finModeToggle{
+  display: inline-flex !important; flex-wrap: wrap; gap: var(--rx-space-1) !important; padding: var(--rx-space-1) !important;
+  border-radius: var(--rx-radius-lg) !important; background: rgba(255,255,255,.42) !important; border: 1px solid var(--rx-hairline) !important;
+  box-shadow: var(--rx-glass-highlight) !important; max-width: 100%; width: auto; margin-bottom: var(--rx-space-4) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.wm-app .wm-period-toggle .wm-period-btn, .wm-app .rx213-subnav button, .wm-app #finModeToggle button{
+  min-height: var(--rx-control-h-sm) !important; padding: var(--rx-space-1) var(--rx-space-4) !important; border-radius: var(--rx-radius-md) !important;
+  background: transparent !important; border-color: transparent !important; box-shadow: none !important; color: var(--rx-ink-2) !important;
+  -webkit-backdrop-filter: none; backdrop-filter: none; white-space: nowrap !important;
+}
+.wm-app .wm-period-toggle .wm-period-btn:hover, .wm-app .rx213-subnav button:hover, .wm-app #finModeToggle button:hover{ background: rgba(255,255,255,.6) !important; transform: none; color: var(--rx-ink-1) !important; }
+.wm-app .wm-period-toggle .wm-period-btn.active, .wm-app .rx213-subnav button[aria-selected="true"], .wm-app #finModeToggle button.active,
+.wm-app #finModeToggle button[aria-pressed="true"], .wm-app #finModeToggle button[aria-selected="true"]{
+  color: var(--rx-ink-1) !important; background: #fff !important; border-color: var(--rx-hairline) !important;
+  box-shadow: var(--rx-glass-highlight), 0 1px 2px rgba(20,23,28,.10), 0 2px 8px rgba(20,23,28,.06) !important;
+}
+/* Disabled */
+.wm-app .wm-btn:disabled, .wm-app .wm-btn[aria-disabled="true"], .wm-app .rx-btn:disabled, .wm-app .rx210-btn:disabled,
+#rexusDocsShell .rd-button:disabled, .wm-auth-screen .wm-auth-submit:disabled, .wm-app .wm-icon-btn:disabled, .wm-app .wm-glass-icon-btn:disabled,
+.wm-app .rx211-bulk-tools button:disabled, .wm-app .wm-new-btn:disabled{
+  opacity: .5 !important; cursor: not-allowed !important; transform: none !important; box-shadow: none !important; pointer-events: none;
+}
+/* Loading — label kept in place (no width jump), spinner overlaid */
+.wm-app .is-loading, .wm-app [aria-busy="true"].wm-btn, .wm-app [aria-busy="true"].rd-button, #rexusDocsShell .is-loading,
+.wm-auth-screen .is-loading{ color: transparent !important; pointer-events: none; cursor: progress !important; transform: none !important; }
+.wm-app .is-loading > *, #rexusDocsShell .is-loading > *, .wm-auth-screen .is-loading > *{ visibility: hidden; }
+.wm-app .is-loading::after, #rexusDocsShell .is-loading::after, .wm-auth-screen .is-loading::after{
+  content: ""; position: absolute; inset: 0; margin: auto; width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid rgba(20,23,28,.18); border-top-color: var(--rx-ink-1); animation: rx-spin .7s linear infinite; visibility: visible;
+}
+.wm-app .wm-btn.primary.is-loading::after, .wm-app .wm-new-btn.is-loading::after, #rexusDocsShell .rd-button.primary.is-loading::after,
+.wm-auth-screen .wm-auth-submit.is-loading::after{ border-color: rgba(255,255,255,.3); border-top-color: #fff; }
+@keyframes rx-spin{ to{ transform: rotate(360deg); } }
+/* Success / error feedback (set briefly by rexus-ui.js after a request settles) */
+.wm-app .is-success, #rexusDocsShell .is-success{ border-color: var(--rx-success) !important; box-shadow: 0 0 0 3px rgba(23,115,74,.16) !important; }
+.wm-app .is-error, #rexusDocsShell .is-error{ border-color: var(--rx-danger) !important; box-shadow: 0 0 0 3px rgba(180,35,47,.16) !important; animation: rx-nudge .32s var(--rx-ease); }
+@keyframes rx-nudge{ 25%{ transform: translateX(-2px); } 75%{ transform: translateX(2px); } }
+/* Icons inside text buttons */
+.wm-app .wm-btn svg, #rexusDocsShell .rd-button svg, .wm-app .rx210-btn svg{ width: var(--rx-icon-sm); height: var(--rx-icon-sm); stroke: currentColor; }
+
+/* Icon-only buttons — rounded squares, three sizes */
+.wm-app .wm-icon-btn, .wm-app .wm-glass-icon-btn, .wm-app .wm-glass-chip, .wm-app .rexus-switch-trigger,
+.wm-app .wm-notif-action, .wm-app .wm-confirm-popup-close, #rexusDocsShell .rd-icon-btn, #rexusDocsShell .rd-tree-toggle, .wm-app .rx-icon-btn{
+  position: relative; display: inline-flex !important; align-items: center !important; justify-content: center !important;
+  flex: 0 0 auto; padding: 0 !important; cursor: pointer; color: var(--rx-ink-2) !important;
+  background: var(--rx-glass-1-bg) !important; background-image: none !important;
+  border: 1px solid var(--rx-hairline-strong) !important; border-radius: var(--rx-radius-md) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1) !important;
+  transition: background-color var(--rx-duration) var(--rx-ease), color var(--rx-duration) var(--rx-ease),
+              border-color var(--rx-duration) var(--rx-ease), box-shadow var(--rx-duration) var(--rx-ease), transform var(--rx-duration-fast) var(--rx-ease);
+}
+.wm-app .wm-icon-btn{ width: var(--rx-icon-btn-sm) !important; height: var(--rx-icon-btn-sm) !important; border-radius: var(--rx-radius-sm) !important; }
+.wm-app .wm-glass-icon-btn, .wm-app .rx-icon-btn{ width: var(--rx-icon-btn) !important; height: var(--rx-icon-btn) !important; }
+.wm-app .wm-icon-btn:hover, .wm-app .wm-glass-icon-btn:hover, .wm-app .wm-glass-chip:hover, .wm-app .rexus-switch-trigger:hover,
+.wm-app .wm-notif-action:hover, .wm-app .wm-confirm-popup-close:hover, #rexusDocsShell .rd-icon-btn:hover, #rexusDocsShell .rd-tree-toggle:hover, .wm-app .rx-icon-btn:hover{
+  background: var(--rx-glass-hover-bg) !important; color: var(--rx-ink-1) !important; border-color: rgba(20,23,28,.22) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-shadow-hover) !important; transform: translateY(-1px);
+}
+.wm-app .wm-icon-btn:active, .wm-app .wm-glass-icon-btn:active, .wm-app .wm-glass-chip:active, .wm-app .rexus-switch-trigger:active,
+#rexusDocsShell .rd-icon-btn:active, .wm-app .rx-icon-btn:active{ transform: scale(.96); background: var(--rx-glass-press-bg) !important; }
+.wm-app .wm-icon-btn.danger:hover, .wm-app .wm-glass-icon-btn.danger:hover{ color: var(--rx-danger) !important; border-color: var(--rx-danger-line) !important; background: var(--rx-danger-soft) !important; }
+.wm-app .wm-icon-btn svg, .wm-app .wm-glass-icon-btn svg, .wm-app .wm-glass-chip > svg, .wm-app .rexus-switch-trigger svg,
+.wm-app .wm-notif-action svg, #rexusDocsShell .rd-icon-btn svg, .wm-app .rx-icon-btn svg{
+  width: var(--rx-icon) !important; height: var(--rx-icon) !important; stroke: currentColor !important; fill: none !important; pointer-events: none;
+}
+.wm-app .wm-icon-btn svg{ width: var(--rx-icon-sm) !important; height: var(--rx-icon-sm) !important; }
+/* A chip nested inside a button would be glass-on-glass: flatten it. */
+.wm-app .wm-icon-btn .rx-glass-icon, .wm-app .wm-glass-icon-btn .rx-glass-icon, .wm-app .wm-glass-chip .rx-glass-icon,
+#rexusDocsShell .rd-icon-btn .rx-glass-icon, .wm-app .wm-gsearch-input-wrap .rx-glass-icon{
+  width: auto !important; height: auto !important; background: none !important; border: 0 !important; box-shadow: none !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important; border-radius: 0 !important; display: grid !important; place-items: center;
+}
+.wm-app .wm-icon-btn .rx-glass-icon svg, .wm-app .wm-glass-icon-btn .rx-glass-icon svg, .wm-app .wm-glass-chip .rx-glass-icon svg, #rexusDocsShell .rd-icon-btn .rx-glass-icon svg{
+  width: var(--rx-icon) !important; height: var(--rx-icon) !important; stroke: currentColor !important;
+}
+.wm-app .wm-icon-btn .rx-glass-icon svg{ width: var(--rx-icon-sm) !important; height: var(--rx-icon-sm) !important; }
+.wm-app .wm-row-actions{ display: flex; gap: var(--rx-space-1) !important; align-items: center; justify-content: flex-end; flex-wrap: nowrap; }
+/* Legacy markup puts .wm-row-actions on the <td> itself; display:flex there broke the row
+   (cell detached from the row grid, misaligned borders). Keep it a real table cell. */
+.wm-app td.wm-row-actions{ display: table-cell !important; white-space: nowrap; text-align: right; width: 1%; }
+.wm-app td.wm-row-actions > * + *{ margin-left: var(--rx-space-1); }
+/* Row actions stay reachable when a wide table scrolls horizontally */
+.wm-app table.wm-table td.wm-row-actions{ position: sticky; right: 0; z-index: 1; background: rgba(255,255,255,.94) !important; box-shadow: -8px 0 12px -10px rgba(20,23,28,.25); }
+.wm-app table.wm-table:has(td.wm-row-actions) thead th:last-child{ position: sticky; right: 0; z-index: 3; }
+.wm-app table.wm-table .rx-nowrap, .wm-app .rx210-table .rx-nowrap{ white-space: nowrap !important; }
+.wm-app table.wm-table th.rx-col-wide, .wm-app .rx210-table th.rx-col-wide{ min-width: 200px; }
+.wm-app table.wm-table th.rx-col-mid, .wm-app .rx210-table th.rx-col-mid{ min-width: 140px; }
+/* "on-dark" buttons were designed for the old navy modal head; the head is now glass. */
+.wm-app .wm-modal-head .wm-glass-icon-btn.on-dark, .wm-app .wm-page-modal .wm-glass-icon-btn.on-dark{ color: var(--rx-ink-2) !important; }
+
+/* Header chips: notification bell, account, app switch */
+.wm-app .wm-glass-chip{ height: var(--rx-icon-btn) !important; min-width: var(--rx-icon-btn); width: auto; gap: var(--rx-space-2) !important; color: var(--rx-ink-1) !important; }
+.wm-app #wmNotifBellBtn{ width: var(--rx-icon-btn) !important; padding: 0 !important; }
+.wm-app #wmUserMenuBtn{
+  padding: 0 var(--rx-space-3) 0 var(--rx-space-1) !important; font-size: var(--rx-text-sm) !important; font-weight: var(--rx-weight-semibold);
+  letter-spacing: .01em; max-width: 260px; white-space: nowrap; overflow: hidden;
+}
+.wm-app #wmUserMenuBtn > span:not(:last-child){ min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.wm-app .wm-notif-bell-icon{ stroke: currentColor !important; width: var(--rx-icon); height: var(--rx-icon); }
+.wm-app .wm-notif-badge{
+  top: -5px !important; right: -5px !important; min-width: 18px !important; height: 18px !important; padding: 0 5px !important;
+  font-size: 11px !important; font-weight: var(--rx-weight-bold); line-height: 18px; background: var(--rx-danger) !important;
+  box-shadow: 0 0 0 2px #fff !important; border-radius: var(--rx-radius-pill) !important;
+}
+.wm-app .wm-brand .rexus-app-switch{ background: transparent !important; border: 0 !important; padding: 0 !important; margin: 0 0 0 var(--rx-space-1) !important; }
+.wm-app .wm-brand .rexus-switch-trigger, .wm-app .wm-brand .rexus-app-switch .rexus-switch-trigger{
+  width: var(--rx-icon-btn-sm) !important; height: var(--rx-icon-btn-sm) !important; min-width: var(--rx-icon-btn-sm) !important;
+  border-radius: var(--rx-radius-sm) !important; padding: 0 !important; color: var(--rx-ink-2) !important;
+  background: var(--rx-glass-1-bg) !important; border: 1px solid var(--rx-hairline-strong) !important;
+}
+.wm-app .wm-brand .rexus-switch-trigger[aria-expanded="true"]{ background: #fff !important; color: var(--rx-ink-1) !important; box-shadow: 0 0 0 3px var(--rx-accent-soft) !important; }
+.wm-app .wm-brand .rexus-switch-trigger svg{ stroke: currentColor !important; width: 16px !important; height: 16px !important; }
+
+/* 7. ICON TILES ---------------------------------------------------------------
+   Decorative pictograms (nav, lists, docs). Neutral glass tile; the stroke
+   follows the text colour so it is visible on any background.              */
+.wm-app .rx-glass-icon, .wm-app .rx-glass-icon[data-tone], .wm-app .wm-body .rx-glass-icon, .wm-app .wm-body .rx-mini-icon, .wm-app .rx-mini-icon, .wm-app .rx-app-emoji, .wm-app .rx210-glyph,
+#rexusDocsShell .rx-glass-icon, #rexusDocsShell .rx-mini-icon, #rexusDocsShell .rd-space-glyph, #rexusDocsShell .rd-nav-glyph,
+#rexusDocsShell .rd-drive-icon, #rexusDocsShell .rd-list-icon, #rexusDocsShell .rd-home-icon, #rexusDocsShell .rx-home-hero-icon,
+.wm-app .wm-tab[data-view] .wm-tab-icon > svg{
+  display: inline-grid !important; place-items: center; flex-shrink: 0;
+  color: var(--rx-ink-2) !important; text-shadow: none !important;
+  background: rgba(255, 255, 255, 0.66) !important; background-image: none !important;
+  border: 1px solid var(--rx-hairline) !important; border-radius: var(--rx-radius-sm) !important;
+  box-shadow: var(--rx-glass-highlight), 0 1px 2px rgba(20,23,28,.06) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.wm-app .rx-glass-icon svg, .wm-app .rx-mini-icon svg, .wm-app .rx-app-emoji svg, .wm-app .rx210-glyph svg, .wm-app .rx-2d-svg,
+#rexusDocsShell .rx-glass-icon svg, #rexusDocsShell .rx-mini-icon svg, #rexusDocsShell .rd-space-glyph svg, #rexusDocsShell .rd-nav-glyph svg,
+#rexusDocsShell .rd-drive-icon svg, #rexusDocsShell .rd-list-icon svg, #rexusDocsShell .rd-home-icon svg, #rexusDocsShell .rx-home-hero-icon svg,
+#rexusDocsShell .rx-2d-svg{
+  stroke: currentColor !important; fill: none !important; width: 60%; height: 60%;
+}
+/* Sidebar tiles */
+.wm-app .wm-tab-icon .rx-glass-icon{ width: 30px !important; height: 30px !important; }
+.wm-app .wm-tab[data-view] .wm-tab-icon{ background: none !important; border: 0 !important; box-shadow: none !important; }
+.wm-app .wm-tab[data-view] .wm-tab-icon > svg{ width: 30px !important; height: 30px !important; padding: 6px; stroke: currentColor !important; stroke-width: 1.8; fill: none !important; stroke-linecap: round; stroke-linejoin: round; }
+.wm-app .wm-tab:hover .rx-glass-icon, .wm-app .wm-tab:hover .wm-tab-icon > svg{ color: var(--rx-ink-1) !important; background: #fff !important; }
+.wm-app .wm-tab.active .rx-glass-icon, .wm-app .wm-tab.active .wm-tab-icon > svg{ color: var(--rx-accent) !important; background: #fff !important; border-color: rgba(26,95,208,.22) !important; }
+/* Notification / attachment / list tiles */
+.wm-app .wm-notif-icon{ background: none !important; width: 32px !important; height: 32px !important; }
+.wm-app .wm-notif-icon .rx-glass-icon, .wm-app .wm-attach-row .rx-glass-icon{ width: 28px !important; height: 28px !important; }
+.wm-app .rx-app-emoji{ width: 40px !important; height: 40px !important; border-radius: var(--rx-radius-md) !important; font-size: 20px; }
+
+/* 8a. FORMS ---------------------------------------------------------------------- */
+.wm-app .wm-form-row{ margin-bottom: var(--rx-space-3) !important; min-width: 0; }
+.wm-app .wm-form-row label, .wm-app .rx210-field, #rexusDocsShell .rd-editor label, #rexusDocsShell .rd-dialog label{
+  font-size: var(--rx-text-sm) !important; line-height: var(--rx-lh-sm); font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-2) !important;
+}
+.wm-app .wm-form-row > label{ display: block; margin-bottom: 6px !important; }
+.wm-app .wm-form-grid{ gap: var(--rx-space-3) var(--rx-space-4) !important; min-width: 0; }
+.wm-app .wm-form-grid > *{ min-width: 0; }
+.wm-app .wm-input, .wm-app .wm-select, .wm-app .wm-form-row input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]),
+.wm-app .wm-form-row select, .wm-app .wm-form-row textarea, .wm-app .wm-user-picker-input, .wm-app .rx210-field input, .wm-app .rx210-field select,
+.wm-app .rx210-search input, .wm-app .wm-gantt-toolbar select, .wm-app .wm-subtask-progress-input, .rx-audit-screen .rx-audit-filters input,
+#rexusDocsShell .rd-editor input, #rexusDocsShell .rd-editor textarea, #rexusDocsShell .rd-dialog input:not([type=checkbox]):not([type=radio]),
+#rexusDocsShell .rd-dialog textarea, #rexusDocsShell .rd-dialog select, #rexusDocsShell .rd-drive-controls select, #rexusDocsShell .rd-search,
+#rexusDocsShell .rd-search-scope, #rexusDocsShell .rd-label-input input, #rexusDocsShell .rd-folder-side textarea, #rexusDocsShell .rd-share-dialog select,
+#rexusDocsShell .rd-space-dropdown input, .wm-auth-screen .wm-auth-row input{
+  min-height: var(--rx-control-h); padding: var(--rx-space-2) var(--rx-space-3) !important;
+  font-family: var(--rx-font); font-size: var(--rx-text-md) !important; line-height: 20px; color: var(--rx-ink-1) !important;
+  background-color: rgba(255, 255, 255, 0.86) !important; border: 1px solid var(--rx-hairline-strong) !important; border-radius: var(--rx-radius-md) !important;
+  box-shadow: inset 0 1px 2px rgba(20,23,28,.04) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  transition: border-color var(--rx-duration) var(--rx-ease), box-shadow var(--rx-duration) var(--rx-ease), background-color var(--rx-duration) var(--rx-ease);
+  max-width: 100%;
+}
+.wm-app textarea, #rexusDocsShell textarea{ line-height: 1.55 !important; resize: vertical; }
+#rexusDocsShell .rd-search{ padding: 0 var(--rx-space-3) !important; display: flex; align-items: center; }
+#rexusDocsShell .rd-search input{ border: 0 !important; background: transparent !important; box-shadow: none !important; min-height: 36px; }
+.wm-app .wm-input:hover, .wm-app .wm-select:hover, .wm-app .wm-form-row input:hover, .wm-app .wm-form-row select:hover, .wm-app .wm-form-row textarea:hover,
+.wm-app .wm-user-picker-input:hover, .wm-app .rx210-field input:hover, .wm-app .rx210-field select:hover{ border-color: rgba(20,23,28,.26) !important; }
+.wm-app .wm-input:focus, .wm-app .wm-select:focus, .wm-app .wm-form-row input:focus, .wm-app .wm-form-row select:focus, .wm-app .wm-form-row textarea:focus,
+.wm-app .wm-user-picker-input:focus, .wm-app .rx210-field input:focus, .wm-app .rx210-field select:focus, .wm-app .rx210-search input:focus,
+#rexusDocsShell .rd-editor input:focus, #rexusDocsShell .rd-editor textarea:focus, #rexusDocsShell .rd-dialog input:focus, #rexusDocsShell .rd-dialog textarea:focus,
+#rexusDocsShell .rd-dialog select:focus, #rexusDocsShell .rd-search:focus-within, .wm-auth-screen .wm-auth-row input:focus{
+  outline: none !important; border-color: var(--rx-accent) !important; background-color: #fff !important; box-shadow: 0 0 0 3px var(--rx-accent-soft) !important;
+}
+.wm-app input::placeholder, .wm-app textarea::placeholder, #rexusDocsShell input::placeholder, .wm-auth-screen input::placeholder{ color: var(--rx-ink-3); opacity: 1; }
+.wm-app input:disabled, .wm-app select:disabled, .wm-app textarea:disabled{ background: var(--rx-surface-muted) !important; color: var(--rx-ink-4) !important; cursor: not-allowed; }
+.wm-app input[aria-invalid="true"], .wm-app select[aria-invalid="true"], .wm-app textarea[aria-invalid="true"]{ border-color: var(--rx-danger) !important; box-shadow: 0 0 0 3px rgba(180,35,47,.12) !important; }
+.wm-app select, #rexusDocsShell select, .wm-app .wm-gsearch-scope{
+  -webkit-appearance: none; appearance: none; padding-right: 32px !important; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23636b77' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important; background-position: right 11px center !important; background-size: 12px !important;
+  text-overflow: ellipsis;
+}
+.wm-app select[multiple], #rexusDocsShell select[multiple]{ background-image: none !important; padding-right: var(--rx-space-3) !important; }
+.wm-app input[type=checkbox], .wm-app input[type=radio], #rexusDocsShell input[type=checkbox], .wm-auth-screen input[type=checkbox]{
+  width: 16px; height: 16px; accent-color: var(--rx-ink-1); cursor: pointer; vertical-align: middle; flex-shrink: 0;
+}
+.wm-app input[type=range]{ accent-color: var(--rx-ink-1); }
+.wm-app input[type=file]{ font-size: var(--rx-text-sm); color: var(--rx-ink-2); max-width: 100%; }
+.wm-app input[type=file]::file-selector-button{
+  margin-right: var(--rx-space-3); min-height: var(--rx-control-h-sm); padding: 0 var(--rx-space-3); border-radius: var(--rx-radius-sm);
+  border: 1px solid var(--rx-hairline-strong); background: #fff; color: var(--rx-ink-1); font: inherit; font-weight: var(--rx-weight-semibold); cursor: pointer;
+}
+.wm-app .wm-filters{ display: flex; flex-wrap: wrap; gap: var(--rx-space-2) !important; align-items: center; margin-bottom: var(--rx-space-4) !important; }
+.wm-app .wm-filters > *{ min-width: 0; }
+.wm-app .wm-filters .wm-input{ flex: 1 1 220px; min-width: 160px !important; }
+.wm-app .wm-filters .wm-select{ flex: 0 1 auto; min-width: 128px; max-width: 280px; }
+.wm-app .wm-static-value{ padding: var(--rx-space-2) 0; font-size: var(--rx-text-md); color: var(--rx-ink-1); min-height: var(--rx-control-h); overflow-wrap: anywhere; }
+.wm-app .wm-auth-error, .wm-app .rx210-alert, #rexusDocsShell .rd-error, .wm-auth-screen .wm-auth-error{
+  background: var(--rx-danger-soft) !important; color: var(--rx-danger) !important; border: 1px solid var(--rx-danger-line) !important;
+  border-radius: var(--rx-radius-md) !important; font-size: var(--rx-text-sm) !important; padding: var(--rx-space-2) var(--rx-space-3) !important;
+}
+.wm-app .wm-view-only-banner{
+  background: var(--rx-warning-soft) !important; color: var(--rx-warning) !important; border: 1px solid var(--rx-warning-line) !important;
+  border-radius: var(--rx-radius-md) !important; font-size: var(--rx-text-sm) !important; font-weight: var(--rx-weight-semibold) !important; padding: var(--rx-space-2) var(--rx-space-3) !important;
+}
+/* Unclassed fields rendered by legacy templates (e.g. "New task type", table search) */
+.wm-app :is(.wm-body, .wm-modal-body) :is(input:not([class]):not([type]), input:not([class])[type=text], input:not([class])[type=search], input:not([class])[type=email],
+  input:not([class])[type=number], input:not([class])[type=date], input:not([class])[type=time], input:not([class])[type=password], input:not([class])[type=url], input:not([class])[type=tel],
+  select:not([class]), textarea:not([class])){
+  min-height: var(--rx-control-h); padding: var(--rx-space-2) var(--rx-space-3); font: inherit; font-size: var(--rx-text-md); color: var(--rx-ink-1);
+  background-color: rgba(255,255,255,.86); border: 1px solid var(--rx-hairline-strong); border-radius: var(--rx-radius-md); box-shadow: inset 0 1px 2px rgba(20,23,28,.04); max-width: 100%; min-width: min(100%, 150px);
+}
+.wm-app :is(.wm-body, .wm-modal-body) :is(input:not([class]), select:not([class]), textarea:not([class])):focus{ outline: none; border-color: var(--rx-accent); background-color: #fff; box-shadow: 0 0 0 3px var(--rx-accent-soft); }
+/* User picker */
+.wm-app .wm-user-picker-dropdown{ z-index: var(--rx-z-dropdown) !important; }
+/* Rich text editor */
+.wm-app .wm-rte{ border: 1px solid var(--rx-hairline-strong) !important; border-radius: var(--rx-radius-md) !important; background: #fff !important; overflow: hidden; }
+.wm-app .wm-rte:focus-within{ border-color: var(--rx-accent) !important; box-shadow: 0 0 0 3px var(--rx-accent-soft); }
+.wm-app .wm-rte-toolbar{ display: flex; flex-wrap: wrap; align-items: center; gap: 2px !important; padding: var(--rx-space-1) var(--rx-space-2) !important; background: var(--rx-surface-muted) !important; border-bottom: 1px solid var(--rx-hairline) !important; }
+.wm-app .wm-rte-btn{ width: 30px !important; height: 30px !important; border-radius: var(--rx-radius-xs) !important; color: var(--rx-ink-2) !important; font-size: var(--rx-text-sm) !important; }
+.wm-app .wm-rte-btn:hover{ background: rgba(20,23,28,.07) !important; color: var(--rx-ink-1) !important; }
+.wm-app .wm-rte-btn.active{ background: #fff !important; color: var(--rx-ink-1) !important; border-color: var(--rx-hairline-strong) !important; box-shadow: var(--rx-shadow-1); }
+.wm-app .wm-rte-toolbar select, .wm-app .wm-rte-size{ width: auto !important; flex: 0 0 auto; min-height: 30px !important; height: 30px; padding: 0 28px 0 var(--rx-space-2) !important; font-size: var(--rx-text-sm) !important; border-radius: var(--rx-radius-xs) !important; background-position: right 8px center !important; }
+.wm-app .wm-rte-sep{ background: var(--rx-hairline-strong) !important; }
+.wm-app .wm-rte-editor{ padding: var(--rx-space-3) !important; font-size: var(--rx-text-md) !important; line-height: 1.6 !important; color: var(--rx-ink-1) !important; }
+
+/* 8b. DATA DISPLAY ---------------------------------------------------------------- */
+/* Cards — Level 2 glass for interactive cards; content stays legible. */
+.wm-app .wm-stat-card, .wm-app .wm-project-card, .wm-app .wm-pd-header, .wm-app .rx210-glass, .wm-app .rx210-metrics article,
+.wm-app .wm-dept-card, .wm-app .wm-card, .wm-app .wm-section{
+  background: var(--rx-glass-2-bg) !important; background-image: none !important;
+  border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-glass-bevel), var(--rx-shadow-2) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important;
+  backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important;
+  color: var(--rx-ink-1);
+}
+.wm-app .wm-stat-card::after{ display: none !important; }
+.wm-app .wm-stats{
+  display: grid !important; gap: var(--rx-gap) !important; margin-bottom: var(--rx-space-4) !important;
+  /* auto-fit beats the inline repeat(4/5/6,1fr) that clipped cards on phones */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 148px), 1fr)) !important;
+}
+.wm-app .wm-stat-card{ padding: var(--rx-pad-card) !important; min-width: 0; }
+.wm-app .wm-stat-num{ font-size: 26px !important; line-height: 32px !important; font-weight: var(--rx-weight-bold) !important; color: var(--rx-ink-1) !important; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.wm-app .wm-stat-label{ font-size: var(--rx-text-sm) !important; line-height: var(--rx-lh-sm); font-weight: var(--rx-weight-medium) !important; color: var(--rx-ink-3) !important; margin-top: var(--rx-space-1) !important; overflow-wrap: anywhere; }
+.wm-app .wm-project-grid{ gap: var(--rx-space-4) !important; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)) !important; }
+.wm-app .wm-project-card{ padding: var(--rx-space-4) !important; cursor: pointer; transition: box-shadow var(--rx-duration) var(--rx-ease), transform var(--rx-duration) var(--rx-ease), background-color var(--rx-duration) var(--rx-ease); min-width: 0; }
+.wm-app .wm-project-card:hover{ background: var(--rx-glass-hover-bg) !important; box-shadow: var(--rx-glass-highlight), var(--rx-shadow-3) !important; transform: translateY(-2px); border-color: var(--rx-glass-edge) !important; }
+.wm-app .wm-project-name{ font-size: var(--rx-text-lg) !important; line-height: var(--rx-lh-lg) !important; font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-1) !important; margin-bottom: var(--rx-space-2) !important; overflow-wrap: anywhere; }
+.wm-app .wm-project-meta{ font-size: var(--rx-text-sm) !important; color: var(--rx-ink-3) !important; gap: var(--rx-space-2); flex-wrap: wrap; }
+.wm-app .wm-project-deadline{ font-size: var(--rx-text-sm) !important; color: var(--rx-ink-3) !important; margin-top: var(--rx-space-3) !important; }
+.wm-app .wm-pd-header{ padding: var(--rx-space-4) var(--rx-space-5) !important; flex-wrap: wrap; gap: var(--rx-space-4) !important; }
+.wm-app .wm-pd-header > *{ min-width: 0; }
+.wm-app .wm-pd-header div:has(> .wm-btn){ display: flex; flex-wrap: wrap; gap: var(--rx-space-2); align-items: center; }
+.wm-app .wm-dept-card{ padding: var(--rx-space-4) !important; margin-bottom: var(--rx-space-3) !important; }
+.wm-app .wm-breadcrumb{ font-size: var(--rx-text-sm) !important; color: var(--rx-ink-3) !important; margin-bottom: var(--rx-space-3) !important; display: flex; flex-wrap: wrap; gap: var(--rx-space-1); }
+.wm-app .wm-breadcrumb span:first-child{ color: var(--rx-accent) !important; font-weight: var(--rx-weight-semibold) !important; }
+
+/* Task rows — solid reading surface (many rows: no per-row blur) */
+.wm-app .wm-task-list{ gap: var(--rx-space-2) !important; }
+.wm-app .wm-task-row{
+  gap: var(--rx-space-3) !important; padding: 10px var(--rx-space-4) !important; min-height: 54px;
+  background: rgba(255, 255, 255, 0.82) !important; background-image: none !important;
+  border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  transition: box-shadow var(--rx-duration) var(--rx-ease), background-color var(--rx-duration) var(--rx-ease), transform var(--rx-duration) var(--rx-ease);
+}
+.wm-app .wm-task-row:not([style]){ grid-template-columns: 24px minmax(0, 1fr) auto auto 96px 72px; }
+.wm-app .wm-task-row:hover{ background: #fff !important; box-shadow: var(--rx-glass-highlight), var(--rx-shadow-hover) !important; transform: translateY(-1px); border-color: rgba(20,23,28,.12) !important; }
+.wm-app .wm-task-main{ min-width: 0; }
+.wm-app .wm-task-name{ font-size: var(--rx-text-md) !important; line-height: var(--rx-lh-md); font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-1) !important; overflow-wrap: anywhere; }
+.wm-app .wm-task-name.done{ color: var(--rx-ink-3) !important; }
+.wm-app .wm-task-project{ font-size: var(--rx-text-sm) !important; line-height: var(--rx-lh-sm); color: var(--rx-ink-3) !important; margin-top: 2px; overflow-wrap: anywhere; }
+.wm-app .wm-task-due{ font-size: var(--rx-text-sm) !important; color: var(--rx-ink-3) !important; font-variant-numeric: tabular-nums; }
+.wm-app .wm-task-due.overdue{ color: var(--rx-danger) !important; font-weight: var(--rx-weight-semibold) !important; }
+.wm-app .wm-task-check{
+  width: 24px !important; height: 24px !important; border-radius: var(--rx-radius-xs) !important; border: 1.5px solid rgba(20,23,28,.28) !important;
+  background: #fff; font-size: 13px !important; line-height: 1; color: #fff; transition: background-color var(--rx-duration-fast), border-color var(--rx-duration-fast);
+  /* enlarge the hit area without changing the drawn size */
+  box-shadow: 0 0 0 6px transparent; cursor: pointer;
+}
+.wm-app .wm-task-check:hover{ border-color: var(--rx-ink-1) !important; }
+.wm-app .wm-task-check.checked{ background: var(--rx-success) !important; border-color: var(--rx-success) !important; }
+
+/* Badges — tinted, text-bearing (status never relies on colour alone) */
+.wm-app .wm-badge, .wm-app .rx210-status, .wm-app .wm-status-badge, #rexusDocsShell .rd-tag, .wm-app .wm-subtask-count-badge{
+  display: inline-flex !important; align-items: center; gap: 6px; height: 24px; padding: 0 10px !important;
+  font-size: var(--rx-text-xs) !important; line-height: 1 !important; font-weight: var(--rx-weight-semibold) !important; letter-spacing: .01em;
+  border-radius: var(--rx-radius-pill) !important; white-space: nowrap; vertical-align: middle; max-width: 100%;
+  border: 1px solid var(--rx-neutral-line) !important; background: var(--rx-neutral-soft) !important; color: var(--rx-neutral) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.wm-app .wm-badge::before{ content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: 0 0 6px; opacity: .9; }
+.wm-app .wm-badge.priority-High, .wm-app .wm-badge.status-Urgent, .wm-app .wm-badge.status-Overdue, .wm-app .rx210-status.danger{ color: var(--rx-danger) !important; background: var(--rx-danger-soft) !important; border-color: var(--rx-danger-line) !important; }
+.wm-app .wm-badge.priority-Medium, .wm-app .wm-badge.status-Review, .wm-app .rx210-status.warning{ color: var(--rx-warning) !important; background: var(--rx-warning-soft) !important; border-color: var(--rx-warning-line) !important; }
+.wm-app .wm-badge.priority-Low, .wm-app .wm-badge.status-Completed, .wm-app .rx210-status.success, .wm-app .wm-status-badge:not(.inactive){ color: var(--rx-success) !important; background: var(--rx-success-soft) !important; border-color: var(--rx-success-line) !important; }
+.wm-app .wm-badge.status-In-Progress, .wm-app .rx210-status:not(.success):not(.warning):not(.danger){ color: var(--rx-info) !important; background: var(--rx-info-soft) !important; border-color: var(--rx-info-line) !important; }
+.wm-app .wm-badge.status-Not-Started, .wm-app .wm-badge.status-Cancelled, .wm-app .wm-status-badge.inactive{ color: var(--rx-neutral) !important; background: var(--rx-neutral-soft) !important; border-color: var(--rx-neutral-line) !important; }
+.wm-app .wm-badge.status-Cancelled{ text-decoration: line-through; text-decoration-thickness: 1px; }
+.wm-app .wm-label-chip{ height: 26px; padding: 0 var(--rx-space-2) 0 10px !important; font-size: var(--rx-text-xs) !important; font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-2) !important; background: var(--tag-bg, var(--rx-neutral-soft)) !important; border: 1px solid var(--rx-hairline) !important; border-radius: var(--rx-radius-pill) !important; max-width: 100%; }
+.wm-app .wm-subtask-toggle{ display: inline-grid !important; place-items: center; width: 24px !important; height: 24px; border-radius: var(--rx-radius-xs); color: var(--rx-ink-2) !important; }
+.wm-app .wm-subtask-toggle:hover{ background: rgba(20,23,28,.06); }
+.wm-app .wm-breadcrumb > span:first-child{ display: inline-flex; align-items: center; min-height: 24px; }
+.wm-app .wm-chip-remove{ display: inline-grid; place-items: center; width: 24px; height: 24px; margin: -3px -6px -3px -2px; border-radius: 50%; color: var(--rx-ink-3) !important; }
+.wm-app .wm-chip-remove:hover{ background: rgba(20,23,28,.08); color: var(--rx-danger) !important; }
+
+/* Progress */
+.wm-app .wm-progress-track{ height: 6px !important; background: rgba(20,23,28,.08) !important; border-radius: var(--rx-radius-pill) !important; }
+.wm-app .wm-progress-fill{ background: var(--rx-accent) !important; background-image: none !important; border-radius: inherit; transition: width var(--rx-duration-slow) var(--rx-ease); }
+.wm-app .wm-progress-fill.complete{ background: var(--rx-success) !important; }
+.wm-app .wm-progress-fill.wm-progress-overtime{ background: var(--rx-danger) !important; }
+.wm-app .wm-proj-bar-label{ font-size: var(--rx-text-md) !important; gap: var(--rx-space-3); }
+.wm-app .wm-proj-bar-label > :first-child{ min-width: 0; overflow-wrap: anywhere; }
+
+/* Tables — solid readable container, quiet sticky header */
+.wm-app .wm-table-wrap, .wm-app .rx210-table-wrap, #rexusDocsShell .rd-drive-overflow{
+  max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch;
+  background: rgba(255, 255, 255, 0.86) !important; background-image: none !important;
+  border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-shadow-2) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.wm-app table.wm-table, .wm-app .rx210-table, #rexusDocsShell .rd-drive-table{ border-collapse: separate !important; border-spacing: 0 !important; width: 100%; font-size: var(--rx-text-md) !important; }
+.wm-app table.wm-table{ min-width: 960px; }
+.wm-app table.wm-table thead th, .wm-app .rx210-table th, #rexusDocsShell .rd-drive-table thead th, .wm-app table.wm-worklog-grid thead th{
+  position: sticky; top: 0; z-index: 2;
+  background: var(--rx-table-head-bg) !important; background-image: none !important; color: var(--rx-ink-2) !important;
+  font-size: var(--rx-text-xs) !important; line-height: var(--rx-lh-xs) !important; font-weight: var(--rx-weight-semibold) !important;
+  letter-spacing: var(--rx-tracking-caps) !important; text-transform: uppercase; text-align: left;
+  padding: var(--rx-cell-y) var(--rx-cell-x) !important; white-space: nowrap; vertical-align: middle;
+  border: 0 !important; border-bottom: 1px solid var(--rx-hairline-strong) !important; border-right: 0 !important;
+  box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  overflow-wrap: normal !important;
+}
+.wm-app table.wm-table thead th:first-child{ border-top-left-radius: var(--rx-radius-lg) !important; }
+.wm-app table.wm-table thead th:last-child{ border-top-right-radius: var(--rx-radius-lg) !important; }
+.wm-app table.wm-table th:hover{ background: #eceef1 !important; color: var(--rx-ink-1) !important; }
+.wm-app table.wm-table tbody td, .wm-app .rx210-table td, #rexusDocsShell .rd-drive-table tbody td{
+  padding: var(--rx-cell-y) var(--rx-cell-x) !important; color: var(--rx-ink-1) !important; vertical-align: middle; line-height: var(--rx-lh-md);
+  background: transparent !important; border: 0 !important; border-bottom: 1px solid var(--rx-hairline) !important;
+  overflow-wrap: normal !important; word-break: normal !important;
+}
+.wm-app table.wm-table tbody tr:last-child td, .wm-app .rx210-table tbody tr:last-child td{ border-bottom: 0 !important; }
+.wm-app table.wm-table tbody tr, #rexusDocsShell .rd-drive-table tbody tr{ transition: background-color var(--rx-duration-fast) var(--rx-ease); }
+.wm-app table.wm-table tbody tr:hover td, .wm-app .rx210-table tbody tr:hover td, #rexusDocsShell .rd-drive-table tbody tr:hover td{ background: rgba(20,23,28,.035) !important; }
+#rexusDocsShell .rd-drive-table tbody tr.rd-row-selected td{ background: var(--rx-accent-soft) !important; }
+/* Column hygiene: text columns wrap by word, compact columns never break mid-number */
+.wm-app table.wm-table td{ min-width: 0; }
+.wm-app table.wm-table td:has(> .wm-badge), .wm-app table.wm-table td:has(> .wm-row-actions){ white-space: nowrap; }
+.wm-app table.wm-table td .wm-task-name, .wm-app table.wm-table td{ hyphens: manual; }
+.wm-app .rx211-check-col, .wm-app table.wm-table .wm-bulk-check-col{ width: 44px !important; min-width: 44px !important; text-align: center !important; padding-left: var(--rx-space-3) !important; padding-right: var(--rx-space-1) !important; }
+/* Bare legacy tables adopted by rexus-ui.js */
+.wm-app .rx-table-scroll{ max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: var(--rx-space-4); border-radius: var(--rx-radius-md); }
+.wm-app table.rx-table{ border-collapse: separate !important; border-spacing: 0; font-size: var(--rx-text-md) !important; }
+.wm-app table.rx-table th{ text-align: left; font-size: var(--rx-text-xs) !important; font-weight: var(--rx-weight-semibold); letter-spacing: var(--rx-tracking-caps); text-transform: uppercase; color: var(--rx-ink-2) !important; background: var(--rx-table-head-bg) !important; padding: var(--rx-space-2) var(--rx-space-3) !important; border-bottom: 1px solid var(--rx-hairline-strong) !important; white-space: nowrap; }
+.wm-app table.rx-table td{ padding: var(--rx-space-2) var(--rx-space-3) !important; border-bottom: 1px solid var(--rx-hairline) !important; vertical-align: middle; color: var(--rx-ink-1); }
+.wm-app table.rx-table tbody tr:hover td{ background: rgba(20,23,28,.03); }
+@media (max-width: 760px){ .wm-app table.rx-table{ min-width: 560px; } }
+/* v2.1.3 set overflow-wrap:anywhere on every cell, which split numbers and dates mid-token */
+.wm-app table th, .wm-app table td{ overflow-wrap: normal !important; word-break: normal !important; }
+.wm-app table td{ overflow-wrap: break-word !important; }
+/* Bulk action bars */
+.wm-app .wm-bulk-bar, .wm-app .rx211-bulk-tools, #rexusDocsShell .rd-bulk-bar{
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--rx-space-2) !important; padding: var(--rx-space-2) var(--rx-space-3) !important; margin: 0 0 var(--rx-space-3) !important;
+  color: var(--rx-ink-1) !important; background: var(--rx-glass-3-bg) !important; background-image: none !important;
+  border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important; box-shadow: var(--rx-glass-highlight), var(--rx-shadow-2) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important; backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important;
+  position: sticky; top: calc(var(--wm-header-h, var(--rx-header-h)) + var(--rx-space-2)); z-index: var(--rx-z-sticky);
+}
+.wm-app .rx211-bulk-tools[hidden]{ display: none !important; }
+.wm-app .wm-bulk-bar .wm-bulk-count, .wm-app .rx211-bulk-tools strong, #rexusDocsShell .rd-bulk-bar strong{ font-weight: var(--rx-weight-semibold); font-size: var(--rx-text-md) !important; color: var(--rx-ink-1) !important; margin-right: auto; }
+.wm-app .wm-bulk-bar .wm-select, .wm-app .wm-bulk-bar .wm-user-picker-input{ background: #fff !important; }
+
+/* Subtask rows */
+.wm-app .wm-subtask-row, .wm-app .wm-subtask-mini-row{ border-top: 1px solid var(--rx-hairline) !important; gap: var(--rx-space-2); }
+.wm-app .wm-subtask-row:first-child, .wm-app .wm-subtask-mini-row:first-child{ border-top: 0 !important; }
+.wm-app tr.wm-subtask-expand-row td, .wm-app tr.wm-grid-subtask-row td{ background: var(--rx-surface-muted) !important; }
+.wm-app .wm-attach-row{ gap: var(--rx-space-2); border-top-color: var(--rx-hairline) !important; font-size: var(--rx-text-md) !important; min-width: 0; }
+.wm-app .wm-attach-row a{ color: var(--rx-accent) !important; overflow-wrap: anywhere; word-break: normal !important; min-width: 0; }
+
+/* Activity */
+.wm-app .wm-pd-activity-row{ border-top-color: var(--rx-hairline) !important; font-size: var(--rx-text-md) !important; gap: var(--rx-space-3) !important; }
+.wm-app .wm-pd-activity-dot{ background: var(--rx-ink-3) !important; }
+
+/* Detail tabs */
+.wm-app .wm-detail-tabs{ display: flex; gap: var(--rx-space-1) !important; border-bottom: 1px solid var(--rx-hairline) !important; margin-bottom: var(--rx-space-4) !important; overflow-x: auto; scrollbar-width: none; }
+.wm-app .wm-detail-tab{ padding: var(--rx-space-2) var(--rx-space-3) !important; font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-medium) !important; color: var(--rx-ink-3) !important; border-bottom: 2px solid transparent !important; white-space: nowrap; border-radius: var(--rx-radius-sm) var(--rx-radius-sm) 0 0; transition: color var(--rx-duration), background-color var(--rx-duration); }
+.wm-app .wm-detail-tab:hover{ color: var(--rx-ink-1) !important; background: rgba(20,23,28,.04); }
+.wm-app .wm-detail-tab.active{ color: var(--rx-ink-1) !important; font-weight: var(--rx-weight-semibold) !important; border-bottom-color: var(--rx-ink-1) !important; }
+.wm-app .wm-detail-grid{ gap: var(--rx-space-4) var(--rx-space-5) !important; }
+.wm-app .wm-detail-item .wm-detail-label{ font-size: var(--rx-text-sm) !important; color: var(--rx-ink-3) !important; font-weight: var(--rx-weight-semibold) !important; margin-bottom: var(--rx-space-1) !important; }
+.wm-app .wm-detail-item .wm-detail-value{ font-size: var(--rx-text-md) !important; overflow-wrap: anywhere; }
+
+/* Calendar */
+.wm-app .wm-cal-head{ gap: var(--rx-space-3); flex-wrap: wrap; margin-bottom: var(--rx-space-4) !important; }
+.wm-app .wm-cal-title{ font-size: var(--rx-text-xl) !important; font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-1) !important; min-width: 140px; }
+.wm-app .wm-cal-grid{ border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg); overflow: hidden; background: rgba(255,255,255,.86); box-shadow: var(--rx-shadow-2); }
+.wm-app .wm-cal-dow{ background: var(--rx-table-head-bg) !important; background-image: none !important; color: var(--rx-ink-2) !important; font-size: var(--rx-text-xs) !important; font-weight: var(--rx-weight-semibold) !important; letter-spacing: var(--rx-tracking-caps); text-transform: uppercase; padding: var(--rx-space-2) 0 !important; border-right: 1px solid var(--rx-hairline) !important; border-bottom: 1px solid var(--rx-hairline-strong); }
+.wm-app .wm-cal-cell{ background: transparent !important; border-right: 1px solid var(--rx-hairline) !important; border-bottom: 1px solid var(--rx-hairline) !important; min-width: 0; overflow: hidden; padding: var(--rx-space-1) !important; }
+.wm-app .wm-cal-cell.other-month{ background: rgba(20,23,28,.025) !important; }
+.wm-app .wm-cal-cell.other-month .wm-cal-daynum{ color: var(--rx-ink-4) !important; }
+.wm-app .wm-cal-daynum{ font-size: var(--rx-text-sm) !important; font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-2) !important; }
+.wm-app .wm-cal-cell.today .wm-cal-daynum{ background: var(--rx-ink-1) !important; color: #fff !important; width: 24px !important; height: 24px !important; }
+.wm-app .wm-cal-chip{ font-size: var(--rx-text-xs) !important; font-weight: var(--rx-weight-semibold) !important; line-height: 20px; min-height: 24px; padding: 2px 6px !important; border-radius: var(--rx-radius-xs) !important; background: var(--rx-info-soft) !important; color: var(--rx-info) !important; border-left: 3px solid currentColor; max-width: 100%; }
+
+/* Work-log grid */
+.wm-app .wm-grid-wrap{ border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important; background: rgba(255,255,255,.88); box-shadow: var(--rx-shadow-2); max-height: min(620px, 70vh) !important; }
+.wm-app table.wm-worklog-grid th, .wm-app table.wm-worklog-grid td{ border-color: var(--rx-hairline) !important; font-size: var(--rx-text-sm); font-variant-numeric: tabular-nums; }
+.wm-app table.wm-worklog-grid thead th{ text-align: center; text-transform: none; letter-spacing: 0; z-index: 3; }
+.wm-app table.wm-worklog-grid th.wm-grid-task-col, .wm-app table.wm-worklog-grid td.wm-grid-task-col{ background: #fff !important; }
+.wm-app table.wm-worklog-grid thead th.wm-grid-task-col{ background: var(--rx-table-head-bg) !important; z-index: 4; }
+.wm-app table.wm-worklog-grid thead th.wm-grid-total-col, .wm-app table.wm-worklog-grid td.wm-grid-total-col, .wm-app table.wm-worklog-grid tbody th.wm-grid-total-col{ background: #eceef1 !important; color: var(--rx-ink-1) !important; }
+.wm-app table.wm-worklog-grid td.wm-grid-cell:hover{ background: rgba(20,23,28,.04) !important; }
+.wm-app table.wm-worklog-grid td.wm-grid-cell.has-value{ background: var(--rx-info-soft) !important; color: var(--rx-info) !important; }
+.wm-app table.wm-worklog-grid .wm-grid-today{ background: rgba(20,23,28,.04) !important; }
+.wm-app table.wm-worklog-grid tr.wm-grid-footer-row td, .wm-app table.wm-worklog-grid tr.wm-grid-footer-row td.wm-grid-task-col{ background: #1e2530 !important; color: #fff !important; }
+
+/* Gantt */
+.wm-app #pdGanttChart{ border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important; background: #fff !important; box-shadow: var(--rx-shadow-1); }
+
+/* 9. MENUS, DROPDOWNS, POPOVERS — Level 3 glass ---------------------------------- */
+.wm-app .wm-user-menu, .wm-app .wm-notif-panel, .wm-app .wm-pd-more-menu, .wm-app .wm-export-menu, .wm-app .wm-gsearch-dropdown,
+.wm-app .wm-user-picker-dropdown, .wm-app .rx-app-launcher, #rexusDocsShell .rd-space-dropdown, .rd-space-dropdown, .rx-popover{
+  background: rgba(252, 252, 253, 0.86) !important; background-image: none !important; color: var(--rx-ink-1) !important;
+  border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important;
+  box-shadow: var(--rx-glass-highlight), 0 0 0 1px rgba(20,23,28,.06), var(--rx-shadow-3) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)) !important;
+  backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)) !important;
+  overscroll-behavior: contain; animation: rx-pop var(--rx-duration) var(--rx-ease);
+}
+@keyframes rx-pop{ from{ opacity: 0; transform: translateY(-4px) scale(.985); } to{ opacity: 1; transform: none; } }
+.wm-app .wm-user-menu, .wm-app .wm-notif-panel{ top: calc(100% + var(--rx-space-2)) !important; z-index: 2 !important; }
+.wm-app .wm-user-menu{ min-width: 220px !important; padding: var(--rx-space-1) !important; }
+.wm-app .wm-user-menu > div:not(.wm-user-menu-sep), .wm-app .wm-export-menu > div, .wm-app .wm-pd-more-menu > div{
+  display: flex; align-items: center; gap: var(--rx-space-2); min-height: 36px; padding: var(--rx-space-2) var(--rx-space-3) !important;
+  font-size: var(--rx-text-md) !important; border-radius: var(--rx-radius-sm); cursor: pointer; color: var(--rx-ink-1);
+  transition: background-color var(--rx-duration-fast);
+}
+.wm-app .wm-user-menu > div:not(.wm-user-menu-sep):hover, .wm-app .wm-export-menu > div:hover, .wm-app .wm-pd-more-menu > div:hover{ background: rgba(20,23,28,.06) !important; }
+.wm-app .wm-user-menu > div[data-action="logout"], .wm-app .wm-pd-more-menu > div{ color: var(--rx-danger) !important; }
+.wm-app .wm-user-menu-sep{ height: 1px !important; margin: var(--rx-space-1) var(--rx-space-2); background: var(--rx-hairline) !important; min-height: 0 !important; }
+.wm-app .wm-export-menu, .wm-app .wm-pd-more-menu{ padding: var(--rx-space-1) !important; z-index: var(--rx-z-dropdown) !important; min-width: 190px !important; }
+/* Notification panel */
+.wm-app .wm-notif-panel{ width: min(380px, calc(100vw - 24px)) !important; max-height: min(70vh, 560px) !important; padding: var(--rx-space-2) !important; border-radius: var(--rx-radius-xl) !important; }
+.wm-app .wm-notif-panel-head{ padding: var(--rx-space-2) var(--rx-space-2) var(--rx-space-3) !important; gap: var(--rx-space-2); }
+.wm-app .wm-notif-panel-head strong{ font-size: var(--rx-text-lg) !important; font-weight: var(--rx-weight-semibold); }
+.wm-app .wm-notif-mark-read{ font-size: var(--rx-text-sm) !important; font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-1) !important; background: rgba(20,23,28,.06) !important; padding: 6px 12px !important; border-radius: var(--rx-radius-pill) !important; white-space: nowrap; }
+.wm-app .wm-notif-mark-read:hover{ background: rgba(20,23,28,.10) !important; }
+.wm-app .wm-notif-item{ background: rgba(255,255,255,.7) !important; border: 1px solid var(--rx-hairline) !important; border-radius: var(--rx-radius-lg) !important; padding: var(--rx-space-3) !important; gap: var(--rx-space-3) !important; }
+.wm-app .wm-notif-item:hover{ background: #fff !important; transform: none !important; }
+.wm-app .wm-notif-item.unread{ background: #fff !important; border-color: rgba(26,95,208,.22) !important; box-shadow: inset 3px 0 0 var(--rx-accent); }
+.wm-app .wm-notif-item.important{ border-color: var(--rx-warning-line) !important; }
+.wm-app .wm-notif-item .wm-notif-title{ font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-semibold) !important; overflow-wrap: anywhere; }
+.wm-app .wm-notif-item .wm-notif-meta, .wm-app .wm-notif-time{ font-size: var(--rx-text-xs) !important; color: var(--rx-ink-3) !important; }
+.wm-app .wm-notif-action{ width: 28px !important; height: 28px !important; border-radius: var(--rx-radius-sm) !important; background: transparent !important; border-color: transparent !important; box-shadow: none !important; }
+.wm-app .wm-notif-star-btn.active{ color: var(--rx-warning) !important; }
+.wm-app .wm-notif-unread-btn.is-unread{ color: var(--rx-accent) !important; }
+/* Global search results */
+.wm-app .wm-gsearch-dropdown{ z-index: var(--rx-z-dropdown) !important; top: calc(100% + var(--rx-space-2)) !important; padding: var(--rx-space-1); max-height: min(420px, 70vh) !important; min-width: min(320px, calc(100vw - 24px)) !important; }
+.wm-app .wm-gsearch-group-label{ font-size: var(--rx-text-xs) !important; letter-spacing: var(--rx-tracking-caps) !important; color: var(--rx-ink-3) !important; padding: var(--rx-space-2) var(--rx-space-3) var(--rx-space-1) !important; }
+.wm-app .wm-gsearch-item{ padding: var(--rx-space-2) var(--rx-space-3) !important; border-radius: var(--rx-radius-sm); font-size: var(--rx-text-md) !important; }
+.wm-app .wm-gsearch-item:hover, .wm-app .wm-gsearch-item:focus-visible{ background: rgba(20,23,28,.06) !important; }
+.wm-app .wm-gsearch-item .wm-gs-title{ font-weight: var(--rx-weight-semibold) !important; overflow-wrap: anywhere; }
+/* User picker list */
+.wm-app .wm-user-picker-dropdown{ padding: var(--rx-space-1); max-height: min(280px, 50vh) !important; }
+.wm-app .wm-user-picker-item{ border-bottom: 0 !important; border-radius: var(--rx-radius-sm); padding: var(--rx-space-2) var(--rx-space-3) !important; font-size: var(--rx-text-md) !important; }
+.wm-app .wm-user-picker-item:hover{ background: rgba(20,23,28,.06) !important; }
+/* App launcher */
+.wm-app .rx-app-launcher{ z-index: var(--rx-z-dropdown) !important; padding: var(--rx-space-2) !important; width: min(320px, calc(100vw - 24px)) !important; border-radius: var(--rx-radius-xl) !important; top: calc(100% + var(--rx-space-3)) !important; }
+.wm-app .rx-app-launcher::before{ display: none !important; }
+.wm-app .rx-launcher-heading{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-xs) !important; letter-spacing: var(--rx-tracking-caps) !important; padding: var(--rx-space-2) var(--rx-space-2) var(--rx-space-2) !important; }
+.wm-app .rx-launcher-heading small{ color: var(--rx-ink-4) !important; }
+.wm-app .rx-launcher-item{ min-height: 56px !important; padding: var(--rx-space-2) !important; gap: var(--rx-space-3) !important; border-radius: var(--rx-radius-md) !important; color: var(--rx-ink-1) !important; }
+.wm-app .rx-launcher-item:hover, .wm-app .rx-launcher-item:focus-visible{ background: rgba(20,23,28,.06) !important; border-color: transparent !important; }
+.wm-app .rx-launcher-item.rx-selected{ background: #fff !important; border-color: var(--rx-hairline) !important; box-shadow: var(--rx-shadow-1) !important; }
+.wm-app .rx-launcher-item strong{ color: var(--rx-ink-1) !important; font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-semibold) !important; }
+.wm-app .rx-launcher-item strong em{ color: var(--rx-ink-3) !important; }
+.wm-app .rx-launcher-item small{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-xs) !important; }
+.wm-app .rx-launcher-item .rx-selected-mark{ color: var(--rx-accent) !important; }
+
+/* 10. MODALS & DIALOGS — Level 3 glass, internal scroll, correct stacking ---------- */
+.wm-app .wm-modal-overlay, .rd-dialog-wrap, #rexusDocsShell .rd-dialog-wrap{
+  z-index: var(--rx-z-modal) !important;
+  align-items: center !important; justify-content: center; padding: var(--rx-space-4) !important; overflow: hidden !important;
+  background: rgba(16, 19, 24, 0.34) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(120%) !important; backdrop-filter: blur(6px) saturate(120%) !important;
+  overscroll-behavior: contain;
+}
+.wm-app .wm-modal-overlay.open{ display: flex !important; animation: rx-fade var(--rx-duration) var(--rx-ease); }
+@keyframes rx-fade{ from{ opacity: 0; } to{ opacity: 1; } }
+/* Modals opened from inside other modals/pages sit one level up; confirm always on top. */
+.wm-app #wmLogModal, .wm-app #wmCellModal, .wm-app #wmShareModal{ z-index: var(--rx-z-modal-nested) !important; }
+.wm-app #wmConfirmModal{ z-index: var(--rx-z-confirm) !important; }
+.wm-app .wm-modal, .wm-app .wm-modal.wm-modal-wide, #rexusDocsShell .rd-dialog, .rd-dialog{
+  display: flex !important; flex-direction: column; width: 100%; max-height: calc(100vh - 2 * var(--rx-space-4)) !important; max-height: calc(100dvh - 2 * var(--rx-space-4)) !important;
+  overflow: hidden !important; color: var(--rx-ink-1);
+  background: rgba(255, 255, 255, 0.90) !important; background-image: none !important;
+  border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-xl) !important;
+  box-shadow: var(--rx-glass-highlight), 0 0 0 1px rgba(20,23,28,.05), 0 24px 64px rgba(16,19,24,.24) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)) !important;
+  backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)) !important;
+  animation: rx-dialog-in var(--rx-duration-slow) var(--rx-ease);
+}
+@keyframes rx-dialog-in{ from{ opacity: 0; transform: translateY(8px) scale(.985); } to{ opacity: 1; transform: none; } }
+.wm-app .wm-modal.wm-modal-wide{ width: min(1120px, 100%) !important; max-width: 100% !important; height: min(860px, calc(100dvh - 2 * var(--rx-space-4))) !important; }
+#rexusDocsShell .rd-dialog, .rd-dialog{ overflow-y: auto !important; padding: var(--rx-space-5) !important; display: block !important; width: min(600px, 100%) !important; }
+.wm-app .wm-modal-head, .wm-app .wm-page-modal .wm-modal-head{
+  flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: var(--rx-space-3);
+  min-height: 60px; padding: var(--rx-space-3) var(--rx-space-3) var(--rx-space-3) var(--rx-space-5) !important;
+  background: transparent !important; background-image: none !important; color: var(--rx-ink-1) !important;
+  border-bottom: 1px solid var(--rx-hairline) !important; border-radius: 0 !important;
+}
+.wm-app .wm-modal-head h3, .wm-app .wm-page-modal .wm-modal-head h3, #rexusDocsShell .rd-dialog h3{
+  color: var(--rx-ink-1) !important; font-size: var(--rx-text-xl) !important; line-height: var(--rx-lh-xl) !important; font-weight: var(--rx-weight-semibold) !important;
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.wm-app .wm-modal-close{ color: var(--rx-ink-3) !important; }
+.wm-app .wm-modal-body, .wm-app .wm-modal.wm-modal-wide .wm-modal-body{
+  flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--rx-modal-pad) var(--rx-space-5) !important;
+}
+.wm-app .wm-modal-footer, .wm-app .wm-modal.wm-modal-wide .wm-modal-footer, .wm-app .wm-page-modal .wm-modal-footer{
+  flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: var(--rx-space-2) !important;
+  padding: var(--rx-space-3) var(--rx-space-5) !important; margin: 0 !important;
+  background: rgba(255,255,255,.5) !important; border-top: 1px solid var(--rx-hairline) !important; border-radius: 0 !important;
+}
+#wmConfirmMessage{ font-size: var(--rx-text-md) !important; line-height: 1.6 !important; color: var(--rx-ink-2); }
+/* Page-hosted editors (task form / task detail) share the dialog anatomy but are solid */
+.wm-app .wm-page-modal{
+  background: rgba(255,255,255,.86) !important; border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-xl) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-shadow-2) !important;
+  height: calc(100vh - var(--wm-header-h, var(--rx-header-h)) - 2 * var(--rx-space-5)) !important;
+  max-height: calc(100vh - var(--wm-header-h, var(--rx-header-h)) - 2 * var(--rx-space-5)) !important;
+  min-height: 420px;
+}
+.wm-app .wm-page-modal .wm-modal-body{ padding: var(--rx-space-5) var(--rx-space-6) !important; }
+.wm-app .wm-modal-wide-sections{ gap: 0 var(--rx-space-6) !important; }
+/* Audit side panel */
+.rx-audit-screen{ z-index: var(--rx-z-modal) !important; background: rgba(16,19,24,.34) !important; }
+.rx-audit-panel{ background: var(--rx-glass-3-bg) !important; background-image: none !important; color: var(--rx-ink-1) !important; border-left: 1px solid var(--rx-glass-edge) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)); backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)); box-shadow: -24px 0 64px rgba(16,19,24,.2) !important; }
+.rx-audit-header, .rx-audit-footer{ background: rgba(255,255,255,.5) !important; border-color: var(--rx-hairline) !important; }
+.rx-audit-title{ color: var(--rx-ink-1) !important; font-size: var(--rx-text-xl) !important; font-weight: var(--rx-weight-semibold) !important; }
+.rx-audit-subtitle, .rx-audit-event-text small{ color: var(--rx-ink-3) !important; }
+.rx-audit-filters{ border-color: var(--rx-hairline) !important; }
+.rx-audit-event{ border-color: var(--rx-hairline) !important; }
+.rx-audit-event-text strong{ color: var(--rx-ink-1) !important; }
+.rx-audit-event-text p{ color: var(--rx-ink-2) !important; }
+.rx-audit-screen .rx-audit-btn{ min-height: var(--rx-control-h-sm) !important; padding: 0 var(--rx-space-3) !important; border-radius: var(--rx-radius-sm) !important; font-size: var(--rx-text-sm) !important; background: rgba(255,255,255,.7) !important; border: 1px solid var(--rx-hairline-strong) !important; color: var(--rx-ink-1) !important; font-weight: var(--rx-weight-semibold) !important; cursor: pointer; }
+.rx-audit-event .rx-glass-icon{ color: var(--rx-ink-2) !important; background: #fff !important; border: 1px solid var(--rx-hairline) !important; box-shadow: none !important; }
+.rx-audit-event .rx-glass-icon svg{ stroke: currentColor !important; }
+
+/* Scroll lock while any dialog is open (JS adds the class for browsers without :has) */
+html.rx-scroll-locked, html:has(.wm-modal-overlay.open), html:has(.rd-dialog-wrap), html:has(.rx-audit-screen:not([hidden])){ overflow: hidden; }
+html.rx-scroll-locked body, html:has(.wm-modal-overlay.open) body{ overflow: hidden; }
+
+/* 11. TOASTS, SYNC PILL, LOADER ----------------------------------------------------
+   The success/error popup used to sit dead-centre for 5 s, covering the very
+   control the user had just clicked. It is now a compact toast at the bottom. */
+.wm-app .wm-confirm-popup{
+  z-index: var(--rx-z-toast) !important;
+  top: auto !important; bottom: var(--rx-space-5) !important; left: 50% !important; transform: translateX(-50%) !important;
+  flex-direction: row !important; align-items: center !important; gap: var(--rx-space-3) !important;
+  min-width: 0 !important; max-width: min(440px, calc(100vw - 2 * var(--rx-space-4))) !important; width: max-content;
+  padding: var(--rx-space-2) var(--rx-space-2) var(--rx-space-2) var(--rx-space-3) !important;
+  color: var(--rx-ink-1); background: var(--rx-glass-3-bg) !important; border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important;
+  box-shadow: var(--rx-glass-highlight), 0 0 0 1px rgba(20,23,28,.06), var(--rx-shadow-3) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)) !important; backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)) !important;
+}
+.wm-app .wm-confirm-popup.show{ display: flex !important; animation: rx-toast-in var(--rx-duration-slow) var(--rx-ease); }
+@keyframes rx-toast-in{ from{ opacity: 0; transform: translate(-50%, 8px); } to{ opacity: 1; transform: translate(-50%, 0); } }
+.wm-app .wm-confirm-popup-ringwrap, .wm-app .wm-confirm-popup-ring{ width: 28px !important; height: 28px !important; flex: 0 0 28px; }
+.wm-app .wm-confirm-popup-ring-bg{ stroke: rgba(20,23,28,.10) !important; stroke-width: 8 !important; }
+.wm-app .wm-confirm-popup-ring-fg{ stroke: var(--rx-success) !important; stroke-width: 8 !important; }
+.wm-app .wm-confirm-popup.error .wm-confirm-popup-ring-fg{ stroke: var(--rx-danger) !important; }
+.wm-app .wm-confirm-popup-icon{ font-size: 13px !important; font-weight: var(--rx-weight-bold) !important; color: var(--rx-success) !important; }
+.wm-app .wm-confirm-popup.error .wm-confirm-popup-icon{ color: var(--rx-danger) !important; }
+.wm-app .wm-confirm-popup-text{ font-family: var(--rx-font) !important; font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-1) !important; text-align: left !important; max-width: none !important; min-width: 0; overflow-wrap: anywhere; }
+.wm-app .wm-confirm-popup-close{ order: 3; position: static !important; width: 28px !important; height: 28px !important; font-size: 12px !important; background: transparent !important; border-color: transparent !important; box-shadow: none !important; color: var(--rx-ink-3) !important; }
+.wm-app .wm-sync{
+  z-index: var(--rx-z-toast) !important; bottom: var(--rx-space-5) !important; right: var(--rx-space-5) !important;
+  font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-semibold) !important; padding: var(--rx-space-2) var(--rx-space-4) !important;
+  border-radius: var(--rx-radius-pill) !important; background: var(--rx-smoke-bg) !important; color: #fff !important; box-shadow: var(--rx-shadow-3) !important;
+  max-width: min(360px, calc(100vw - 32px)) !important;
+}
+.wm-app .wm-sync.ok{ background: var(--rx-success) !important; }
+.wm-app .wm-sync.error{ background: var(--rx-danger) !important; }
+#rexusDocsShell .rd-toast, .rd-toast{ z-index: var(--rx-z-toast) !important; bottom: var(--rx-space-5) !important; right: var(--rx-space-5) !important; background: var(--rx-smoke-bg) !important; color: #fff !important; border-radius: var(--rx-radius-md) !important; font-size: var(--rx-text-md) !important; box-shadow: var(--rx-shadow-3) !important; max-width: min(380px, calc(100vw - 32px)) !important; }
+.wm-app .wm-loader{ z-index: var(--rx-z-loader) !important; background: var(--rx-canvas) !important; }
+.wm-app .wm-loader-ring-bg{ stroke: rgba(20,23,28,.08) !important; }
+.wm-app .wm-loader-ring-fg{ stroke: var(--rx-ink-1) !important; }
+.wm-app .wm-loader-spinner{ border-color: rgba(20,23,28,.1) !important; border-top-color: var(--rx-ink-1) !important; }
+.wm-app .wm-loader-number{ color: var(--rx-ink-1) !important; font-size: var(--rx-text-3xl) !important; }
+.wm-app .wm-loader-text{ font-size: var(--rx-text-md) !important; color: var(--rx-ink-3) !important; font-weight: var(--rx-weight-medium) !important; }
+
+/* 12. REXUS DOCUMENT WORKSPACE ---------------------------------------------------- */
+.wm-app.rexus-document-mode{ background-attachment: fixed !important; }
+#rexusDocsShell .rd-layout{ background: transparent !important; grid-template-columns: var(--rx-sidebar-w) minmax(0, 1fr) !important; }
+#rexusDocsShell .rd-sidebar{
+  background: rgba(255,255,255,.38) !important; background-image: none !important; border-right: 1px solid var(--rx-hairline) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-1-blur)) saturate(var(--rx-glass-saturate)) !important; backdrop-filter: blur(var(--rx-glass-1-blur)) saturate(var(--rx-glass-saturate)) !important;
+  padding: var(--rx-space-3) var(--rx-space-3) var(--rx-space-5) !important; z-index: var(--rx-z-sidebar) !important;
+}
+#rexusDocsShell .rd-sidebar:has(.rd-space-dropdown){ z-index: var(--rx-z-popover) !important; }
+#rexusDocsShell .rd-side-head{ z-index: auto !important; }
+#rexusDocsShell .rd-space-dropdown, .rd-space-dropdown{ z-index: var(--rx-z-popover) !important; padding: var(--rx-space-2) !important; }
+#rexusDocsShell .rd-space-switch{
+  min-height: 52px; padding: var(--rx-space-2) var(--rx-space-3) !important; color: var(--rx-ink-1) !important; border-radius: var(--rx-radius-md) !important;
+  background: var(--rx-glass-2-bg) !important; background-image: none !important; border: 1px solid var(--rx-glass-edge) !important; box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1) !important;
+}
+#rexusDocsShell .rd-space-switch:hover{ background: var(--rx-glass-hover-bg) !important; }
+#rexusDocsShell .rd-space-switch small{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-sm) !important; }
+#rexusDocsShell .rd-chevron{ color: var(--rx-ink-3) !important; }
+#rexusDocsShell .rd-switch-section, #rexusDocsShell .rd-section-title{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-xs) !important; letter-spacing: var(--rx-tracking-caps) !important; font-weight: var(--rx-weight-semibold) !important; }
+#rexusDocsShell .rd-current-space{ background: #fff !important; color: var(--rx-ink-1) !important; border: 1px solid var(--rx-hairline); }
+#rexusDocsShell .rd-space-option-list button, #rexusDocsShell .rd-space-add{ color: var(--rx-ink-1) !important; border-radius: var(--rx-radius-sm) !important; min-height: 36px; }
+#rexusDocsShell .rd-space-option-list button:hover, #rexusDocsShell .rd-space-option-list button[aria-selected=true]{ background: rgba(20,23,28,.06) !important; }
+#rexusDocsShell .rd-space-add{ color: var(--rx-accent) !important; border-top: 1px solid var(--rx-hairline) !important; }
+#rexusDocsShell .rd-nav-row{
+  min-height: 36px; gap: var(--rx-space-2) !important; padding: var(--rx-space-1) var(--rx-space-2) !important; border-radius: var(--rx-radius-md) !important;
+  font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-medium) !important; color: var(--rx-ink-2) !important; border: 1px solid transparent !important;
+  transition: background-color var(--rx-duration), color var(--rx-duration);
+}
+#rexusDocsShell .rd-nav-row:hover{ background: rgba(255,255,255,.6) !important; color: var(--rx-ink-1) !important; }
+#rexusDocsShell .rd-nav-row.active{ background: var(--rx-glass-hover-bg) !important; background-image: none !important; color: var(--rx-ink-1) !important; font-weight: var(--rx-weight-semibold) !important; border-color: var(--rx-glass-edge) !important; box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1) !important; }
+#rexusDocsShell .rd-nav-row .rx-glass-icon, #rexusDocsShell .rd-nav-glyph, #rexusDocsShell .rd-space-glyph{
+  width: 26px !important; height: 26px !important; border-radius: var(--rx-radius-xs) !important;
+  color: var(--rx-ink-2) !important; background: rgba(255,255,255,.7) !important; border: 1px solid var(--rx-hairline) !important;
+  box-shadow: var(--rx-glass-highlight) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+#rexusDocsShell .rd-nav-row{ min-width: 0; max-width: 100%; overflow: hidden; }
+#rexusDocsShell .rd-nav-row > span:last-child{ min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#rexusDocsShell .rd-sidebar{ overflow-x: hidden !important; }
+#rexusDocsShell .rd-sidebar:has(.rd-space-dropdown){ overflow: visible !important; }
+#rexusDocsShell .rd-icon-btn, #rexusDocsShell .rd-icon-btn[data-rx2d]{
+  color: var(--rx-ink-1) !important; background: var(--rx-glass-2-bg) !important; background-image: none !important;
+  border: 1px solid var(--rx-hairline-strong) !important; box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1) !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important; border-radius: var(--rx-radius-md) !important;
+}
+#rexusDocsShell .rd-icon-btn[data-rx2d]:hover{ background: #fff !important; }
+#rexusDocsShell .rd-nav-row.active .rx-glass-icon{ color: var(--rx-accent) !important; background: #fff !important; }
+#rexusDocsShell .rd-tree-toggle{ width: 24px !important; height: 28px !important; min-height: 28px !important; background: transparent !important; border-color: transparent !important; box-shadow: none !important; font-size: 16px !important; }
+#rexusDocsShell .rd-icon-btn{ width: var(--rx-icon-btn) !important; height: var(--rx-icon-btn) !important; min-width: var(--rx-icon-btn); }
+#rexusDocsShell .rd-main{ padding: var(--rx-space-5) var(--rx-space-6) var(--rx-space-7) !important; }
+#rexusDocsShell .rd-hero h2, #rexusDocsShell .rd-document-head h2{ font-family: var(--rx-font) !important; color: var(--rx-ink-1) !important; font-size: var(--rx-text-3xl) !important; line-height: var(--rx-lh-3xl) !important; font-weight: var(--rx-weight-bold) !important; letter-spacing: var(--rx-tracking-tight) !important; }
+#rexusDocsShell .rd-overline{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-xs) !important; letter-spacing: var(--rx-tracking-caps) !important; font-weight: var(--rx-weight-semibold) !important; }
+#rexusDocsShell .rd-breadcrumb, #rexusDocsShell .rd-path{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-sm) !important; }
+#rexusDocsShell .rd-breadcrumb a, #rexusDocsShell .rd-path button{ color: var(--rx-accent) !important; font-size: var(--rx-text-sm) !important; }
+#rexusDocsShell .rd-panel, #rexusDocsShell .rd-home-action, #rexusDocsShell .rd-folder-side, #rexusDocsShell .rd-details-panel, #rexusDocsShell .rd-thread-panel, #rexusDocsShell .rd-drive-controls{
+  background: var(--rx-glass-2-bg) !important; background-image: none !important; border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) !important;
+  box-shadow: var(--rx-glass-highlight), var(--rx-shadow-2) !important; color: var(--rx-ink-1);
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important; backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important;
+}
+#rexusDocsShell .rd-drive-controls{ padding: var(--rx-space-2) var(--rx-space-3) !important; gap: var(--rx-space-2) !important; }
+#rexusDocsShell .rd-panel{ overflow: hidden; }
+#rexusDocsShell .rd-home-banner{
+  background: var(--rx-glass-2-bg) !important; background-image: none !important; color: var(--rx-ink-1) !important;
+  border: 1px solid var(--rx-glass-edge) !important; box-shadow: var(--rx-glass-highlight), var(--rx-shadow-2) !important; border-radius: var(--rx-radius-xl) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)); backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate));
+  padding: var(--rx-space-6) !important;
+}
+#rexusDocsShell .rd-home-banner::after{ display: none !important; }
+#rexusDocsShell .rd-home-banner h2{ color: var(--rx-ink-1) !important; font-size: clamp(24px, 3vw, 32px) !important; line-height: 1.2 !important; }
+#rexusDocsShell .rd-home-banner p{ color: var(--rx-ink-2) !important; font-size: var(--rx-text-md) !important; }
+#rexusDocsShell .rx-home-hero-icon{ width: 88px !important; height: 88px !important; border-radius: var(--rx-radius-xl) !important; color: var(--rx-ink-1) !important; }
+#rexusDocsShell .rd-home-actions{ gap: var(--rx-space-3) !important; margin: var(--rx-space-4) 0 !important; }
+#rexusDocsShell .rd-home-action{ min-height: 80px; padding: var(--rx-space-4) !important; gap: var(--rx-space-3) !important; font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-semibold) !important; color: var(--rx-ink-1) !important; cursor: pointer; transition: background-color var(--rx-duration), box-shadow var(--rx-duration), transform var(--rx-duration); }
+#rexusDocsShell .rd-home-action:hover{ background: var(--rx-glass-hover-bg) !important; box-shadow: var(--rx-glass-highlight), var(--rx-shadow-3) !important; transform: translateY(-2px); }
+#rexusDocsShell .rd-home-action small{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-sm) !important; font-weight: var(--rx-weight-regular) !important; }
+#rexusDocsShell .rd-home-icon, #rexusDocsShell .rd-home-action span.rd-home-icon{ width: 44px !important; height: 44px !important; flex: 0 0 44px !important; border-radius: var(--rx-radius-md) !important; font-size: 20px; }
+#rexusDocsShell .rd-home-section-head{ padding: var(--rx-space-4) var(--rx-space-5) var(--rx-space-2) !important; }
+#rexusDocsShell .rd-home-section-head h3, #rexusDocsShell .rd-subhead, #rexusDocsShell .rd-folder-side h3{ color: var(--rx-ink-1) !important; font-size: var(--rx-text-lg) !important; font-weight: var(--rx-weight-semibold) !important; }
+#rexusDocsShell .rd-home-space{ background: transparent !important; border-bottom: 1px solid var(--rx-hairline) !important; box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; border-radius: 0 !important; padding: var(--rx-space-3) var(--rx-space-5) !important; }
+#rexusDocsShell .rd-home-space:hover{ background: rgba(20,23,28,.035) !important; }
+#rexusDocsShell .rd-home-space strong{ color: var(--rx-ink-1) !important; font-size: var(--rx-text-md) !important; }
+#rexusDocsShell .rd-home-space small, #rexusDocsShell .rd-row-meta, #rexusDocsShell .rd-row-end, #rexusDocsShell .rd-note{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-sm) !important; }
+#rexusDocsShell .rd-list-row{ background: transparent !important; border-bottom: 1px solid var(--rx-hairline) !important; padding: var(--rx-space-3) var(--rx-space-5) !important; gap: var(--rx-space-3) !important; color: var(--rx-ink-1) !important; }
+#rexusDocsShell .rd-list-row:hover{ background: rgba(20,23,28,.035) !important; }
+#rexusDocsShell .rd-list-icon{ width: 36px !important; height: 36px !important; flex: 0 0 36px !important; border-radius: var(--rx-radius-md) !important; font-size: 18px; }
+#rexusDocsShell .rd-row-name{ color: var(--rx-ink-1) !important; font-size: var(--rx-text-md) !important; font-weight: var(--rx-weight-semibold) !important; }
+#rexusDocsShell .rd-drive-icon{ width: 28px !important; height: 28px !important; border-radius: var(--rx-radius-sm) !important; margin-right: var(--rx-space-2) !important; vertical-align: middle; }
+#rexusDocsShell .rd-drive-table button:not(.rd-button), #rexusDocsShell .rd-drive-table a{ color: var(--rx-ink-1) !important; font-weight: var(--rx-weight-semibold) !important; }
+#rexusDocsShell .rd-drive-table button:not(.rd-button):hover, #rexusDocsShell .rd-drive-table a:hover{ color: var(--rx-accent) !important; text-decoration: underline; }
+#rexusDocsShell .rd-drive-table .rd-button[data-rd="file-options"], #rexusDocsShell .rd-drive-table .rd-button[data-rd="doc-options"]{ width: var(--rx-icon-btn-sm) !important; min-width: var(--rx-icon-btn-sm) !important; height: var(--rx-icon-btn-sm) !important; min-height: var(--rx-icon-btn-sm) !important; padding: 0 !important; }
+#rexusDocsShell .rd-drive-table .rd-button .rx-mini-icon{ background: none !important; border: 0 !important; box-shadow: none !important; }
+#rexusDocsShell .rd-tag{ height: 24px; color: var(--rx-ink-2) !important; background: var(--rx-neutral-soft) !important; }
+#rexusDocsShell .rd-empty{ color: var(--rx-ink-3) !important; }
+#rexusDocsShell .rd-empty strong{ color: var(--rx-ink-1) !important; }
+/* Editor chrome */
+#rexusDocsShell .rd-editor-shell{ background: transparent !important; }
+#rexusDocsShell .rd-edit-top{ background: var(--rx-glass-3-bg) !important; background-image: none !important; border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-lg) var(--rx-radius-lg) 0 0 !important; z-index: var(--rx-z-sticky) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important; backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important; }
+#rexusDocsShell .rd-edit-meta{ color: var(--rx-ink-2) !important; }
+#rexusDocsShell .rd-toolbar, #rexusDocsShell .rd-compact-toolbar{ background: rgba(250,250,251,.86) !important; background-image: none !important; border: 1px solid var(--rx-glass-edge) !important; border-top: 0 !important; z-index: calc(var(--rx-z-sticky) - 1) !important; box-shadow: var(--rx-shadow-1) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important; backdrop-filter: blur(var(--rx-glass-2-blur)) saturate(var(--rx-glass-saturate)) !important; }
+#rexusDocsShell .rd-tools{ border-right-color: var(--rx-hairline-strong) !important; }
+#rexusDocsShell .rd-tool, #rexusDocsShell .rd-tool.rx-outline-tool, #rexusDocsShell .rd-tool.rx-emoji-tool{
+  min-width: var(--rx-icon-btn-sm) !important; height: var(--rx-icon-btn-sm) !important; border-radius: var(--rx-radius-sm) !important;
+  color: var(--rx-ink-2) !important; background: transparent !important; background-image: none !important; border: 1px solid transparent !important; box-shadow: none !important; filter: none !important;
+}
+#rexusDocsShell .rd-tool:hover, #rexusDocsShell .rd-tool:focus-visible, #rexusDocsShell .rd-tool.rx-outline-tool:hover{ background: rgba(20,23,28,.07) !important; color: var(--rx-ink-1) !important; }
+#rexusDocsShell .rd-tool.active, #rexusDocsShell .rd-tool[aria-pressed="true"]{ background: #fff !important; border-color: var(--rx-hairline-strong) !important; color: var(--rx-ink-1) !important; box-shadow: var(--rx-shadow-1) !important; }
+#rexusDocsShell .rd-tool .rx-2d-svg, #rexusDocsShell .rd-tool svg{ stroke: currentColor !important; width: 18px !important; height: 18px !important; min-width: 18px; }
+#rexusDocsShell .rd-tool .rx-glass-icon{ background: none !important; border: 0 !important; box-shadow: none !important; }
+#rexusDocsShell .rd-block-select, #rexusDocsShell .rd-font, #rexusDocsShell .rd-font-size{ min-height: var(--rx-icon-btn-sm) !important; height: var(--rx-icon-btn-sm) !important; padding-top: 0 !important; padding-bottom: 0 !important; font-size: var(--rx-text-sm) !important; color: var(--rx-ink-1) !important; background-color: #fff !important; border: 1px solid var(--rx-hairline-strong) !important; border-radius: var(--rx-radius-sm) !important; }
+#rexusDocsShell .rd-paper, #rexusDocsShell .rd-page-paper{ color: var(--rx-ink-1); }
+#rexusDocsShell .rd-paper-title{ color: var(--rx-ink-1) !important; }
+#rexusDocsShell .rd-rich-surface, #rexusDocsShell .rd-content.rd-rich-display, #rexusDocsShell .rd-content{ color: #262b33 !important; }
+#rexusDocsShell .rd-draft-status{ color: var(--rx-success) !important; }
+#rexusDocsShell .rd-draft-status.dirty{ color: var(--rx-warning) !important; }
+#rexusDocsShell .rd-thread{ background: #fff !important; border: 1px solid var(--rx-hairline) !important; border-radius: var(--rx-radius-md) !important; box-shadow: none !important; }
+#rexusDocsShell .rd-thread.active{ border-color: var(--rx-accent) !important; box-shadow: 0 0 0 3px var(--rx-accent-soft) !important; }
+#rexusDocsShell .rd-thread-quote{ background: var(--rx-surface-muted) !important; color: var(--rx-ink-1) !important; border-left-color: var(--rx-ink-3) !important; }
+#rexusDocsShell .rd-annotation{ background: rgba(250, 204, 21, .28) !important; box-shadow: inset 0 -2px rgba(161,98,7,.6) !important; }
+#rexusDocsShell .rd-dialog-choices{ border-color: var(--rx-hairline) !important; border-radius: var(--rx-radius-md) !important; }
+#rexusDocsShell .rd-dialog-choices button{ border-bottom-color: var(--rx-hairline) !important; color: var(--rx-ink-1) !important; background: transparent !important; }
+#rexusDocsShell .rd-dialog-choices button:hover{ background: rgba(20,23,28,.05) !important; }
+#rexusDocsShell .rd-rich-surface nav.rd-toc, #rexusDocsShell .rd-rich-display nav.rd-toc{ background: var(--rx-surface-muted) !important; border-color: var(--rx-hairline) !important; }
+#rexusDocsShell .rd-embed-preview, #rexusDocsShell .rd-mermaid-rendered{ background: var(--rx-surface-muted) !important; border-color: var(--rx-hairline) !important; color: var(--rx-ink-1) !important; }
+
+/* 13. v2.1 MODULES (Approval Center, Resource Planning, Project Financials, Org search) */
+.wm-app .rx210-title{ margin: 0 0 var(--rx-space-4) !important; gap: var(--rx-space-3) !important; }
+.wm-app .rx210-title h2{ color: var(--rx-ink-1) !important; font-size: var(--rx-text-3xl) !important; line-height: var(--rx-lh-3xl) !important; font-weight: var(--rx-weight-bold) !important; margin: 0 0 var(--rx-space-1) !important; }
+.wm-app .rx210-title p{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-md) !important; }
+.wm-app .rx210-glass{ padding: var(--rx-space-4) var(--rx-space-5) !important; margin-bottom: var(--rx-space-4) !important; }
+.wm-app .rx210-metrics{ gap: var(--rx-space-3) !important; margin-bottom: var(--rx-space-4) !important; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)) !important; }
+.wm-app .rx210-metrics article{ padding: var(--rx-space-4) !important; gap: var(--rx-space-1) !important; }
+.wm-app .rx210-metrics article small{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-sm) !important; }
+.wm-app .rx210-metrics article strong{ color: var(--rx-ink-1) !important; font-size: var(--rx-text-2xl) !important; line-height: var(--rx-lh-2xl); overflow-wrap: anywhere; }
+.wm-app .rx210-filters{ gap: var(--rx-space-3) !important; }
+.wm-app .rx210-field{ gap: 6px !important; }
+.wm-app .rx210-person{ color: var(--rx-ink-1) !important; border-bottom: 1px solid var(--rx-hairline) !important; padding: var(--rx-space-3) !important; border-radius: 0; }
+.wm-app .rx210-person:hover{ background: rgba(20,23,28,.035) !important; }
+.wm-app .rx210-person small, .wm-app .rx210-details small{ color: var(--rx-ink-3) !important; }
+.wm-app .rx210-details strong{ font-size: var(--rx-text-md) !important; color: var(--rx-ink-1); }
+.wm-app #rx210EmpDetails{ border-top-color: var(--rx-hairline) !important; }
+.wm-app .rx210-glyph{ width: 32px !important; height: 32px !important; }
+
+/* 14. AUTHENTICATION ------------------------------------------------------------------ */
+.wm-auth-screen{
+  z-index: var(--rx-z-auth) !important; font-family: var(--rx-font) !important; padding: var(--rx-space-4); overflow-y: auto;
+  --a-navy: var(--rx-ink-1); --a-navy-deep: var(--rx-ink-1); --a-gold: var(--rx-ink-1); --a-ink: var(--rx-ink-1); --a-ink-soft: var(--rx-ink-3); --a-line: #e2e5ea; --a-danger: var(--rx-danger);
+  background:
+    radial-gradient(900px 600px at 15% 10%, rgba(120,160,230,.32), transparent 60%),
+    radial-gradient(800px 600px at 90% 90%, rgba(230,180,140,.28), transparent 60%),
+    radial-gradient(700px 500px at 80% 10%, rgba(150,200,180,.24), transparent 60%),
+    linear-gradient(160deg, #eef0f4, #e4e7ec) !important;
+}
+.wm-auth-screen .wm-auth-card{
+  max-width: 400px !important; margin: auto; background: var(--rx-glass-3-bg) !important; border: 1px solid var(--rx-glass-edge) !important; border-radius: var(--rx-radius-xl) !important;
+  box-shadow: var(--rx-glass-highlight), 0 0 0 1px rgba(20,23,28,.05), 0 24px 64px rgba(16,19,24,.16) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)) !important; backdrop-filter: blur(var(--rx-glass-3-blur)) saturate(var(--rx-glass-saturate)) !important;
+}
+.wm-auth-screen .wm-auth-head{ background: transparent !important; background-image: none !important; color: var(--rx-ink-1) !important; padding: var(--rx-space-6) var(--rx-space-6) var(--rx-space-2) !important; }
+.wm-auth-screen .wm-auth-head h1{ color: var(--rx-ink-1) !important; font-family: var(--rx-font) !important; font-size: var(--rx-text-3xl) !important; line-height: var(--rx-lh-3xl); font-weight: var(--rx-weight-bold) !important; letter-spacing: var(--rx-tracking-tight); margin-bottom: var(--rx-space-1) !important; }
+.wm-auth-screen .wm-auth-head p{ color: var(--rx-ink-3) !important; font-size: var(--rx-text-md) !important; }
+.wm-auth-screen .wm-auth-body{ padding: var(--rx-space-5) var(--rx-space-6) var(--rx-space-6) !important; }
+.wm-auth-screen .wm-auth-row{ margin-bottom: var(--rx-space-4) !important; }
+.wm-auth-screen .wm-auth-row label{ font-size: var(--rx-text-sm) !important; color: var(--rx-ink-2) !important; font-weight: var(--rx-weight-semibold) !important; margin-bottom: 6px !important; }
+.wm-auth-screen .wm-auth-row input{ width: 100%; min-height: var(--rx-control-h-lg) !important; }
+.wm-auth-screen a{ color: var(--rx-accent) !important; }
+
+/* 15. RESPONSIVE --------------------------------------------------------------------- */
+@media (max-width: 1280px){
+  .wm-app{ --rx-sidebar-w: 216px; }
+  .wm-app .wm-body, #rexusDocsShell .rd-main{ padding: var(--rx-space-5) !important; }
+}
+@media (max-width: 1024px){
+  .wm-app .wm-header{ padding: var(--rx-space-2) var(--rx-space-4) !important; }
+  .wm-app .wm-modal.wm-modal-wide .wm-form-grid, .wm-app .wm-page-modal .wm-form-grid{ grid-template-columns: 1fr 1fr !important; }
+  .wm-app .wm-modal-wide-sections{ grid-template-columns: 1fr !important; }
+  #rexusDocsShell .rd-home-columns{ grid-template-columns: 1fr !important; }
+}
+@media (max-width: 900px){
+  .wm-app .wm-task-row{ grid-template-columns: 24px minmax(0, 1fr) auto auto !important; }
+  .wm-app .wm-form-grid, .wm-app .wm-detail-grid, .wm-app .wm-modal.wm-modal-wide .wm-form-grid, .wm-app .wm-page-modal .wm-form-grid{ grid-template-columns: 1fr !important; }
+  .wm-app .wm-page-modal{ height: auto !important; max-height: none !important; min-height: 0; }
+  .wm-app .wm-page-modal .wm-modal-body{ overflow: visible; padding: var(--rx-space-4) !important; }
+  .wm-app .wm-page-modal .wm-modal-footer{ position: sticky; bottom: 0; z-index: var(--rx-z-sticky); border-radius: 0 0 var(--rx-radius-xl) var(--rx-radius-xl) !important; background: rgba(255,255,255,.92) !important;
+    -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)); backdrop-filter: blur(var(--rx-glass-2-blur)); }
+  #rexusDocsShell .rd-layout{ grid-template-columns: 200px minmax(0, 1fr) !important; }
+}
+@media (max-width: 760px){
+  .wm-app{ --wm-sidebar-w: var(--rx-sidebar-w-collapsed); --rx-header-h: 56px; }
+  .wm-app .wm-header{ padding: var(--rx-space-2) var(--rx-space-3) !important; }
+  .wm-app .wm-header-top{ gap: var(--rx-space-2) !important; }
+  .wm-app .wm-brand{ width: auto !important; border-right: 0 !important; padding-right: 0 !important; }
+  .wm-app .wm-sidebar{ width: var(--rx-sidebar-w-collapsed) !important; padding: var(--rx-space-2) var(--rx-space-2) var(--rx-space-5) !important; }
+  .wm-app .wm-sidebar .wm-tab{ justify-content: center; padding: var(--rx-space-1) !important; min-height: 44px; }
+  .wm-app .wm-sidebar .wm-tab-label{ display: none !important; }
+  .wm-app .wm-sidebar .wm-tabs-toggle{ display: none !important; }
+  .wm-app .wm-body{ padding: var(--rx-space-4) var(--rx-space-3) var(--rx-space-6) !important; }
+  .wm-app h1, .wm-app .rx210-title h2{ font-size: var(--rx-text-2xl) !important; line-height: var(--rx-lh-2xl) !important; }
+  .wm-app .wm-view > h2:first-child{ font-size: var(--rx-text-2xl) !important; }
+  .wm-app .wm-footer{ padding: var(--rx-space-5) var(--rx-space-4) !important; }
+  /* Menus anchored to the viewport so they can never escape it */
+  .wm-app .wm-notif-panel, .wm-app .wm-user-menu{ position: fixed !important; top: calc(var(--wm-header-h, var(--rx-header-h)) + var(--rx-space-2)) !important; right: var(--rx-space-3) !important; left: auto !important; }
+  .wm-app .wm-notif-panel{ left: var(--rx-space-3) !important; width: auto !important; }
+  .wm-app .rx-app-launcher{ position: fixed !important; top: calc(var(--wm-header-h, var(--rx-header-h)) + var(--rx-space-2)) !important; left: var(--rx-space-3) !important; right: auto; }
+  .wm-app .wm-pd-header{ flex-direction: column; }
+  #rexusDocsShell .rd-main{ padding: var(--rx-space-4) var(--rx-space-3) !important; }
+  #rexusDocsShell .rd-layout{ grid-template-columns: var(--rx-sidebar-w-collapsed) minmax(0,1fr) !important; }
+  #rexusDocsShell .rd-home-actions{ grid-template-columns: 1fr !important; }
+  #rexusDocsShell .rd-home-banner{ padding: var(--rx-space-5) !important; }
+}
+@media (max-width: 700px){
+  #rexusDocsShell .rd-layout{ display: block !important; }
+  #rexusDocsShell .rd-side-head strong, #rexusDocsShell .rd-section-title, #rexusDocsShell .rd-spaces-tree .rd-subnav{ display: block !important; }
+  #rexusDocsShell .rd-nav-row span:last-child{ display: inline !important; }
+  #rexusDocsShell .rd-nav-row{ justify-content: flex-start !important; font-size: var(--rx-text-md) !important; }
+  #rexusDocsShell .rd-side-head{ justify-content: space-between !important; }
+  #rexusDocsShell .rd-sidebar{ height: auto; max-height: 220px !important; position: relative !important; top: 0 !important; border-right: 0 !important; border-bottom: 1px solid var(--rx-hairline) !important; }
+}
+@media (max-width: 600px){
+  /* Task rows: check + text on line 1, badges on line 2 (they were clipped before) */
+  .wm-app .wm-task-row{ display: flex !important; flex-wrap: wrap; align-items: flex-start; row-gap: var(--rx-space-2) !important; }
+  .wm-app .wm-task-row > .wm-task-check{ margin-top: 1px; }
+  .wm-app .wm-task-row > .wm-task-main{ flex: 1 1 calc(100% - 40px); }
+  .wm-app .wm-task-row > .wm-task-main + .wm-badge{ margin-left: 36px; }
+  .wm-app .wm-task-row > .wm-task-progress-mini, .wm-app .wm-task-row > .wm-task-due{ display: none !important; }
+  .wm-app .wm-stats{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: var(--rx-space-2) !important; }
+  .wm-app .wm-stat-card{ padding: var(--rx-space-3) !important; }
+  .wm-app .wm-stat-num{ font-size: 20px !important; line-height: 26px !important; }
+  .wm-app .wm-filters .wm-select, .wm-app .wm-filters .wm-input{ flex: 1 1 100%; max-width: none; }
+  .wm-app .wm-modal-overlay, #rexusDocsShell .rd-dialog-wrap, .rd-dialog-wrap{ padding: var(--rx-space-2) !important; align-items: flex-end !important; }
+  .wm-app .wm-modal, .wm-app .wm-modal.wm-modal-wide{ max-height: calc(100dvh - var(--rx-space-4)) !important; border-radius: var(--rx-radius-xl) !important; }
+  .wm-app .wm-modal.wm-modal-wide{ height: calc(100dvh - var(--rx-space-4)) !important; }
+  .wm-app .wm-modal-head{ padding-left: var(--rx-space-4) !important; min-height: 56px; }
+  .wm-app .wm-modal-body{ padding: var(--rx-space-4) !important; }
+  .wm-app .wm-modal-footer, .wm-app .wm-page-modal .wm-modal-footer{ padding: var(--rx-space-3) var(--rx-space-4) !important; }
+  .wm-app .wm-modal-footer > .wm-btn, .wm-app .wm-page-modal .wm-modal-footer > .wm-btn{ flex: 1 1 auto; }
+  .wm-app .wm-period-toggle, .wm-app .rx213-subnav, .wm-app #finModeToggle{ display: flex !important; width: 100%; }
+  .wm-app .wm-period-toggle .wm-period-btn, .wm-app .rx213-subnav button, .wm-app #finModeToggle button{ flex: 1 1 auto; padding: var(--rx-space-1) var(--rx-space-2) !important; }
+  .wm-app .wm-confirm-popup{ bottom: var(--rx-space-3) !important; }
+  .wm-app .wm-sync{ right: var(--rx-space-3) !important; bottom: var(--rx-space-3) !important; }
+  .wm-app .wm-cal-cell{ min-height: 64px !important; }
+  .wm-app .wm-cal-chip{ font-size: 11px !important; padding: 0 4px !important; }
+  .wm-auth-screen .wm-auth-head{ padding: var(--rx-space-5) var(--rx-space-5) var(--rx-space-1) !important; }
+  .wm-auth-screen .wm-auth-body{ padding: var(--rx-space-4) var(--rx-space-5) var(--rx-space-5) !important; }
+}
+@media (max-width: 480px){
+  .wm-app .wm-title{ font-size: var(--rx-text-md) !important; }
+  .wm-app #wmUserMenuBtn{ max-width: 44px !important; width: var(--rx-icon-btn) !important; padding: 0 !important; justify-content: center !important; }
+  .wm-app #wmUserMenuBtn > span{ display: none !important; }
+  .wm-app #wmUserMenuBtn > img, .wm-app #wmUserMenuBtn > span:first-child:not(:only-child){ display: inline-flex !important; }
+}
+@media (max-width: 360px){
+  .wm-app .wm-stats{ grid-template-columns: 1fr 1fr !important; }
+  .wm-app .wm-stat-num{ font-size: var(--rx-text-xl) !important; }
+}
+/* Touch devices: comfortable 44px targets */
+@media (pointer: coarse){
+  .wm-app .wm-btn, #rexusDocsShell .rd-button, .wm-app .rx210-btn{ min-height: 44px !important; }
+  .wm-app .wm-icon-btn{ width: 40px !important; height: 40px !important; }
+  .wm-app .wm-glass-icon-btn, .wm-app .wm-glass-chip, #rexusDocsShell .rd-icon-btn{ min-width: 44px; height: 44px !important; }
+  .wm-app #wmNotifBellBtn{ width: 44px !important; }
+  .wm-app .wm-input, .wm-app .wm-select, .wm-app .wm-form-row input, .wm-app .wm-form-row select{ min-height: 44px; font-size: 16px !important; /* prevents iOS zoom */ }
+}
+
+/* 16. ACCESSIBILITY & FALLBACKS ------------------------------------------------------- */
+/* One visible, consistent focus indicator for every interactive element */
+.wm-app :focus-visible, #rexusDocsShell :focus-visible, .wm-auth-screen :focus-visible, .rx-audit-screen :focus-visible{
+  outline: 2px solid var(--rx-accent) !important; outline-offset: 2px !important;
+}
+.wm-app .wm-btn:focus-visible, .wm-app .wm-icon-btn:focus-visible, .wm-app .wm-glass-icon-btn:focus-visible, .wm-app .wm-glass-chip:focus-visible,
+.wm-app .wm-tab:focus-visible, #rexusDocsShell .rd-button:focus-visible, .wm-auth-screen .wm-auth-submit:focus-visible{
+  outline: 2px solid var(--rx-accent) !important; outline-offset: 2px !important; box-shadow: 0 0 0 4px var(--rx-accent-soft) !important;
+}
+.wm-app input:focus-visible, .wm-app select:focus-visible, .wm-app textarea:focus-visible{ outline: none !important; }
+.rx-sr-only{ position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .wm-app *, .wm-app *::before, .wm-app *::after, #rexusDocsShell *, .wm-auth-screen *{
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important;
+  }
+  .wm-app .is-loading::after, #rexusDocsShell .is-loading::after{ animation: rx-spin 1.6s linear infinite !important; }
+  .wm-app [class]:hover{ transform: none !important; }
+}
+/* Higher-contrast preference: firmer glass and edges */
+@media (prefers-contrast: more){
+  :root{ --rx-glass-1-bg: rgba(255,255,255,.86); --rx-glass-2-bg: rgba(255,255,255,.92); --rx-glass-3-bg: rgba(255,255,255,.97); --rx-hairline: rgba(20,23,28,.28); --rx-hairline-strong: rgba(20,23,28,.45); --rx-ink-3: #4a515c; }
+}
+@media (forced-colors: active){
+  .wm-app .wm-btn, .wm-app .wm-icon-btn, .wm-app .wm-glass-icon-btn, #rexusDocsShell .rd-button{ border: 1px solid ButtonText !important; }
+  .wm-app .wm-badge{ border: 1px solid CanvasText !important; }
+}
+/* No backdrop-filter support: raise opacity so text keeps its contrast */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))){
+  :root{ --rx-glass-1-bg: rgba(255,255,255,.88); --rx-glass-2-bg: rgba(255,255,255,.93); --rx-glass-3-bg: rgba(255,255,255,.98); }
+  .wm-app .wm-header{ background: rgba(248,249,251,.97) !important; }
+  .wm-app .wm-sidebar, #rexusDocsShell .rd-sidebar{ background: rgba(250,250,251,.96) !important; }
+}
+/* Print: plain, ink-saving */
+@media print{
+  .wm-app .wm-header, .wm-app .wm-sidebar, .wm-app .wm-footer, .wm-app .wm-sync, .wm-app .wm-confirm-popup{ display: none !important; }
+  .wm-app, .wm-app .wm-body{ background: #fff !important; padding: 0 !important; }
+  .wm-app *{ box-shadow: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+}
+
+/* =============================================================================
+   17. THEMES (Module 9) — two user-selectable themes, saved per REXUS user.
+   "mono"  Black & White: the neutral Adaptive Liquid Glass defaults above.
+   "navy"  Navy Blue & Light Blue: navy headings/primary, light-blue highlights,
+           near-white backgrounds, subtly blue-tinted cards. Status colours keep
+           their meaning in both themes.
+   ========================================================================== */
+:root[data-rx-theme="navy"]{
+  --rx-ink-1: #0f2440; --rx-ink-2: #34496a; --rx-ink-3: #56698a;
+  --rx-heading: #0b2f63;
+  --rx-accent: #1f5fb4; --rx-accent-strong: #154a91; --rx-accent-soft: rgba(31, 95, 180, 0.12);
+  --rx-hairline: rgba(15, 50, 100, 0.12); --rx-hairline-strong: rgba(15, 50, 100, 0.20);
+  --rx-glass-1-bg: rgba(244, 249, 255, 0.55);
+  --rx-glass-2-bg: rgba(246, 250, 255, 0.72);
+  --rx-glass-3-bg: rgba(250, 252, 255, 0.90);
+  --rx-glass-hover-bg: rgba(255, 255, 255, 0.92);
+  --rx-glass-edge: rgba(205, 225, 250, 0.85);
+  --rx-smoke-bg: rgba(13, 47, 99, 0.94); --rx-smoke-hover-bg: rgba(9, 36, 78, 0.98);
+  --rx-surface-muted: #f1f6fd; --rx-canvas: #f3f7fc;
+  --rx-app-bg:
+    radial-gradient(1100px 600px at 10% -10%, rgba(150, 195, 250, 0.35), transparent 60%),
+    radial-gradient(900px 600px at 100% 0%, rgba(190, 220, 255, 0.35), transparent 60%),
+    linear-gradient(180deg, #f6f9fe 0%, #edf3fb 100%);
+  --rx-header-bg: rgba(247, 251, 255, 0.82);
+  --rx-sidebar-bg: rgba(236, 244, 255, 0.62);
+  --rx-table-head-bg: #e9f1fc;
+  --rx-nav-active-bg: #dbeaff;
+  --rx-nav-active-ink: #0b2f63;
+  --rx-footer-bg: #0b2447;
+  --rx-info: #1f5fb4; --rx-info-soft: #e3eefc; --rx-info-line: rgba(31, 95, 180, .26);
+}
+:root[data-rx-theme="navy"] .wm-app .wm-tab.active .rx-glass-icon,
+:root[data-rx-theme="navy"] .wm-app .wm-tab.active .wm-tab-icon > svg{ color: #0b2f63 !important; background: #fff !important; }
+:root[data-rx-theme="navy"] .wm-app .wm-title{ color: #0b2f63 !important; }
+:root[data-rx-theme="navy"] .wm-app .wm-progress-fill{ background: #2a6fcf !important; }
+:root[data-rx-theme="navy"] .wm-app .rx-metric{ background: rgba(240, 247, 255, 0.85) !important; }
+:root[data-rx-theme="navy"] .wm-auth-screen{ background: linear-gradient(160deg, #eaf2fd, #dbe8fa) !important; }
+:root[data-rx-density="comfortable"]{ --rx-pad-page-y: 24px; --rx-pad-page-x: 32px; --rx-pad-card: 16px; --rx-gap: 14px; --rx-cell-y: 12px; --rx-cell-x: 12px; --rx-nav-item-h: 40px; --rx-section-gap: 32px; --rx-modal-pad: 24px; }
+
+/* =============================================================================
+   18. v2.2.1 MODULE COMPONENTS (HR, Resource Planning, Approval Center,
+       Project Finance, WBS + Gantt, Connected Accounts, Appearance)
+   ========================================================================== */
+.wm-app .rx-page-head{ display: flex; justify-content: space-between; align-items: flex-start; gap: var(--rx-gap); flex-wrap: wrap; margin: 0 0 var(--rx-space-3); }
+.wm-app .rx-page-head h2{ font-size: var(--rx-text-2xl) !important; line-height: var(--rx-lh-2xl) !important; margin: 0 0 2px !important; }
+.wm-app .rx-page-head p{ margin: 0; color: var(--rx-ink-3); max-width: 72ch; }
+.wm-app .rx-page-actions, .wm-app .rx-btn-row{ display: flex; flex-wrap: wrap; gap: var(--rx-gap-sm); align-items: center; }
+.wm-app .rx-card{ background: var(--rx-glass-2-bg); border: 1px solid var(--rx-glass-edge); border-radius: var(--rx-radius-lg); box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1);
+  padding: var(--rx-pad-card); margin-bottom: var(--rx-gap); min-width: 0; -webkit-backdrop-filter: blur(var(--rx-glass-1-blur)); backdrop-filter: blur(var(--rx-glass-1-blur)); }
+.wm-app .rx-card-head{ display: flex; justify-content: space-between; align-items: center; gap: var(--rx-gap-sm); flex-wrap: wrap; margin-bottom: var(--rx-space-2); }
+.wm-app .rx-card-head h3, .wm-app .rx-card-head h4, .wm-app .rx-section-h{ margin: 0; font-size: var(--rx-text-lg) !important; line-height: var(--rx-lh-lg) !important; font-weight: var(--rx-weight-semibold) !important; color: var(--rx-heading); }
+.wm-app .rx-section-h{ margin: var(--rx-space-4) 0 var(--rx-space-2) !important; font-size: var(--rx-text-md) !important; }
+.wm-app .rx-muted{ color: var(--rx-ink-3); font-size: var(--rx-text-sm); margin: 0 0 var(--rx-space-2); }
+.wm-app .rx-help{ color: var(--rx-ink-3); font-size: var(--rx-text-xs); margin-top: 4px; }
+.wm-app .rx-req{ color: var(--rx-danger); }
+.wm-app .rx-footnote{ margin-top: var(--rx-space-2); font-size: var(--rx-text-xs); }
+.wm-app .rx-sub{ display: block; color: var(--rx-ink-3); font-size: var(--rx-text-xs); font-weight: var(--rx-weight-regular); margin-top: 1px; }
+.wm-app .rx-neg{ color: var(--rx-danger) !important; font-weight: var(--rx-weight-semibold); }
+.wm-app .rx-num{ text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.wm-app .rx-cell-wrap, .wm-app table.wm-table td.rx-cell-wrap{ white-space: normal !important; min-width: 170px; max-width: 360px; overflow-wrap: break-word; }
+.wm-app .rx-actions{ white-space: nowrap; text-align: right; }
+.wm-app .rx-actions > * + *{ margin-left: 4px; }
+.wm-app .rx-sr-only{ position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.wm-app code{ font-family: var(--rx-font-mono); font-size: 12px; background: var(--rx-surface-muted); padding: 1px 5px; border-radius: 4px; }
+.wm-app .rx-tabs{ margin-bottom: var(--rx-space-3) !important; }
+.wm-app .rx-count{ display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 9px; font-size: 11px; background: var(--rx-accent-soft); color: var(--rx-accent); }
+.wm-app .rx-toolbar{ display: flex; justify-content: space-between; align-items: center; gap: var(--rx-gap-sm); flex-wrap: wrap; margin-bottom: var(--rx-space-3); }
+.wm-app .rx-toolbar .rx-tabs{ margin-bottom: 0 !important; }
+.wm-app .rx-toolbar > p{ margin: 0; flex: 1 1 280px; }
+.wm-app .rx-filters{ padding: var(--rx-space-3); }
+.wm-app .rx-filter-row{ display: flex; flex-wrap: wrap; gap: var(--rx-gap-sm) var(--rx-gap); align-items: flex-end; }
+.wm-app .rx-inline-field{ display: flex; flex-direction: column; gap: 4px; font-size: var(--rx-text-xs); font-weight: var(--rx-weight-semibold); color: var(--rx-ink-2); min-width: 0; }
+.wm-app .rx-inline-field.rx-grow, .wm-app .wm-form-row.rx-grow{ flex: 1 1 220px; }
+.wm-app .rx-inline-field input, .wm-app .rx-inline-field select{ min-width: 120px; }
+.wm-app .rx-grow input{ width: 100%; }
+.wm-app .rx-check{ display: inline-flex; align-items: center; gap: 6px; font-weight: var(--rx-weight-medium); color: var(--rx-ink-1); font-size: var(--rx-text-sm); cursor: pointer; min-height: 32px; }
+.wm-app .rx-check-row{ display: flex; margin: 2px 0; }
+.wm-app .rx-weekdays{ display: flex; flex-wrap: wrap; gap: 4px 14px; }
+.wm-app .rx-weekly-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 0 var(--rx-gap-sm); }
+
+/* Metrics (semantic, restrained) */
+.wm-app .rx-metrics{ display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: var(--rx-gap-sm); margin-bottom: var(--rx-gap); }
+.wm-app .rx-metric{ position: relative; padding: 10px 12px 10px 14px; border-radius: var(--rx-radius-md); background: var(--rx-glass-2-bg); border: 1px solid var(--rx-glass-edge); box-shadow: var(--rx-glass-highlight), var(--rx-shadow-1); min-width: 0; overflow: hidden; }
+.wm-app .rx-metric::before{ content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: var(--rx-neutral-line); }
+.wm-app .rx-metric small{ display: block; font-size: var(--rx-text-xs); color: var(--rx-ink-3); font-weight: var(--rx-weight-semibold); line-height: 16px; }
+.wm-app .rx-metric strong{ display: block; font-size: 20px; line-height: 28px; font-weight: var(--rx-weight-bold); color: var(--rx-ink-1); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.wm-app .rx-metric > span{ display: block; font-size: var(--rx-text-xs); color: var(--rx-ink-3); }
+.wm-app .rx-tone-info::before{ background: var(--rx-info); } .wm-app .rx-tone-success::before{ background: var(--rx-success); }
+.wm-app .rx-tone-warning::before{ background: #c27a07; } .wm-app .rx-tone-danger::before{ background: var(--rx-danger); }
+.wm-app .rx-tone-indigo::before{ background: #5a4fcf; } .wm-app .rx-tone-neutral::before{ background: var(--rx-ink-4); }
+.wm-app .rx-tone-bg-success{ background: var(--rx-success) !important; } .wm-app .rx-tone-bg-warning{ background: #c27a07 !important; }
+.wm-app .rx-tone-bg-danger{ background: var(--rx-danger) !important; } .wm-app .rx-tone-bg-info{ background: var(--rx-accent) !important; }
+
+/* Chips */
+.wm-app .rx-chip{ display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: var(--rx-radius-pill); font-size: var(--rx-text-xs); font-weight: var(--rx-weight-semibold); white-space: nowrap; border: 1px solid var(--rx-neutral-line); background: var(--rx-neutral-soft); color: var(--rx-neutral); vertical-align: middle; }
+.wm-app .rx-chip::before{ content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.wm-app .rx-chip-success{ color: var(--rx-success); background: var(--rx-success-soft); border-color: var(--rx-success-line); }
+.wm-app .rx-chip-warning{ color: var(--rx-warning); background: var(--rx-warning-soft); border-color: var(--rx-warning-line); }
+.wm-app .rx-chip-danger{ color: var(--rx-danger); background: var(--rx-danger-soft); border-color: var(--rx-danger-line); }
+.wm-app .rx-chip-info{ color: var(--rx-info); background: var(--rx-info-soft); border-color: var(--rx-info-line); }
+
+/* Loading / empty / error states */
+.wm-app .rx-state{ display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; padding: var(--rx-space-6) var(--rx-space-4); color: var(--rx-ink-3); font-size: var(--rx-text-sm); }
+.wm-app .rx-state strong{ color: var(--rx-ink-1); font-size: var(--rx-text-md); }
+.wm-app .rx-state-loading{ flex-direction: row; }
+.wm-app .rx-state-error{ background: var(--rx-danger-soft); border: 1px solid var(--rx-danger-line); border-radius: var(--rx-radius-md); color: var(--rx-danger); }
+.wm-app .rx-state-error strong{ color: var(--rx-danger); }
+.wm-app .rx-spinner{ width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--rx-hairline-strong); border-top-color: var(--rx-ink-1); animation: rx-spin .7s linear infinite; }
+.wm-app td .rx-state{ padding: var(--rx-space-5); }
+.wm-app .rx-table-dense table.wm-table{ min-width: 0; }
+.wm-app .rx-row-reversal td{ color: var(--rx-ink-3) !important; font-style: italic; }
+.wm-app tr.rx-subrow td{ background: var(--rx-surface-muted) !important; padding-top: 6px !important; padding-bottom: 6px !important; }
+.wm-app .rx-pay-list{ display: flex; flex-direction: column; gap: 2px; font-size: var(--rx-text-xs); color: var(--rx-ink-2); white-space: normal; }
+.wm-app .rx-pager{ display: flex; justify-content: flex-end; align-items: center; gap: var(--rx-gap-sm); margin-top: var(--rx-space-2); font-size: var(--rx-text-sm); color: var(--rx-ink-3); flex-wrap: wrap; }
+.wm-app .rx-pager > span:first-child{ margin-right: auto; }
+.wm-app .rx-details{ margin-top: var(--rx-space-3); }
+.wm-app .rx-details > summary{ cursor: pointer; font-weight: var(--rx-weight-semibold); padding: 6px 0; color: var(--rx-ink-1); }
+.wm-app .rx-note{ font-size: var(--rx-text-sm); color: var(--rx-ink-2); }
+.wm-app .rx-desc{ background: var(--rx-surface-muted); border-radius: var(--rx-radius-sm); padding: var(--rx-space-2) var(--rx-space-3); margin: var(--rx-space-2) 0; white-space: pre-wrap; }
+.wm-app .rx-confirm-text{ margin: 0; font-size: var(--rx-text-md); line-height: 1.6; color: var(--rx-ink-2); }
+
+/* Key/value grids */
+.wm-app .rx-kv{ display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: var(--rx-space-3) var(--rx-gap); }
+.wm-app .rx-kv > div{ min-width: 0; }
+.wm-app .rx-kv small{ display: block; font-size: var(--rx-text-xs); color: var(--rx-ink-3); font-weight: var(--rx-weight-semibold); margin-bottom: 2px; }
+.wm-app .rx-kv strong{ display: block; font-weight: var(--rx-weight-medium); overflow-wrap: anywhere; }
+
+/* Employee search + profile */
+.wm-app .rx-search-card{ position: relative; }
+.wm-app .rx-search-field{ display: flex; align-items: center; gap: var(--rx-space-2); border: 1px solid var(--rx-hairline-strong); border-radius: var(--rx-radius-md); background: #fff; padding: 0 var(--rx-space-3); }
+.wm-app .rx-search-field:focus-within{ border-color: var(--rx-accent); box-shadow: 0 0 0 3px var(--rx-accent-soft); }
+.wm-app .rx-search-field svg{ width: 18px; height: 18px; stroke: var(--rx-ink-3); fill: none; stroke-width: 2; }
+.wm-app .rx-search-field input{ flex: 1; border: 0 !important; box-shadow: none !important; background: transparent !important; min-height: 42px; padding: 0 !important; font-size: var(--rx-text-md) !important; outline: none !important; }
+.wm-app .rx-results{ margin-top: var(--rx-space-2); max-height: min(50vh, 360px); overflow-y: auto; border: 1px solid var(--rx-hairline); border-radius: var(--rx-radius-md); background: #fff; }
+.wm-app .rx-result{ display: flex; align-items: center; gap: var(--rx-space-3); width: 100%; text-align: left; padding: var(--rx-space-2) var(--rx-space-3); background: transparent; border: 0; border-bottom: 1px solid var(--rx-hairline); cursor: pointer; color: var(--rx-ink-1); }
+.wm-app .rx-result:last-child{ border-bottom: 0; }
+.wm-app .rx-result:hover, .wm-app .rx-result[aria-selected="true"]{ background: var(--rx-accent-soft); }
+.wm-app .rx-result small{ display: block; color: var(--rx-ink-3); font-size: var(--rx-text-xs); }
+.wm-app .rx-avatar{ display: inline-grid; place-items: center; flex: 0 0 32px; width: 32px; height: 32px; border-radius: 50%; background: var(--rx-accent-soft); color: var(--rx-accent); font-weight: var(--rx-weight-bold); font-size: 12px; }
+.wm-app .rx-avatar-lg{ flex-basis: 48px; width: 48px; height: 48px; font-size: 16px; }
+.wm-app .rx-profile-head{ display: flex; align-items: center; gap: var(--rx-space-3); margin-bottom: var(--rx-space-3); }
+.wm-app .rx-profile-head h3{ margin: 0 !important; font-size: var(--rx-text-xl) !important; }
+.wm-app .rx-profile-head p{ margin: 0; }
+
+/* Month navigation + calendars (leave, capacity) */
+.wm-app .rx-month-nav{ display: flex; align-items: center; gap: var(--rx-gap-sm); flex-wrap: wrap; margin-bottom: var(--rx-space-3); }
+.wm-app .rx-month-nav input[type=month]{ width: auto; min-width: 150px; }
+.wm-app .rx-legend{ display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: var(--rx-text-xs); color: var(--rx-ink-3); margin-left: auto; }
+.wm-app .rx-cal{ display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border: 1px solid var(--rx-glass-edge); border-radius: var(--rx-radius-lg); overflow: hidden; background: rgba(255,255,255,.88); box-shadow: var(--rx-shadow-1); }
+.wm-app .rx-cal-dow{ background: var(--rx-table-head-bg); text-align: center; font-size: var(--rx-text-xs); font-weight: var(--rx-weight-semibold); text-transform: uppercase; letter-spacing: var(--rx-tracking-caps); color: var(--rx-ink-2); padding: 6px 0; border-bottom: 1px solid var(--rx-hairline-strong); }
+.wm-app .rx-cal-cell{ min-height: 84px; padding: 4px 6px 6px; border-right: 1px solid var(--rx-hairline); border-bottom: 1px solid var(--rx-hairline); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.wm-app .rx-cal-cell:nth-child(7n){ border-right: 0; }
+.wm-app .rx-cal-cell.is-out{ background: rgba(20,23,28,.025); }
+.wm-app .rx-cal-cell.is-holiday{ background: repeating-linear-gradient(135deg, rgba(20,23,28,.03) 0 6px, transparent 6px 12px); }
+.wm-app .rx-cal-cell.is-today .rx-cal-num{ background: var(--rx-ink-1); color: #fff; border-radius: 10px; padding: 0 6px; }
+.wm-app .rx-cal-num{ font-size: var(--rx-text-sm); font-weight: var(--rx-weight-semibold); color: var(--rx-ink-2); align-self: flex-start; }
+.wm-app .rx-cal-num small{ font-weight: var(--rx-weight-regular); color: var(--rx-ink-3); font-size: 11px; }
+.wm-app .rx-cal-tag{ font-size: 11px; color: var(--rx-ink-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wm-app .rx-cal-ev{ font-size: 11px; font-weight: var(--rx-weight-semibold); padding: 1px 5px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 3px solid currentColor; }
+.wm-app .rx-ev-ok{ background: var(--rx-success-soft); color: var(--rx-success); }
+.wm-app .rx-ev-pending{ background: var(--rx-warning-soft); color: var(--rx-warning); }
+.wm-app .rx-cap-cell{ min-height: 92px; }
+.wm-app .rx-cap-cell .rx-cap-hours{ width: 100%; min-height: 32px !important; padding: 4px 6px !important; font-size: var(--rx-text-md) !important; text-align: center; font-variant-numeric: tabular-nums; }
+.wm-app .rx-cap-off{ font-size: 11px; color: var(--rx-ink-3); display: flex; gap: 4px; align-items: center; cursor: pointer; }
+.wm-app .rx-cap-cell.is-off{ background: rgba(180,35,47,.04); }
+.wm-app .rx-cap-cell.is-off .rx-cap-hours{ opacity: .4; }
+.wm-app .rx-mini-days{ display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 4px; margin-top: var(--rx-space-2); }
+.wm-app .rx-mini-days span{ display: flex; flex-direction: column; align-items: center; padding: 3px; border: 1px solid var(--rx-hairline); border-radius: 6px; font-size: 11px; color: var(--rx-ink-3); }
+.wm-app .rx-mini-days span b{ color: var(--rx-ink-1); font-size: 12px; }
+.wm-app .rx-mini-days span.is-off{ background: var(--rx-danger-soft); }
+
+/* Utilisation bar */
+.wm-app .rx-util{ display: inline-flex; align-items: center; gap: 6px; min-width: 110px; font-variant-numeric: tabular-nums; font-size: var(--rx-text-sm); }
+.wm-app .rx-util-track{ flex: 1; height: 6px; border-radius: 3px; background: rgba(20,23,28,.08); overflow: hidden; min-width: 50px; }
+.wm-app .rx-util-fill{ display: block; height: 100%; border-radius: 3px; }
+
+/* Resource timeline / heatmap */
+.wm-app .rx-tl-scroll{ overflow-x: auto; border: 1px solid var(--rx-glass-edge); border-radius: var(--rx-radius-lg); background: rgba(255,255,255,.9); box-shadow: var(--rx-shadow-1); }
+.wm-app .rx-tl{ display: grid; grid-template-columns: 200px repeat(var(--rx-tl-cols), minmax(44px, 1fr)); min-width: max-content; }
+.wm-app .rx-tl-row{ display: contents; }
+.wm-app .rx-tl-name{ position: sticky; left: 0; z-index: 1; background: #fff; padding: 6px 10px; border-bottom: 1px solid var(--rx-hairline); border-right: 1px solid var(--rx-hairline-strong); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.wm-app .rx-tl-name strong{ font-size: var(--rx-text-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wm-app .rx-tl-head .rx-tl-name, .wm-app .rx-tl-hcell{ background: var(--rx-table-head-bg); font-size: 11px; font-weight: var(--rx-weight-semibold); color: var(--rx-ink-2); text-transform: uppercase; letter-spacing: .03em; }
+.wm-app .rx-tl-cell{ border-bottom: 1px solid var(--rx-hairline); border-right: 1px solid var(--rx-hairline); min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px; font-variant-numeric: tabular-nums; }
+.wm-app .rx-tl-hcell small{ font-weight: var(--rx-weight-regular); text-transform: none; }
+.wm-app button.rx-heat{ border: 0; border-right: 1px solid var(--rx-hairline); border-bottom: 1px solid var(--rx-hairline); cursor: default; font: inherit; color: var(--rx-ink-1); }
+.wm-app .rx-heat span{ font-size: 12px; font-weight: var(--rx-weight-semibold); line-height: 1.1; }
+.wm-app .rx-heat small{ font-size: 10px; color: var(--rx-ink-3); line-height: 1.1; }
+.wm-app .rx-heat.is-free{ background: #fff; } .wm-app .rx-heat.is-ok{ background: #d3ebdb; } .wm-app .rx-heat.is-near{ background: #f7dc9c; }
+.wm-app .rx-heat.is-over{ background: #f1b6bc; } .wm-app .rx-heat.is-over span{ color: var(--rx-danger); }
+.wm-app .rx-heat.is-unconfirmed{ background: repeating-linear-gradient(135deg, #f2f3f5 0 5px, #fff 5px 10px); }
+.wm-app .rx-heat.is-zero{ background: #eceef1; }
+.wm-app .rx-heat.has-leave{ box-shadow: inset 0 -3px 0 #8a6dd8; }
+.wm-app .rx-heat.is-holiday{ box-shadow: inset 0 3px 0 var(--rx-ink-4); }
+.wm-app .rx-heat-legend{ margin: 0 0 var(--rx-space-2); gap: 4px 10px; }
+.wm-app .rx-heat-legend .rx-heat{ display: inline-block; width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--rx-hairline-strong); vertical-align: middle; margin-left: 6px; }
+
+/* Approval details */
+.wm-app .rx-steps{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.wm-app .rx-step{ display: flex; align-items: center; gap: var(--rx-space-3); padding: 8px 10px; border: 1px solid var(--rx-hairline); border-radius: var(--rx-radius-md); background: #fff; }
+.wm-app .rx-step > span:nth-child(2){ flex: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.wm-app .rx-step small{ color: var(--rx-ink-3); font-size: var(--rx-text-xs); }
+.wm-app .rx-step-n{ display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--rx-surface-muted); font-size: 12px; font-weight: var(--rx-weight-bold); flex: 0 0 24px; }
+.wm-app .rx-step.is-approved .rx-step-n{ background: var(--rx-success); color: #fff; }
+.wm-app .rx-step.is-rejected .rx-step-n{ background: var(--rx-danger); color: #fff; }
+.wm-app .rx-timeline{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.wm-app .rx-timeline li{ display: grid; grid-template-columns: 150px 1fr; gap: var(--rx-space-3); padding: 7px 0; border-bottom: 1px solid var(--rx-hairline); font-size: var(--rx-text-sm); }
+.wm-app .rx-timeline li:last-child{ border-bottom: 0; }
+.wm-app .rx-timeline time{ color: var(--rx-ink-3); font-size: var(--rx-text-xs); font-variant-numeric: tabular-nums; padding-top: 2px; }
+.wm-app .rx-timeline small{ display: block; color: var(--rx-ink-3); }
+.wm-app .rx-timeline.rx-card{ padding: var(--rx-space-2) var(--rx-pad-card); }
+.wm-app .rx-dep-list{ list-style: none; margin: 0 0 var(--rx-space-3); padding: 0; }
+.wm-app .rx-dep-list li{ display: flex; justify-content: space-between; align-items: center; gap: var(--rx-gap-sm); padding: 6px 0; border-bottom: 1px solid var(--rx-hairline); }
+.wm-app .rx-tpl-preview ol{ margin: 0; padding-left: 20px; font-size: var(--rx-text-sm); }
+
+/* Connected accounts + appearance */
+.wm-app .rx-appearance{ margin-top: var(--rx-space-5); }
+.wm-app .rx-theme-grid{ display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: var(--rx-gap); }
+.wm-app .rx-theme-card{ display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: var(--rx-pad-card); text-align: left; cursor: pointer; border-radius: var(--rx-radius-lg); border: 1px solid var(--rx-hairline-strong); background: #fff; color: var(--rx-ink-1); font: inherit; transition: border-color var(--rx-duration), box-shadow var(--rx-duration); }
+.wm-app .rx-theme-card:hover{ border-color: rgba(20,23,28,.3); }
+.wm-app .rx-theme-card[aria-checked="true"]{ border-color: var(--rx-accent); box-shadow: 0 0 0 3px var(--rx-accent-soft); }
+.wm-app .rx-theme-card[aria-checked="true"] strong::after{ content: "  ✓ Selected"; color: var(--rx-accent); font-size: var(--rx-text-xs); }
+.wm-app .rx-theme-card small{ color: var(--rx-ink-3); font-size: var(--rx-text-xs); }
+.wm-app .rx-theme-swatch{ display: flex; gap: 4px; margin-bottom: 4px; }
+.wm-app .rx-theme-swatch i{ width: 28px; height: 18px; border-radius: 4px; border: 1px solid rgba(0,0,0,.08); }
+.wm-app .rx-swatch-mono i:nth-child(1){ background: #ffffff; } .wm-app .rx-swatch-mono i:nth-child(2){ background: #d8dbe0; } .wm-app .rx-swatch-mono i:nth-child(3){ background: #14171c; }
+.wm-app .rx-swatch-navy i:nth-child(1){ background: #f3f8ff; } .wm-app .rx-swatch-navy i:nth-child(2){ background: #bcd7fa; } .wm-app .rx-swatch-navy i:nth-child(3){ background: #0b2f63; }
+
+/* WBS + Gantt — one aligned row grid, natural page height (no nested vertical scrollbar) */
+.wm-app .rx-wbs{ margin: var(--rx-section-gap) 0 0; }
+.wm-app .rx-wbs-head{ display: flex; justify-content: space-between; align-items: center; gap: var(--rx-gap-sm); flex-wrap: wrap; margin-bottom: var(--rx-space-2); }
+.wm-app .rx-wbs-head h3{ margin: 0 !important; font-size: var(--rx-text-xl) !important; }
+.wm-app .rx-wbs-head .rx-tabs{ margin-bottom: 0 !important; }
+.wm-app .rx-wbs-filters{ margin-bottom: var(--rx-space-2); }
+.wm-app .rx-wbs-layout{ display: grid; grid-template-columns: minmax(0, 1fr); border: 1px solid var(--rx-glass-edge); border-radius: var(--rx-radius-lg); background: rgba(255,255,255,.92); box-shadow: var(--rx-shadow-1); overflow: hidden; }
+.wm-app .rx-wbs-layout.is-both{ grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+.wm-app .rx-wbs-layout.is-gantt{ grid-template-columns: minmax(200px, 280px) minmax(0, 1fr); }
+.wm-app .rx-wbs-table{ min-width: 0; overflow-x: auto; }
+.wm-app .rx-wbs-layout.is-both .rx-wbs-table, .wm-app .rx-wbs-layout.is-gantt .rx-wbs-table{ border-right: 1px solid var(--rx-hairline-strong); }
+.wm-app .rx-wbs-row{ display: grid; grid-template-columns: 52px minmax(200px, 2.4fr) minmax(96px, 1fr) 118px 86px 66px 66px 64px 64px 112px 40px; align-items: center; height: 36px; border-bottom: 1px solid var(--rx-hairline); min-width: 980px; }
+.wm-app .rx-wbs-layout.is-both .rx-wbs-row{ grid-template-columns: 46px minmax(180px, 2fr) minmax(90px, 1fr) 112px 0 0 0 58px 58px 0 38px; min-width: 620px; }
+.wm-app .rx-wbs-layout.is-both .rx-wc4, .wm-app .rx-wbs-layout.is-both .rx-wc5, .wm-app .rx-wbs-layout.is-both .rx-wc6, .wm-app .rx-wbs-layout.is-both .rx-wc9{ visibility: hidden; padding: 0 !important; overflow: hidden; }
+.wm-app .rx-wbs-narrow .rx-wbs-row{ grid-template-columns: 46px minmax(0, 1fr); min-width: 0; }
+.wm-app .rx-wbs-hrow{ background: var(--rx-table-head-bg); height: 34px; position: sticky; top: 0; z-index: 1; }
+.wm-app .rx-wbs-hrow .rx-wbs-c{ font-size: 11px; font-weight: var(--rx-weight-semibold); text-transform: uppercase; letter-spacing: .04em; color: var(--rx-ink-2); }
+.wm-app .rx-wbs-c{ padding: 0 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--rx-text-sm); display: flex; align-items: center; gap: 4px; }
+.wm-app .rx-wbs-c.rx-num{ justify-content: flex-end; }
+.wm-app .rx-wbs-c .rx-sub{ display: inline; margin: 0 0 0 4px; }
+.wm-app .rx-wc0{ color: var(--rx-ink-3); font-variant-numeric: tabular-nums; font-size: var(--rx-text-xs); }
+.wm-app .rx-wbs-row:not(.rx-wbs-hrow):hover, .wm-app .rx-gt-row:hover{ background: rgba(20,23,28,.03); }
+.wm-app .rx-wbs-row.is-selected, .wm-app .rx-gt-row.is-selected{ background: var(--rx-accent-soft) !important; }
+.wm-app .rx-wbs-row.is-sub .rx-wbs-name{ font-weight: var(--rx-weight-regular); color: var(--rx-ink-2); }
+.wm-app .rx-indent{ display: inline-block; width: 18px; flex: 0 0 18px; }
+.wm-app .rx-tree-toggle, .wm-app .rx-tree-spacer{ flex: 0 0 24px; width: 24px; height: 24px; display: inline-grid; place-items: center; }
+.wm-app .rx-tree-toggle{ border: 0; background: transparent; border-radius: 6px; cursor: pointer; color: var(--rx-ink-2); padding: 0; }
+.wm-app .rx-tree-toggle:hover{ background: rgba(20,23,28,.07); }
+.wm-app .rx-tree-toggle svg{ width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.4; transition: transform var(--rx-duration-fast); }
+.wm-app .rx-tree-toggle[aria-expanded="true"] svg{ transform: rotate(90deg); }
+.wm-app .rx-wbs-name{ border: 0; background: transparent; padding: 0; min-height: 28px; cursor: pointer; font: inherit; font-weight: var(--rx-weight-semibold); color: var(--rx-ink-1); text-align: left; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 0 1 auto; }
+.wm-app .rx-wbs-name:hover{ color: var(--rx-accent); text-decoration: underline; }
+.wm-app .rx-dep-dot{ width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
+.wm-app .rx-dep-dot.is-ok{ background: var(--rx-success); } .wm-app .rx-dep-dot.is-wait{ background: #c27a07; }
+.wm-app .rx-wbs-c .rx-chip{ height: 20px; padding: 0 6px; font-size: 11px; }
+.wm-app .rx-wbs-c .wm-icon-btn{ width: 28px !important; height: 28px !important; }
+.wm-app .rx-gantt{ min-width: 0; }
+.wm-app .rx-gt-scroll{ overflow-x: auto; overflow-y: hidden; }
+.wm-app .rx-gt-inner{ position: relative; }
+.wm-app .rx-gt-heads{ position: relative; height: 34px; background: var(--rx-table-head-bg); border-bottom: 1px solid var(--rx-hairline); }
+.wm-app .rx-gt-h{ position: absolute; top: 0; height: 34px; display: flex; align-items: center; padding-left: 4px; font-size: 11px; color: var(--rx-ink-2); border-left: 1px solid var(--rx-hairline); white-space: nowrap; font-weight: var(--rx-weight-semibold); }
+.wm-app .rx-gt-h.is-weekend{ color: var(--rx-ink-4); background: rgba(20,23,28,.03); }
+.wm-app .rx-gt-rows{ position: relative; }
+.wm-app .rx-gt-row{ position: relative; height: 36px; border-bottom: 1px solid var(--rx-hairline); }
+.wm-app .rx-gt-bar{ position: absolute; top: 6px; height: 24px; text-overflow: ellipsis; border-radius: 6px; border: 1px solid rgba(20,23,28,.12); background: #c9d6ea; padding: 0; cursor: pointer; overflow: hidden; display: flex; align-items: center; }
+.wm-app .rx-gt-bar.is-sub{ top: 8px; height: 20px; background: #dfe5ef; }
+.wm-app .rx-gt-bar.is-done{ background: #bfe3cc; } .wm-app .rx-gt-bar.is-late{ background: #f3c6cb; border-color: rgba(180,35,47,.4); }
+.wm-app .rx-gt-prog{ position: absolute; inset: 0 auto 0 0; background: rgba(20,23,28,.18); }
+.wm-app .rx-gt-label{ position: relative; font-size: 11px; padding: 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; color: var(--rx-ink-1); font-weight: var(--rx-weight-semibold); }
+.wm-app .rx-gt-nodate{ position: absolute; left: 8px; top: 10px; font-size: 11px; color: var(--rx-ink-4); font-style: italic; }
+.wm-app .rx-gt-today{ position: absolute; top: 0; bottom: 0; width: 2px; background: var(--rx-danger); opacity: .55; z-index: 1; pointer-events: none; }
+.wm-app .rx-gt-links{ position: absolute; inset: 0; pointer-events: none; overflow: visible; }
+.wm-app .rx-gt-link{ fill: none; stroke: var(--rx-ink-3); stroke-width: 1.4; }
+.wm-app .rx-gt-arrow{ fill: none; stroke: var(--rx-ink-3); stroke-width: 1.4; }
+:root[data-rx-theme="navy"] .wm-app .rx-gt-bar{ background: #c4dafa; } :root[data-rx-theme="navy"] .wm-app .rx-gt-bar.is-sub{ background: #dde9fb; }
+.wm-app .rx-pd-finance{ margin-top: var(--rx-section-gap); }
+.wm-app .rx-pd-finance > .rx-card-head h3{ margin: 0 !important; font-size: var(--rx-text-xl) !important; }
+
+/* Dialogs created by rexus-v221.js */
+.wm-app .rx-dialog .wm-modal{ width: 100%; }
+.wm-app .rx-dialog .rx-dialog-form{ display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; overflow: hidden; }
+.wm-app .rx-dialog select[multiple]{ min-height: 120px; }
+.wm-app .rx-form-error{ display: block; margin: var(--rx-space-2) 0 0; padding: var(--rx-space-2) var(--rx-space-3); border-radius: var(--rx-radius-md);
+  background: var(--rx-danger-soft); color: var(--rx-danger); border: 1px solid var(--rx-danger-line); font-size: var(--rx-text-sm); font-weight: var(--rx-weight-medium); }
+.wm-app .rx-form-error[hidden]{ display: none; }
+
+@media (max-width: 1100px){
+  .wm-app .rx-wbs-layout.is-both{ grid-template-columns: minmax(0, 1fr); }
+  .wm-app .rx-wbs-layout.is-both .rx-wbs-table{ border-right: 0; border-bottom: 1px solid var(--rx-hairline-strong); }
+}
+@media (max-width: 760px){
+  .wm-app .rx-cal-cell{ min-height: 64px; padding: 3px; }
+  .wm-app .rx-cal-ev{ font-size: 10px; padding: 0 3px; }
+  .wm-app .rx-cap-cell{ min-height: 80px; }
+  .wm-app .rx-cap-off{ font-size: 0; } .wm-app .rx-cap-off input{ margin: 0 auto; }
+  .wm-app .rx-tl{ grid-template-columns: 130px repeat(var(--rx-tl-cols), minmax(40px, 1fr)); }
+  .wm-app .rx-timeline li{ grid-template-columns: 1fr; gap: 2px; }
+  .wm-app .rx-wbs-layout.is-gantt{ grid-template-columns: 150px minmax(0, 1fr); }
+  .wm-app .rx-page-head h2{ font-size: var(--rx-text-xl) !important; }
+}
+@media (max-width: 480px){ .wm-app .rx-cal-num small{ display: none; } }

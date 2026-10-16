@@ -1,0 +1,86 @@
+/* REXUS 2.1.3: containment, compact navigation and neutral frosted 2D icon treatments.
+   Presentation only; module permissions and all business values stay server-owned. */
+:root { --rx213-gap:12px; --rx213-frost:rgba(245,251,255,.12); --rx213-edge:rgba(231,245,255,.65); }
+*, *::before, *::after {box-sizing:border-box}
+.wm-app,.wm-shell,.wm-body,.wm-view,#rexusDocsShell,#rexusDocsShell .rd-layout,#rexusDocsShell .rd-main {min-width:0}
+.wm-app .wm-tab[hidden], .wm-app .wm-view:not(.active), #rexusDocsShell [hidden], [hidden] {display:none!important}
+.wm-app .wm-body {overflow-x:clip;padding:clamp(12px,1.4vw,20px)}
+.wm-app .wm-card,.wm-app .wm-section,.wm-app .rx210-glass,.wm-app .wm-table-wrap {min-width:0;max-width:100%}
+.wm-app input,.wm-app select,.wm-app textarea,.wm-app button {max-width:100%;min-width:0}
+.wm-app .wm-form-grid,.wm-app .wm-table-wrap,.wm-app .rx210-table-wrap {min-width:0}
+.wm-app .rx210-filters{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.wm-app .rx210-filters > * {min-width:min(100%,170px)}
+.wm-app .rx210-title{margin:0 0 12px;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.wm-app .rx210-title p{max-width:68ch}
+.wm-app .rx210-details{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+.wm-app .rx210-details>div,.wm-app .rx210-details strong{min-width:0;overflow-wrap:anywhere}
+.wm-app #rx210EmpResults{max-height:min(46vh,300px);overflow-y:auto;border-radius:12px;margin-top:8px}
+.wm-app #rx210EmpDetails{clear:both;margin-top:14px;border-top:1px solid #d9e8f7;padding-top:13px}
+.wm-app #rx210EmpResults[hidden] + #rx210EmpDetails {margin-top:14px}
+.wm-app .rx210-person{width:100%;gap:10px;min-width:0;overflow-wrap:anywhere}
+.wm-app .rx213-subnav {display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:6px;margin:0 0 12px;border:1px solid #c6dcf0;border-radius:14px;background:rgba(255,255,255,.70);backdrop-filter:blur(16px);width:fit-content;max-width:100%}
+.wm-app .rx213-subnav button {appearance:none;border:1px solid transparent;border-radius:10px;padding:9px 15px;background:transparent;color:#235887;font-size:14px;font-weight:700;cursor:pointer;white-space:normal;overflow-wrap:anywhere}
+.wm-app .rx213-subnav button[aria-selected="true"] {color:#0a4e94;background:rgba(203,233,255,.8);border-color:#a9ccec;box-shadow:inset 0 1px 0 #fff}
+.wm-app .rx213-subcontent{min-width:0}
+.wm-app #finModeToggle{display:flex;max-width:100%;flex-wrap:wrap;gap:5px;height:auto}
+.wm-app #finModeToggle button{white-space:normal;min-height:37px}
+.wm-app table{border-collapse:separate}
+.wm-app table th,.wm-app table td{overflow-wrap:anywhere}
+/* Documents: remove unintended vertical auto-centering of grid content. */
+#rexusDocsShell .rd-main {margin:0!important;align-self:start!important;padding:clamp(12px,1.6vw,20px)!important;width:100%;max-width:none!important}
+#rexusDocsShell .rd-layout {align-items:start;min-width:0;overflow:visible}
+#rexusDocsShell .rd-sidebar {overflow-x:visible;overflow-y:auto;min-width:0;z-index:12}
+#rexusDocsShell .rd-sidebar:has(.rd-space-dropdown) {z-index:1200;overflow:visible}
+#rexusDocsShell .rd-side-head {z-index:1201;isolation:isolate;min-width:0;gap:7px}
+#rexusDocsShell .rd-space-switch {overflow:hidden;min-width:0;flex:1}
+#rexusDocsShell .rd-space-switch-label,#rexusDocsShell .rd-space-switch small {overflow:hidden;text-overflow:ellipsis;min-width:0}
+#rexusDocsShell .rd-space-dropdown {z-index:2000!important;overscroll-behavior:contain;border:1px solid rgba(221,239,255,.93);background:rgba(248,252,255,.94)!important;backdrop-filter:blur(25px) saturate(135%)!important;box-shadow:0 15px 42px rgba(11,45,84,.22)}
+#rexusDocsShell .rd-space-option-list {max-height:min(34vh,260px);overflow:auto;overscroll-behavior:contain}
+#rexusDocsShell .rd-space-option-list button {min-width:0;max-width:100%}
+#rexusDocsShell .rd-section-title{margin-top:11px;margin-bottom:5px}
+#rexusDocsShell .rd-spaces-tree {min-width:0;overflow-wrap:anywhere}
+#rexusDocsShell .rd-tree-line {display:flex;align-items:center;min-width:0;gap:2px}
+#rexusDocsShell .rd-tree-toggle,#rexusDocsShell .rd-tree-spacer{width:24px;min-width:24px;min-height:31px;display:inline-grid;place-items:center;flex:none}
+#rexusDocsShell .rd-tree-toggle{border:0;border-radius:8px;background:transparent;color:#285a86;font-size:21px;cursor:pointer}
+#rexusDocsShell .rd-tree-toggle:hover {background:#d7eafa}
+#rexusDocsShell .rd-tree-line>.rd-nav-row{flex:1;min-width:0;overflow:hidden;text-align:left;justify-content:flex-start}
+#rexusDocsShell .rd-tree-line>.rd-nav-row>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#rexusDocsShell .rd-hero {align-items:center;gap:12px;margin:5px 0 10px}
+#rexusDocsShell .rd-hero>div{min-width:0;max-width:100%}
+#rexusDocsShell .rd-hero h2{overflow-wrap:anywhere;line-height:1.25}
+#rexusDocsShell .rd-breadcrumb{min-width:0;max-width:100%;overflow-x:auto;white-space:nowrap;margin-bottom:8px}
+#rexusDocsShell .rd-drive-controls {display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin:8px 0 12px}
+#rexusDocsShell .rd-drive-controls>*{margin:0;min-width:0;flex-shrink:1}
+#rexusDocsShell .rd-drive-controls select {min-width:120px;max-width:100%}
+#rexusDocsShell .rd-list-layout {grid-template-columns:minmax(0,1fr) minmax(235px,290px);gap:14px;min-width:0}
+#rexusDocsShell .rd-list-layout>*{min-width:0;max-width:100%}
+#rexusDocsShell .rd-folder-side{overflow-wrap:anywhere}
+#rexusDocsShell .rd-folder-side .rd-actions{display:flex;flex-wrap:wrap;gap:7px}
+#rexusDocsShell .rd-drive-overflow{max-width:100%;overflow-x:auto}
+#rexusDocsShell .rd-drive-table{min-width:580px}
+#rexusDocsShell .rd-drive-table td{vertical-align:middle}
+#rexusDocsShell .rd-bulk-bar{gap:8px;align-items:center}
+#rexusDocsShell .rd-bulk-bar strong{flex:1 1 100px}
+#rexusDocsShell .rd-actions,#rexusDocsShell .rd-edit-top .rd-actions{gap:8px;flex-wrap:wrap;min-width:0}
+#rexusDocsShell .rd-button{min-height:35px;line-height:1.3;overflow-wrap:anywhere}
+#rexusDocsShell .rd-page-view,#rexusDocsShell .rd-paper,#rexusDocsShell .rd-document-layout,#rexusDocsShell .rd-document-body{min-width:0;max-width:100%}
+#rexusDocsShell .rd-dialog-wrap .rd-dialog {width:min(92vw,650px);max-width:100%;max-height:90vh;overflow-y:auto}
+#rexusDocsShell .rd-dialog-wrap .rd-dialog label{min-width:0}
+/* [v2.2.0] removed: white-on-frost icon tiles (invisible on light backgrounds) — superseded by rexus-ui.css */
+
+#rexusDocsShell .rd-button .rx-mini-icon {display:none!important}
+#rexusDocsShell .rd-drive-table .rd-button[data-rd="file-options"],
+#rexusDocsShell .rd-drive-table .rd-button[data-rd="doc-options"] {font-size:22px;line-height:1;width:37px;min-width:37px;height:36px;padding:3px}
+#rexusDocsShell .rd-drive-table .rd-button[data-rd="file-options"] .rx-mini-icon,
+#rexusDocsShell .rd-drive-table .rd-button[data-rd="doc-options"] .rx-mini-icon {display:grid!important;width:28px;height:28px;place-items:center;margin:auto}
+#rexusDocsShell .rd-drive-table .rd-button[data-rd="file-options"] .rx-mini-icon svg,
+#rexusDocsShell .rd-drive-table .rd-button[data-rd="doc-options"] .rx-mini-icon svg {width:18px;height:18px}
+@media(max-width:1100px){#rexusDocsShell .rd-list-layout{grid-template-columns:1fr}}
+@media(max-width:850px){.wm-app .wm-body{padding:12px}#rexusDocsShell .rd-layout{grid-template-columns:210px minmax(0,1fr)}}
+@media(max-width:700px){#rexusDocsShell .rd-layout{display:block}#rexusDocsShell .rd-sidebar{max-height:220px;position:relative;overflow-y:auto}#rexusDocsShell .rd-sidebar:has(.rd-space-dropdown){overflow:visible}#rexusDocsShell .rd-main{padding:12px!important}#rexusDocsShell .rd-bulk-bar{gap:6px}#rexusDocsShell .rd-tree-line>.rd-nav-row>span:last-child{display:inline}#rexusDocsShell .rd-hero{margin:5px 0 9px}.wm-app .rx213-subnav{width:100%}}
+/* [v2.2.0] removed: smoked icon tiles — superseded by rexus-ui.css */
+
+#rexusDocsShell .rd-drive-table thead th{color:#fff!important;line-height:1.4;font-weight:720;vertical-align:middle}
+#rexusDocsShell .rd-drive-table tbody td{line-height:1.45}
+#rexusDocsShell .rd-drive-table tbody td:nth-child(2){min-width:160px}
+#rexusDocsShell .rd-drive-table tbody td:last-child{text-align:center}

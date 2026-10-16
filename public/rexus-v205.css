@@ -1,0 +1,79 @@
+/* REXUS v2.0.5 • Ocean Liquid Glass identity & application launcher */
+.wm-app .wm-header { isolation: isolate; }
+.wm-app .wm-brand { position:relative;gap:10px;overflow:visible; }
+.wm-app .wm-brand-mark { display:none!important; }
+.wm-app .wm-brand .rexus-app-switch { display:block;position:relative;order:0;flex:0 0 auto;margin:0!important; }
+.wm-app .wm-brand .rexus-switch-trigger {
+  width:40px;min-width:40px;height:40px;padding:0!important;border-radius:12px;
+  background:linear-gradient(150deg,rgba(224,244,255,.31),rgba(69,143,230,.28));
+  border:1px solid rgba(231,248,255,.52);box-shadow:0 5px 17px #02193648,inset 0 1px 1px #fff8;
+  cursor:pointer;display:grid;place-items:center;color:white;
+}
+.wm-app .wm-brand .rexus-switch-trigger[aria-expanded="true"] {background:rgba(78,161,255,.45)}
+.rx-grid-glyph{font-size:27px;line-height:1;color:#dff3ff;text-shadow:0 1px 4px #183e7e;pointer-events:none}
+.wm-app .wm-title{font-weight:850;letter-spacing:-.4px;font-size:18px;line-height:1.1;white-space:nowrap}
+.wm-app .wm-title .rx-doc-word{font-weight:780;font-size:.84em;letter-spacing:-.25px;color:#62d6ff;background:linear-gradient(125deg,#efffff,#82e5ff 38%,#48aaff);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.rx-app-launcher[hidden]{display:none!important}
+.rx-app-launcher{position:absolute;left:-5px;top:calc(100% + 18px);z-index:99999;
+  width:min(360px,calc(100vw - 34px));padding:16px;border-radius:21px;
+  background:linear-gradient(145deg,rgba(255,255,255,.98),rgba(233,245,255,.94));
+  border:1px solid rgba(255,255,255,.99);box-shadow:0 25px 64px #0b295056,0 5px 22px #0b39741c,inset 0 1px 0 #fff;
+  backdrop-filter:blur(26px) saturate(155%);-webkit-backdrop-filter:blur(26px) saturate(155%);color:#193a64;
+}
+.rx-app-launcher:before{content:'';position:absolute;left:17px;top:-8px;transform:rotate(45deg);width:14px;height:14px;background:#f6fbff;border-left:1px solid #fff;border-top:1px solid #fff}
+.rx-launcher-heading{padding:4px 8px 13px;color:#1260bd;font-size:12px;letter-spacing:.1em;font-weight:850;display:flex;flex-direction:column;gap:2px}
+.rx-launcher-heading small{font-size:10px;color:#7b9bbd;letter-spacing:.04em;font-weight:600}
+.rx-launcher-item{display:flex!important;gap:13px;align-items:center;text-align:left;width:100%;border:1px solid transparent!important;
+  padding:10px 11px!important;min-height:66px;margin:3px 0;cursor:pointer;border-radius:15px!important;color:#183252;
+  background:transparent!important;box-shadow:none!important;white-space:normal!important;}
+.rx-launcher-item:hover,.rx-launcher-item:focus-visible,.rx-launcher-item.rx-selected{background:linear-gradient(135deg,#e0f0ff,#f2f9ff)!important;border-color:#c9e4ff!important;outline:none}
+.rx-launcher-item>span:nth-child(2){flex:1;display:grid;gap:3px;min-width:0}
+.rx-launcher-item strong{font-size:15px;line-height:1.25;color:#122e54;font-weight:800}
+.rx-launcher-item strong em{font-style:normal;color:#1599ed}
+.rx-launcher-item small{color:#7085a3;font-size:12px;line-height:1.25}
+.rx-launcher-item .rx-selected-mark{color:#0a79dc;opacity:0;font-weight:900;font-size:17px}
+.rx-launcher-item.rx-selected .rx-selected-mark{opacity:1}
+.rx-app-emoji,.rx-glass-icon{display:inline-grid;place-items:center;flex:0 0 auto;border-radius:12px;
+  background:linear-gradient(145deg,#b8e7ff 0%,#59adfc 48%,#1b67ce 100%);
+  border:1px solid #f4ffffb8;box-shadow:0 4px 12px #1b579d45,inset 0 2px 2px #ffffff98,inset 0 -2px 3px #003d8d33;
+  color:#fff;font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif;font-weight:400;
+  text-shadow:0 1px 3px #0a306b44;line-height:1;vertical-align:middle}
+.rx-app-emoji{width:45px;height:45px;font-size:25px}
+.rx-app-document{background:linear-gradient(145deg,#b2f3ff,#4ab5ed 48%,#0569b9)}
+.rx-glass-icon{width:28px;height:28px;font-size:16px;margin:0;}
+.wm-app .wm-tab-icon .rx-glass-icon{width:28px;height:28px;font-size:16px}
+.wm-app .wm-tab.active .rx-glass-icon,.wm-app .wm-tab:hover .rx-glass-icon{box-shadow:0 5px 15px #0b438051,inset 0 2px 2px #fff9}
+/* [v2.2.0] removed: tinted icon tone gradients — superseded by rexus-ui.css */
+
+.wm-app .wm-icon-btn.rx-decorated,.wm-app .wm-glass-icon-btn.rx-decorated{display:inline-flex;align-items:center;justify-content:center}
+.wm-app .wm-icon-btn .rx-glass-icon{width:23px;height:23px;border-radius:8px;font-size:13px}
+.wm-app .wm-glass-icon-btn .rx-glass-icon{width:26px;height:26px;font-size:14px}
+#rexusDocsShell .rd-nav-row .rx-glass-icon{width:25px;height:25px;font-size:14px;border-radius:9px}
+#rexusDocsShell .rd-list-icon.rx-glass-icon{display:grid;width:35px;height:35px;font-size:18px}
+#rexusDocsShell .rd-home-icon.rx-glass-icon{width:44px;height:44px;font-size:22px}
+#rexusDocsShell .rd-tool.rx-emoji-tool{font-family:'Apple Color Emoji','Segoe UI Emoji',sans-serif;font-size:17px;background:linear-gradient(145deg,#fafdff,#e5f2ff);border:1px solid #d7e9ff;box-shadow:inset 0 1px 0 #fff}
+#rexusDocsShell .rd-tool.rx-emoji-tool:hover{background:linear-gradient(145deg,#e3f7ff,#c9e9ff)}
+.wm-app .wm-gsearch-input-wrap .rx-search-icon{position:absolute;left:9px;top:50%;transform:translateY(-50%);width:22px;height:22px;font-size:13px;border-radius:8px;z-index:1}
+.wm-app #wmNotifBellBtn .rx-glass-icon{width:29px;height:29px;font-size:16px}
+/* Audit log: authenticated, server-written history */
+.rx-audit-screen[hidden]{display:none!important}
+.rx-audit-screen{position:fixed;inset:0;z-index:100100;background:rgba(4,19,45,.51);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);display:flex;justify-content:flex-end}
+.rx-audit-panel{width:min(700px,100%);height:100%;overflow:auto;background:linear-gradient(140deg,rgba(246,251,255,.985),rgba(223,238,255,.975));border-left:1px solid #fff;box-shadow:-22px 0 65px #061f4650;color:#1d385d;display:flex;flex-direction:column}
+.rx-audit-header{padding:23px 27px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #d5e5f7;background:#ffffffa8}
+.rx-audit-title{font-size:21px;font-weight:850;color:#0c305e}.rx-audit-subtitle{font-size:12px;color:#7891ad;margin-top:4px}
+.rx-audit-btn{border:1px solid #c4ddf4;border-radius:10px;padding:8px 13px;cursor:pointer;background:#ffffffd9;color:#195491;font-weight:700}
+.rx-audit-filters{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:16px 26px;border-bottom:1px solid #dae9f8}
+.rx-audit-filters input{flex:1;min-width:140px;border-radius:10px;border:1px solid #cbdef4;background:#fff;padding:10px 12px;font:inherit;color:#1d385d}
+.rx-audit-list{padding:6px 27px 25px;overflow:auto;flex:1}
+.rx-audit-event{display:flex;gap:14px;padding:17px 3px;border-bottom:1px solid #d5e3f3;align-items:flex-start}
+.rx-audit-event .rx-glass-icon{width:38px;height:38px;font-size:20px}
+.rx-audit-event-text{flex:1;min-width:0}.rx-audit-event-text strong{display:block;font-size:14px;color:#17395e}
+.rx-audit-event-text p{font-size:13px;line-height:1.45;margin:5px 0;color:#4e6989;overflow-wrap:anywhere}
+.rx-audit-event-text small{font-size:11px;color:#7d90a7;overflow-wrap:anywhere}
+.rx-audit-footer{border-top:1px solid #d6e5f7;padding:13px 27px;display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff9}
+@media(max-width:650px){.wm-app .wm-brand{gap:6px}.wm-app .wm-brand .rexus-switch-trigger{height:33px;width:33px;min-width:33px}.wm-app .wm-title{font-size:14px}.wm-app .wm-title .rx-doc-word{font-size:.85em}.rx-app-launcher{left:-12px;top:calc(100% + 12px)}.rx-audit-header{padding:17px}.rx-audit-list{padding:5px 15px 20px}.rx-audit-filters{padding:13px 15px}.rx-audit-footer{padding:12px 15px}}
+
+#rexusDocsShell .rx-home-hero-icon{font-size:56px;width:96px;height:96px;display:grid;place-items:center;flex-shrink:0;z-index:1;border-radius:26px;background:linear-gradient(140deg,#ffffff56,#78d6ff59 60%,#1554ac6b);border:1px solid #ffffff75;box-shadow:0 9px 21px #04336c45,inset 0 2px 2px #ffffff70;text-shadow:0 3px 9px #143a6966}
+.wm-app .wm-attach-row .rx-glass-icon{width:23px;height:23px;font-size:13px;border-radius:8px}
+.wm-app .wm-notif-icon .rx-glass-icon{width:29px;height:29px;font-size:16px}
+@media(max-width:650px){#rexusDocsShell .rx-home-hero-icon{font-size:34px;width:58px;height:58px;border-radius:18px}}

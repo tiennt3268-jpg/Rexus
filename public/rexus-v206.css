@@ -1,0 +1,69 @@
+/* REXUS v2.0.6 Document Drive + pageless editor. Works with existing Liquid Glass theme. */
+#rexusDocsShell { --rd-ink:#102d50; --rd-ocean:#1773d1; --rd-sky:#57c5ff; }
+#rexusDocsShell .rd-main {max-width:1600px;padding:22px clamp(14px,2.3vw,34px) 70px;}
+#rexusDocsShell .rd-path{display:flex;align-items:center;flex-wrap:wrap;gap:9px;padding:7px 0 17px;color:#7288a2;}
+#rexusDocsShell .rd-path button{border:0;cursor:pointer;color:#1462ac;font-size:13px;background:none;padding:5px 2px;font-weight:700;max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#rexusDocsShell .rd-path button:hover{text-decoration:underline;}
+#rexusDocsShell .rd-document-head{padding:0 0 12px;border-bottom:1px solid #dce9f9;align-items:center;}
+#rexusDocsShell .rd-document-head h2{font-family:Inter,'Segoe UI',sans-serif!important;font-size:23px!important;}
+#rexusDocsShell .rd-document-layout{display:flex;align-items:flex-start;gap:18px;min-width:0;}
+#rexusDocsShell .rd-document-body{flex:1;min-width:0;}
+#rexusDocsShell .rd-details-panel{width:275px;flex:0 0 275px;background:rgba(247,252,255,.91);border:1px solid #cfe0f3;border-radius:17px;padding:18px;box-shadow:0 12px 35px #10376513;position:sticky;top:calc(var(--wm-header-h,72px) + 16px);max-height:calc(100vh - var(--wm-header-h,72px) - 22px);overflow:auto;}
+#rexusDocsShell .rd-details-panel p{font-size:12px;color:#657d99;line-height:1.65;overflow-wrap:anywhere;}
+#rexusDocsShell .rd-details-panel strong{color:#143b6a;}
+#rexusDocsShell .rd-details-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px;}
+#rexusDocsShell .rd-side-section{border-top:1px solid #deeaf7;margin-top:13px;padding-top:15px;}
+#rexusDocsShell .rd-tagbox{margin:10px 0;}
+#rexusDocsShell .rd-label-input{display:grid;gap:7px;font-size:12px;}
+#rexusDocsShell .rd-label-input input{min-width:0;width:100%;padding:8px 10px;border:1px solid #cbdcf0;border-radius:8px;}
+#rexusDocsShell .rd-drive-controls{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:0 0 16px;}
+#rexusDocsShell .rd-drive-controls select{min-width:126px;padding:9px 11px;border:1px solid #cfe1f3;background:#ffffffdf;color:#255583;border-radius:10px;font-size:13px;}
+#rexusDocsShell .rd-list-layout{display:grid;grid-template-columns:minmax(0,1fr) 295px;gap:16px;align-items:start;}
+#rexusDocsShell .rd-list-layout:not(:has(.rd-folder-side)){grid-template-columns:1fr;}
+#rexusDocsShell .rd-folder-side{border:1px solid #dce7f7;border-radius:16px;background:#fffffff0;padding:17px;box-shadow:0 8px 20px #255ea30d;}
+#rexusDocsShell .rd-folder-side h3{font-size:16px!important;margin:5px 0 13px;color:#123c68;}
+#rexusDocsShell .rd-folder-side p{font-size:13px;line-height:1.5;}
+#rexusDocsShell .rd-folder-side textarea{display:block;width:100%;border-radius:9px;padding:10px;border:1px solid #cde0f3;resize:vertical;min-height:70px;margin:10px 0;font:13px/1.5 Inter,'Segoe UI',sans-serif;}
+#rexusDocsShell .rd-folder-comments{max-height:400px;overflow:auto;}
+#rexusDocsShell .rd-folder-comment{padding:11px 8px;border-top:1px solid #e5eff9;word-wrap:break-word;}
+#rexusDocsShell .rd-folder-comment small{color:#7790ae;}
+#rexusDocsShell .rd-folder-comment .rd-button{font-size:11px;padding:4px 6px;}
+#rexusDocsShell .rd-drive-overflow{width:100%;overflow-x:auto;}
+#rexusDocsShell .rd-drive-table{width:100%;border-spacing:0;border-collapse:collapse;font-size:13px;color:#305378;}
+#rexusDocsShell .rd-drive-table th{text-align:left;background:#f0f7ff;color:#607996;padding:13px 13px;font-weight:750;white-space:nowrap;}
+#rexusDocsShell .rd-drive-table td{padding:12px 13px;border-bottom:1px solid #e9eff8;white-space:nowrap;}
+#rexusDocsShell .rd-drive-table td:first-child{min-width:200px;max-width:360px;overflow:hidden;text-overflow:ellipsis;}
+#rexusDocsShell .rd-drive-table tr:hover td{background:rgba(231,244,255,.62);}
+#rexusDocsShell .rd-drive-table button:not(.rd-button),#rexusDocsShell .rd-drive-table a{border:0;background:transparent;cursor:pointer;color:#185fba;text-decoration:none;font-weight:700;text-align:left;}
+#rexusDocsShell .rd-drive-icon{display:inline-grid;place-items:center;width:31px;height:31px;margin-right:10px;border:1px solid #d1e7ff;background:linear-gradient(145deg,#ffffff,#dcefff);border-radius:9px;box-shadow:inset 1px 1px 2px #fff,0 3px 9px #164b8017;font-size:18px;}
+/* Pageless canvas: no A4 border, min-height, sheet shadow or page footers. */
+#rexusDocsShell .rd-page-view,#rexusDocsShell .rd-page-paper{border:0!important;box-shadow:none!important;background:transparent!important;padding:0!important;min-height:0!important;border-radius:0!important;}
+#rexusDocsShell .rd-page-paper{width:min(860px,100%)!important;max-width:100%;margin:0 auto!important;padding:26px clamp(5px,2vw,28px)!important;}
+#rexusDocsShell .rd-editor-shell{background:transparent!important;border:0!important;border-radius:0!important;overflow:visible!important;box-shadow:none!important;}
+#rexusDocsShell .rd-editor{padding:0!important;}
+#rexusDocsShell .rd-paper{width:min(860px,100%)!important;margin:0 auto!important;padding:35px clamp(7px,2.2vw,35px) 60px!important;min-height:500px!important;background:transparent!important;border:0!important;box-shadow:none!important;border-radius:0!important;}
+#rexusDocsShell .rd-paper-title{font-size:32px!important;padding-bottom:25px!important;}
+#rexusDocsShell .rd-rich-surface,#rexusDocsShell .rd-content.rd-rich-display{font-size:16px!important;line-height:1.85!important;color:#16365c;padding:0!important;white-space:normal!important;min-height:240px;}
+#rexusDocsShell .rd-rich-surface h4,#rexusDocsShell .rd-rich-display h4{font-size:17px!important;}
+#rexusDocsShell .rd-rich-surface h5,#rexusDocsShell .rd-rich-display h5{font-size:16px!important;}
+#rexusDocsShell .rd-rich-surface h6,#rexusDocsShell .rd-rich-display h6{font-size:15px!important;}
+#rexusDocsShell .rd-edit-top{position:sticky;top:var(--wm-header-h,72px);z-index:7;border-radius:13px 13px 0 0;backdrop-filter:blur(21px);background:linear-gradient(140deg,#ebf6ffed,#c9e5ffdc)!important;}
+#rexusDocsShell .rd-toolbar{position:sticky;top:calc(var(--wm-header-h,72px) + 56px);z-index:6;background:#f5faffeb!important;box-shadow:0 9px 19px #3a729d13;max-height:112px;overflow:auto;scrollbar-width:thin;}
+#rexusDocsShell .rd-toolbar .rd-tools{flex-wrap:nowrap;}
+#rexusDocsShell .rd-toolbar .rd-tool{flex-shrink:0;}
+#rexusDocsShell .rd-font{min-width:95px;max-width:112px;}
+#rexusDocsShell .rd-font-size{min-width:58px;max-width:64px;}
+#rexusDocsShell .rd-insert-button{white-space:nowrap;}
+#rexusDocsShell .rd-table-picker{display:grid;grid-template-columns:repeat(8,25px);gap:3px;margin:18px 0;}
+#rexusDocsShell .rd-table-picker button{width:25px;height:25px;border:1px solid #b9d4ee;border-radius:3px;background:#f4faff;cursor:pointer;}
+#rexusDocsShell .rd-table-picker button.active,#rexusDocsShell .rd-table-picker button:hover{background:#a2d3ff;border-color:#1378d1;}
+#rexusDocsShell .rd-code-dialog{width:min(760px,100%);}
+#rexusDocsShell .rd-code-dialog textarea{font:13px/1.55 ui-monospace,Consolas,monospace!important;min-height:180px;}
+#rexusDocsShell .rd-embed-preview{border:1px solid #cadff6;border-radius:12px;background:#f5fbff;padding:14px;min-height:65px;max-height:280px;overflow:auto;margin:12px 0;}
+#rexusDocsShell .rd-flow-preview{display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+#rexusDocsShell .rd-flow-node{border-radius:9px;padding:12px 15px;color:#0a3e74;background:linear-gradient(130deg,#dbf2ff,#fff);border:1px solid #9acff9;font-weight:700;}
+#rexusDocsShell .rd-mermaid-rendered{background:#f0f8ff!important;color:#1c5e9a!important;font-family:Inter,sans-serif;}
+#rexusDocsShell .rd-rich-surface nav.rd-toc,#rexusDocsShell .rd-rich-display nav.rd-toc{background:#eef7ff;border:1px solid #d0e7ff;border-radius:12px;padding:18px 22px;margin:17px 0;display:grid;gap:8px;}
+#rexusDocsShell .rd-rich-surface nav.rd-toc a,#rexusDocsShell .rd-rich-display nav.rd-toc a{display:block;color:#165aa8;}
+@media(max-width:1180px){#rexusDocsShell .rd-list-layout{grid-template-columns:minmax(0,1fr);}#rexusDocsShell .rd-folder-side{max-width:none;}#rexusDocsShell .rd-details-panel{width:220px;flex-basis:220px;}#rexusDocsShell .rd-toolbar{top:var(--wm-header-h,72px)}#rexusDocsShell .rd-edit-top{position:static}}
+@media(max-width:750px){#rexusDocsShell .rd-document-layout{display:block;}#rexusDocsShell .rd-details-panel{width:100%;max-height:none;position:static;margin-top:14px;}#rexusDocsShell .rd-page-paper,#rexusDocsShell .rd-paper{padding:20px 6px!important;}#rexusDocsShell .rd-toolbar{max-height:94px;overflow:auto;flex-wrap:nowrap;position:sticky;top:var(--wm-header-h,72px)}#rexusDocsShell .rd-toolbar .rd-tools{flex-shrink:0;}#rexusDocsShell .rd-drive-table th:nth-child(4),#rexusDocsShell .rd-drive-table td:nth-child(4){display:none;}#rexusDocsShell .rd-document-head h2{font-size:21px!important;} }

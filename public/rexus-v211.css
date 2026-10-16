@@ -1,0 +1,76 @@
+/* REXUS v2.1.1 — compact, legible Liquid Glass. Both work and docs use one scale. */
+:root{--rx211-stroke:rgba(138,194,240,.5);--rx211-navy:#13375e;--rx211-veil:rgba(255,255,255,.76)}
+#rexusDocsShell .rd-main{max-width:none;padding:16px clamp(14px,2.1vw,29px) 28px}
+#rexusDocsShell .rd-layout{grid-template-columns:248px minmax(0,1fr)}
+#rexusDocsShell .rd-sidebar{padding:12px 11px 20px}
+#rexusDocsShell .rd-hero{margin:6px 0 11px}
+#rexusDocsShell .rd-hero h2{font-size:clamp(24px,2.1vw,29px)!important}
+#rexusDocsShell .rd-panel{border-radius:17px}
+#rexusDocsShell .rd-drive-controls{padding:8px 11px!important;gap:7px;margin-bottom:9px;box-shadow:0 6px 16px rgba(15,78,136,.06)}
+#rexusDocsShell .rd-drive-table thead th{padding:10px 11px!important;background:linear-gradient(110deg,#153e72,#246bab)!important}
+#rexusDocsShell .rd-drive-table tbody td{padding-top:10px!important;padding-bottom:10px!important}
+#rexusDocsShell .rd-drive-overflow{box-shadow:0 7px 19px rgba(15,78,136,.055)}
+#rexusDocsShell .rd-home-banner{padding:24px 26px!important;min-height:0}
+#rexusDocsShell .rd-home-banner h2{font-size:clamp(24px,2.6vw,34px)!important}
+#rexusDocsShell .rd-home-columns{gap:12px}
+#rexusDocsShell .rd-home-actions{margin:12px 0!important;gap:10px}
+#rexusDocsShell .rd-list-row{padding-top:10px!important;padding-bottom:10px!important}
+#rexusDocsShell .rd-section-title{margin-top:14px;margin-bottom:5px;font-size:11px!important;letter-spacing:.075em;color:#557a9d}
+#rexusDocsShell .rd-nav-row{min-height:36px;padding:6px 9px!important}
+#rexusDocsShell .rd-space-switch{padding:8px 10px;gap:2px 5px;min-height:54px;background:linear-gradient(130deg,rgba(255,255,255,.88),rgba(224,241,255,.58));border:1px solid var(--rx211-stroke);box-shadow:0 4px 12px rgba(17,75,139,.08)}
+#rexusDocsShell .rd-space-switch-label{display:flex;align-items:center;justify-content:space-between;width:100%;font-size:14px}
+#rexusDocsShell .rd-space-switch small{font-size:13px!important;color:#31639a;flex-basis:100%}
+#rexusDocsShell .rd-space-dropdown{left:0;right:auto;top:calc(100% + 5px);width:min(340px,calc(100vw - 20px));padding:11px;border-radius:16px;background:linear-gradient(145deg,rgba(255,255,255,.985),rgba(228,243,255,.98));box-shadow:0 17px 38px #16395922}
+#rexusDocsShell .rd-switch-section{font-size:10.5px;letter-spacing:.09em;font-weight:800;color:#7090aa;margin:7px 7px 6px}
+#rexusDocsShell .rd-current-space{display:flex;align-items:center;gap:9px;padding:8px;border-radius:12px;background:#e9f5ff;color:#184a81;font-size:14px}
+#rexusDocsShell .rd-current-space strong{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#rexusDocsShell .rd-space-check{font-weight:750;color:#207fc8}
+#rexusDocsShell .rd-space-glyph{display:grid;place-items:center;flex:none;width:31px;height:31px;color:white;border-radius:9px;border:1px solid rgba(246,253,255,.85);background:linear-gradient(145deg,rgba(79,171,231,.9),rgba(19,79,155,.96));box-shadow:inset 0 1px 2px #ffffff70,0 3px 8px #0b70b92a}
+#rexusDocsShell .rd-space-glyph svg{width:19px;height:19px}
+#rexusDocsShell .rd-nav-glyph{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;color:#faffff;background:linear-gradient(140deg,#47b8ec,#0d5eae)}
+#rexusDocsShell .rd-nav-glyph svg{width:16px;height:16px}
+#rexusDocsShell .rd-space-add{color:#1169b9!important;font-weight:750;border-top:1px solid #d9e6f4!important;border-radius:3px!important}
+#rexusDocsShell .rd-space-search{display:block;margin:10px 0 8px}
+#rexusDocsShell .rd-space-option-list{max-height:285px}
+#rexusDocsShell .rd-space-option-list button{padding:8px;border-radius:11px}
+#rexusDocsShell .rd-sidebar-empty{font-size:13px;padding:12px;line-height:1.5}
+#rexusDocsShell .rd-compact-toolbar{gap:5px;padding:7px 11px;background:linear-gradient(140deg,rgba(250,253,255,.96),rgba(228,242,255,.92));border-bottom:1px solid var(--rx211-stroke);flex-wrap:wrap}
+#rexusDocsShell .rd-compact-toolbar .rd-tools{gap:2px;padding-right:6px}
+#rexusDocsShell .rd-compact-toolbar .rd-tool{height:33px;min-width:32px}
+#rexusDocsShell .rd-compact-toolbar .rd-block-select{height:33px;min-width:107px;padding:5px 6px;font-size:12px}
+#rexusDocsShell .rd-compact-toolbar .rd-font{min-width:92px;max-width:108px}
+#rexusDocsShell .rd-compact-toolbar .rd-font-size{min-width:52px;max-width:57px}
+#rexusDocsShell .rd-edit-top{padding:8px 13px;gap:8px}
+#rexusDocsShell .rd-edit-top .rd-actions{gap:6px}
+#rexusDocsShell .rd-edit-top .rd-button{padding:7px 12px;min-height:33px}
+#rexusDocsShell .rd-micro-note{font-weight:450;color:#738ba7}
+#rexusDocsShell .rd-paper{margin:12px auto 18px;padding:32px clamp(22px,5vw,58px);min-height:440px;width:min(1000px,calc(100% - 18px));border-radius:15px}
+#rexusDocsShell .rd-rich-surface{font-size:16px!important;line-height:1.68;min-height:290px}
+#rexusDocsShell .rd-tool-more{white-space:nowrap}
+#rexusDocsShell .rd-rexus-reference{display:inline-flex;align-items:center;padding:2px 8px;border:1px solid #a9d6f2;border-radius:7px;background:rgba(225,243,255,.86);font-weight:700;text-decoration:none!important;vertical-align:baseline}
+#rexusDocsShell .rd-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.wm-app .wm-table-wrap{box-shadow:0 5px 20px rgba(22,84,141,.06)!important}
+.wm-app table.wm-table thead th,.rx210-table th{background:linear-gradient(115deg,rgba(13,61,113,.94),rgba(31,112,184,.9))!important;padding:10px 11px!important;font-size:13px!important}
+.wm-app table.wm-table tbody td,.rx210-table td{padding:9px 11px!important}
+.wm-app .wm-card,.wm-app .wm-section,.rx210-glass{margin-bottom:12px!important}
+.rx210-glass{padding:15px 17px!important;border-radius:17px}
+.rx210-metrics{gap:10px;margin-bottom:10px}
+.rx210-metrics article{padding:13px 15px!important;border-radius:15px}
+.rx210-title{margin:3px 0 11px}
+.rx210-title h2{font-size:clamp(24px,2.3vw,30px)}
+.rx210-table-wrap{border-radius:15px;box-shadow:0 6px 18px #113b6610}
+.rx211-bulk-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 11px;margin:8px 0;border:1px solid #b2d5ef;border-radius:12px;background:linear-gradient(140deg,#ecf8ff,#fff);color:#1c5088}
+.rx211-bulk-tools[hidden]{display:none}
+.rx211-bulk-tools strong{margin-right:auto}
+.rx211-bulk-tools button{padding:7px 12px;border-radius:9px;border:1px solid #bdd7eb;background:white;color:#195a94;font-weight:650;cursor:pointer}
+.rx211-check-col{width:38px!important;min-width:38px!important;text-align:center!important;padding:7px 5px!important}
+.rx211-check-col input{width:16px;height:16px;accent-color:#1978c9}
+@media(max-width:1050px){#rexusDocsShell .rd-layout{grid-template-columns:210px minmax(0,1fr)}}
+@media(max-width:700px){#rexusDocsShell .rd-layout{display:block}#rexusDocsShell .rd-sidebar{max-height:205px;position:relative;min-height:0}#rexusDocsShell .rd-main{padding:11px}#rexusDocsShell .rd-paper{width:100%;padding:21px 16px}#rexusDocsShell .rd-compact-toolbar{position:sticky;top:var(--wm-header-h,72px);gap:3px}#rexusDocsShell .rd-compact-toolbar .rd-font{display:none}#rexusDocsShell .rd-compact-toolbar .rd-tool-lists{display:none}#rexusDocsShell .rd-space-dropdown{position:fixed;top:calc(var(--wm-header-h,72px) + 6px);left:10px;right:10px;width:auto;z-index:999}}
+
+/* Hand-drawn SVG replaces all old emoji artwork inside glass chips. */
+.wm-app .rx-glass-icon svg{width:65%;height:65%;stroke:#fff;fill:none;flex:none;pointer-events:none}
+#rexusDocsShell .rd-tool .rx-glass-icon{width:26px;height:26px;border-radius:8px}
+#rexusDocsShell .rd-list-icon .rx-glass-icon,#rexusDocsShell .rd-home-icon .rx-glass-icon{width:100%;height:100%;border-radius:inherit}
+#rexusDocsShell .rd-drive-icon{display:inline-flex;width:27px;height:27px;vertical-align:middle;align-items:center;justify-content:center;border-radius:9px;background:linear-gradient(140deg,#63bcf6,#1b68b3);margin-right:8px;color:white}
+#rexusDocsShell .rd-drive-icon svg{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
