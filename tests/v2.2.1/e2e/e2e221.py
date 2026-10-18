@@ -24,7 +24,7 @@ def go(page, view):
     page.evaluate("(v)=>{const t=document.querySelector('.wm-tab[data-view=\"'+v+'\"]'); t&&t.click();}", view); page.wait_for_timeout(700)
 
 def toast_text(page):
-    return page.evaluate("()=>{const p=document.getElementById('wmConfirmPopup');return p&&p.classList.contains('show')?document.getElementById('wmConfirmPopupText').textContent:''}")
+    return page.evaluate("()=>{const l=window.REXUSNotify&&REXUSNotify.last;return l&&Date.now()-l.at<6000?l.text:''}")  # v2.2.3 GEN-10: shared centred notification
 
 with sync_playwright() as p:
     b = p.chromium.launch()
@@ -42,7 +42,7 @@ with sync_playwright() as p:
     page.screenshot(path=f'{OUT}/hr-profile@1440.png', full_page=True)
     page.click('#rxHrTabs [data-tab="leave"]'); page.wait_for_timeout(900)
     page.click('#rxNewLeave'); page.wait_for_timeout(400)
-    dlg = page.locator('.rx-dialog').last
+    dlg = page.locator('.rx-dialog, .rx-page.active .rx-page-form').last
     dlg.locator('select[name=leave_type]').select_option('Personal Leave')
     dlg.locator('input[name=start_date]').fill('2026-12-07'); dlg.locator('input[name=start_date]').dispatch_event('change')
     dlg.locator('input[name=end_date]').fill('2026-12-08')
@@ -79,10 +79,10 @@ with sync_playwright() as p:
     check('M3 detail shows related record + steps + history', 'Related record' in page.inner_text('.rx-dialog') and page.locator('.rx-step').count() >= 1)
     page.screenshot(path=f'{OUT}/approval-detail@1440.png')
     page.click('#apReject'); page.wait_for_timeout(300)
-    page.locator('.rx-dialog').last.locator('button[type=submit]').click(); page.wait_for_timeout(300)
-    check('M3 reject requires a reason (client validation)', page.locator('.rx-dialog').last.locator('.rx-form-error').is_visible() and 'reason is required' in page.locator('.rx-dialog').last.inner_text().lower())
-    page.locator('.rx-dialog').last.locator('[data-close]').first.click(); page.wait_for_timeout(200)
-    page.click('#apApprove'); page.wait_for_timeout(300); page.locator('.rx-dialog').last.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
+    page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.locator('button[type=submit]').click(); page.wait_for_timeout(300)
+    check('M3 reject requires a reason (client validation)', page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.locator('.rx-form-error').is_visible() and 'reason is required' in page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.inner_text().lower())
+    page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.locator('[data-close]').first.click(); page.wait_for_timeout(200)
+    page.click('#apApprove'); page.wait_for_timeout(300); page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
     check('M3 approve via UI', 'approved' in toast_text(page).lower(), toast_text(page))
     page.click('#apTabs [data-tab="delegations"]'); page.wait_for_timeout(700)
     check('M3 delegations tab', 'New delegation' in page.inner_text('#apBody'))
@@ -97,13 +97,13 @@ with sync_playwright() as p:
     go(page, 'organization'); page.click('#rxHrTabs [data-tab="capacity"]'); page.wait_for_timeout(1200)
     check('M2 capacity calendar for declaration-based employee', page.locator('.rx-cap-cell').count() >= 28, page.inner_text('#rxHrBody')[:200])
     page.click('#rxCapWeekly'); page.wait_for_timeout(300)
-    d = page.locator('.rx-dialog').last
+    d = page.locator('.rx-dialog, .rx-page.active .rx-page-form').last
     for wd in ['1', '3', '5']: d.locator(f'input[name=w{wd}]').fill('4')
     d.locator('button[type=submit]').click(); page.wait_for_timeout(400)
     filled = page.evaluate("()=>[...document.querySelectorAll('.rx-cap-hours')].filter(i=>i.value==='4').length")
     check('M2 apply weekly availability fills matching weekdays', filled >= 10, filled)
     page.screenshot(path=f'{OUT}/capacity@1440.png', full_page=True)
-    page.click('#rxCapSubmit'); page.wait_for_timeout(300); page.locator('.rx-dialog').last.locator('button[type=submit]').click(); page.wait_for_timeout(1600)
+    page.click('#rxCapSubmit'); page.wait_for_timeout(300); page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.locator('button[type=submit]').click(); page.wait_for_timeout(1600)
     check('M2 declaration submitted → Pending Approval', 'Pending Approval' in page.inner_text('#rxCapContent'), page.inner_text('#rxCapContent')[:300])
     check('M2 pending month locked for editing', page.evaluate("()=>[...document.querySelectorAll('.rx-cap-hours')].every(i=>i.disabled)"))
     page.click('#rxCapView [data-tab="list"]'); page.wait_for_timeout(300)
@@ -131,12 +131,12 @@ with sync_playwright() as p:
     check('M7 project finance overview metrics', page.locator('#fnBody .rx-metric').count() >= 7)
     page.click('#fnTabs [data-tab="ledger"]'); page.wait_for_timeout(1000)
     page.click('#fnAddIncome'); page.wait_for_timeout(300)
-    d = page.locator('.rx-dialog').last
+    d = page.locator('.rx-dialog, .rx-page.active .rx-page-form').last
     d.locator('input[name=amount]').fill('12000000'); d.locator('input[name=reference]').fill('UI-INC-1'); d.locator('select[name=method]').select_option('Bank Transfer')
     d.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
     check('M7 income added through dialog (draft)', 'UI-INC-1' in page.inner_text('#fnLedgerTable') and 'Draft' in page.inner_text('#fnLedgerTable'))
     page.locator('#fnLedgerTable [data-act="confirm_transaction"]').first.click(); page.wait_for_timeout(300)
-    page.locator('.rx-dialog').last.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
+    page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
     page.click('#fnTabs [data-tab="overview"]'); page.wait_for_timeout(900)
     check('M7 confirmed income updates cash received', '12,000,000' in page.inner_text('#fnBody'), page.inner_text('#fnBody')[:400])
     page.screenshot(path=f'{OUT}/finance-detail@1440.png', full_page=True)
@@ -159,9 +159,9 @@ with sync_playwright() as p:
     page.click('#wbsMode [data-tab="wbs"]'); page.wait_for_timeout(300); page.screenshot(path=f'{OUT}/wbs-only@1440.png', full_page=False)
     check('M7 project financials section inside project detail', page.locator('#pdFinance .rx-metric').count() >= 7)
     page.locator('#pdWbs [data-deps]').first.click(); page.wait_for_timeout(400)
-    check('M5 dependency dialog opens', 'Predecessors' in page.locator('.rx-dialog').last.inner_text())
+    check('M5 dependency dialog opens', 'Predecessors' in page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.inner_text())
     page.keyboard.press('Escape'); page.wait_for_timeout(300)
-    check('M10 Escape closes v2.2.1 dialogs', page.locator('.rx-dialog').count() == 0)
+    check('M10 Escape closes v2.2.1 dialogs', page.locator('.rx-dialog, .rx-page.active .rx-page-form').count() == 0)
     all_errs = errs + errs2 + errs3 + errs4 + errs5
     check('No JavaScript page errors in any flow', not all_errs, all_errs[:5])
     ctx.close()

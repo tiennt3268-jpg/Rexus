@@ -41,8 +41,9 @@ const server = http.createServer(async (req, res) => {
       if (cookies.length) h['set-cookie'] = cookies.map(c => c.replace('; Secure', ''));
       res.writeHead(out.status, h); return res.end(Buffer.from(await out.arrayBuffer()));
     }
-    let p = path.join(SRC, 'public', decodeURIComponent(u.pathname === '/' ? '/index.html' : u.pathname));
-    if (!p.startsWith(path.join(SRC, 'public')) || !fs.existsSync(p)) { res.writeHead(404); return res.end('not found'); }
+    const PUB = process.env.REXUS_PUBLIC || path.join(SRC, 'public');   // REXUS_PUBLIC: serve another build (before/after evidence)
+    let p = path.join(PUB, decodeURIComponent(u.pathname === '/' ? '/index.html' : u.pathname));
+    if (!p.startsWith(PUB) || !fs.existsSync(p)) { res.writeHead(404); return res.end('not found'); }
     res.writeHead(200, { 'content-type': MIME[path.extname(p)] || 'application/octet-stream' }); fs.createReadStream(p).pipe(res);
   } catch (e) { res.writeHead(500, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: String(e && e.stack || e) })); }
 });

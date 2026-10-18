@@ -1445,17 +1445,6 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
 
   <div class="wm-sync" id="wmSync"></div>
 
-  <div class="wm-confirm-popup" id="wmConfirmPopup">
-    <button class="wm-confirm-popup-close" id="wmConfirmPopupClose">✕</button>
-    <div class="wm-confirm-popup-ringwrap">
-      <svg class="wm-confirm-popup-ring" viewBox="0 0 100 100">
-        <circle class="wm-confirm-popup-ring-bg" cx="50" cy="50" r="45"></circle>
-        <circle class="wm-confirm-popup-ring-fg" id="wmConfirmPopupRingFg" cx="50" cy="50" r="45"></circle>
-      </svg>
-      <div class="wm-confirm-popup-icon" id="wmConfirmPopupIcon">✓</div>
-    </div>
-    <div class="wm-confirm-popup-text" id="wmConfirmPopupText"></div>
-  </div>
 
   <!-- Create / Edit Task Modal -->
 
@@ -1608,6 +1597,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
 
   <!-- Task Detail Modal -->
 
+  <script src="/rexus-notify.js?v=2.2.3"></script>  <!-- GEN-10: shared result notification -->
+  <script src="/rexus-pages.js?v=2.2.3"></script>  <!-- GEN-09: before the app script, which registers its form routes -->
   <script>
 (function(){
 
@@ -2295,25 +2286,11 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
 
   // Same dialog, styled as a one-button notice (used in place of alert()).
   function showAlert(message, title){
-    return new Promise(function(resolve){
-      byId('wmConfirmTitle').textContent = title || 'Notice';
-      byId('wmConfirmMessage').textContent = message;
-      byId('wmConfirmFooter').innerHTML = '<button class="wm-btn primary" id="wmConfirmOk">OK</button>';
-      byId('wmConfirmModal').classList.add('open');
-
-      var okBtn = byId('wmConfirmOk');
-      function onOk(){
-        byId('wmConfirmModal').classList.remove('open');
-        okBtn.removeEventListener('click', onOk);
-        // restore the two-button footer for the next askConfirm() call
-        byId('wmConfirmFooter').innerHTML =
-          '<button class="wm-btn" id="wmConfirmCancel">Cancel</button>' +
-          '<button class="wm-btn primary" id="wmConfirmOk">Confirm</button>';
-        resolve();
-      }
-      okBtn.addEventListener('click', onOk);
-    });
+    // GEN-10: notices go through the shared centred notification and wait for OK, as before.
+    var m = String(message || '');
+    return window.REXUSNotify(m, /^(could not|unable)/i.test(m) ? 'error' : /^account created/i.test(m) ? 'success' : 'warning', { sticky: true, title: title || undefined }).then(function(){});
   }
+
 
   function showSync(message, kind){
     if(kind){
@@ -2327,31 +2304,11 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     el.className = 'wm-sync show';
   }
 
-  var confirmPopupTimer = null;
+  // GEN-10: results go to the shared centred notification (rexus-notify.js); the corner pill is only for progress.
   function showConfirmPopup(message, kind){
     byId('wmSync').classList.remove('show'); // clear any lingering "Saving…" indicator
-    var popup = byId('wmConfirmPopup');
-    byId('wmConfirmPopupText').textContent = message;
-    byId('wmConfirmPopupIcon').textContent = kind === 'error' ? '✕' : '✓';
-    popup.className = 'wm-confirm-popup show' + (kind === 'error' ? ' error' : '');
-
-    var ring = byId('wmConfirmPopupRingFg');
-    var circumference = 282.74; // 2 * PI * 45, matches the SVG circle's radius
-    ring.style.transition = 'none';
-    ring.style.strokeDashoffset = 0;
-    requestAnimationFrame(function(){
-      ring.style.transition = 'stroke-dashoffset 5s linear';
-      ring.style.strokeDashoffset = circumference;
-    });
-
-    clearTimeout(confirmPopupTimer);
-    confirmPopupTimer = setTimeout(closeConfirmPopup, 5000);
+    return window.REXUSNotify(message, kind === 'error' ? 'error' : kind === 'warning' ? 'warning' : kind === 'info' ? 'info' : 'success');
   }
-  function closeConfirmPopup(){
-    clearTimeout(confirmPopupTimer);
-    byId('wmConfirmPopup').classList.remove('show');
-  }
-  byId('wmConfirmPopupClose').addEventListener('click', closeConfirmPopup);
 
   /* =========================================================
      4b. LOADING OVERLAY (initial load + post-action reload)
@@ -4551,9 +4508,23 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     byId('pfGanttEnabled').checked = existing ? !!existing.gantt_enabled : false;
     byId('pfGanttAuto').checked = existing ? !!existing.workflow_notifications_enabled : false;
     byId('pfGanttAutoWrap').style.display = byId('pfGanttEnabled').checked ? 'flex' : 'none';
-    byId('wmProjectModal').classList.add('open');
+    openOverlayAsPage('wmProjectModal', name ? 'project-edit?name=' + encodeURIComponent(name) : 'project-new', name ? 'Edit project' : 'New project',
+      name ? [['Projects', '#/projects'], [name, '#project/' + encodeURIComponent(name)]] : [['Projects', '#/projects']], '#/projects', { dirtyKey: 'wmProjectModal', back: 'wmProjectModalCancel' });
   }
-  function closeProjectModal(){ byId('wmProjectModal').classList.remove('open'); }
+  function closeProjectModal(){ byId('wmProjectModal').classList.remove('open'); closeOverlayPage('wmProjectModal'); }
+  /* GEN-09: open a legacy overlay's dialog as a routed page (its fields, events and validation are reused as they are). */
+  function openOverlayAsPage(id, route, title, crumbs, parentHash, opts){
+    var ov = byId(id);
+    if(!window.REXUSPages){ ov.classList.add('open'); return; }
+    if(ov._rxPage){ var old = ov._rxPage; ov._rxPage = null; REXUSPages.close(old, { keepHistory: true, silent: true }); }
+    ov._rxPage = REXUSPages.open({ node: ov.querySelector('.wm-modal'), route: route, title: title, crumbs: crumbs, fromRoute: !!STATE.pageFromRoute, parentHash: parentHash,
+      prepare: function(){ switchView(parentHash.replace('#/', '')); },
+      isDirty: opts && opts.dirtyKey ? function(){ return !!MODAL_DIRTY[opts.dirtyKey]; } : null,
+      onBack: opts && opts.back ? function(){ byId(opts.back).click(); } : null,
+      onClose: function(){ ov._rxPage = null; } });
+    STATE.pageFromRoute = false;
+  }
+  function closeOverlayPage(id){ var ov = byId(id); if(ov && ov._rxPage && window.REXUSPages){ var h = ov._rxPage; ov._rxPage = null; REXUSPages.close(h); } }
 
   function saveProjectModal(){
     var newName = byId('pfName').value.trim();
@@ -5552,8 +5523,9 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       '</div>';
     document.querySelector('.wm-app').insertAdjacentHTML('beforeend', html);
 
-    byId('wmLogModalClose').addEventListener('click', closeLogModal);
-    byId('wmLogModalCancel').addEventListener('click', closeLogModal);
+    var logBack = function(){ var ov = byId('wmLogModal'); if(ov._rxPage && window.REXUSPages) REXUSPages.back(ov._rxPage); else closeLogModal(); };
+    byId('wmLogModalClose').addEventListener('click', logBack);
+    byId('wmLogModalCancel').addEventListener('click', logBack);
     byId('wmLogModalSave').addEventListener('click', saveLogModal);
     byId('wmLogModal').addEventListener('click', function(e){
       if(e.target === byId('wmLogModal')) closeLogModal();
@@ -5589,9 +5561,10 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     byId('lfDesc').value = log ? log.description : '';
     byId('lfHours').value = log ? log.hours : '';
 
-    byId('wmLogModal').classList.add('open');
+    var q = log ? 'worklog-edit?id=' + encodeURIComponent(log.id) : 'worklog-new' + (presetTaskId || presetDate || presetSubtaskId ? '?' + [presetTaskId ? 'task=' + encodeURIComponent(presetTaskId) : '', presetDate ? 'date=' + encodeURIComponent(presetDate) : '', presetSubtaskId ? 'subtask=' + encodeURIComponent(presetSubtaskId) : ''].filter(Boolean).join('&') : '');
+    openOverlayAsPage('wmLogModal', q, log ? 'Edit log entry' : 'Log work', [['Work Log', '#/worklog']], '#/worklog');
   }
-  function closeLogModal(){ byId('wmLogModal').classList.remove('open'); }
+  function closeLogModal(){ byId('wmLogModal').classList.remove('open'); closeOverlayPage('wmLogModal'); }
 
   function saveLogModal(){
     var data = {
@@ -5896,11 +5869,13 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   function ownerPickerHtml(p, selectedId, selectedName){
     return assigneePickerHtml(p, selectedId, selectedName, 'Owner');
   }
+  // GEN-08: picker search ignores case and Vietnamese diacritics (shared fold() from rexus-ui.js).
+  function foldText(s){ return window.REXUSui && REXUSui.fold ? REXUSui.fold(s) : String(s||'').toLowerCase(); }
   function renderUserPickerDropdown(dropdownEl, query, opts, onPick){
-    var q = (query||'').trim().toLowerCase();
+    var q = foldText((query||'').trim());
     var list = STATE.allUsers.filter(function(u){
       if(!q) return true;
-      var hay = ((u.full_name||'')+' '+(u.username||'')+' '+(u.email||'')+' '+(u.department||'')).toLowerCase();
+      var hay = foldText((u.full_name||'')+' '+(u.username||'')+' '+(u.email||'')+' '+(u.department||''));
       return hay.indexOf(q) !== -1;
     }).slice(0, 30);
     var html = '';
@@ -5914,8 +5889,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           '<div class="wm-upi-meta">' + escapeHtml(u.email||'') + (u.department ? ' · ' + escapeHtml(u.department) : '') + '</div>' +
         '</div>';
       }).join('');
-    } else if(!(opts && opts.allowUnassigned)){
-      html += '<div class="wm-user-picker-item" style="color:var(--ink-soft);cursor:default;">No matching users</div>';
+    } else if(q || !(opts && opts.allowUnassigned)){
+      html += '<div class="wm-user-picker-item" style="color:var(--ink-soft);cursor:default;">No results found</div>';
     }
     dropdownEl.innerHTML = html;
     dropdownEl.style.display = 'block';
@@ -5964,12 +5939,12 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     '</div>';
   }
   function renderStringPickerDropdown(dropdownEl, query, items, allLabel, onPick){
-    var q = (query||'').trim().toLowerCase();
-    var list = items.filter(function(name){ return !q || String(name).toLowerCase().indexOf(q) !== -1; }).slice(0, 40);
+    var q = foldText((query||'').trim());
+    var list = items.filter(function(name){ return !q || foldText(name).indexOf(q) !== -1; }).slice(0, 40);
     var html = '<div class="wm-user-picker-item" data-val="">' + escapeHtml(allLabel) + '</div>';
     html += list.length ? list.map(function(name){
       return '<div class="wm-user-picker-item" data-val="' + escapeHtml(name) + '"><div class="wm-upi-name">' + escapeHtml(name) + '</div></div>';
-    }).join('') : '<div class="wm-user-picker-item" style="color:var(--ink-soft);cursor:default;">No matches</div>';
+    }).join('') : '<div class="wm-user-picker-item" style="color:var(--ink-soft);cursor:default;">No results found</div>';
     dropdownEl.innerHTML = html;
     dropdownEl.style.display = 'block';
     dropdownEl.querySelectorAll('[data-val]').forEach(function(el){
@@ -5980,6 +5955,19 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       });
     });
   }
+  // GEN-08 keyboard for every .wm-user-picker: ↑/↓ move through the suggestions, Enter picks, Esc closes.
+  document.addEventListener('keydown', function(e){
+    var input = e.target; if(!input.classList || !input.classList.contains('wm-user-picker-input')) return;
+    var dd = input.parentElement && input.parentElement.querySelector('.wm-user-picker-dropdown'); if(!dd || dd.style.display === 'none') return;
+    var items = [].slice.call(dd.querySelectorAll('[data-uid],[data-val]')), cur = dd.querySelector('.is-active'), i = items.indexOf(cur);
+    if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+      e.preventDefault(); if(!items.length) return;
+      if(cur) cur.classList.remove('is-active');
+      var n = items[e.key === 'ArrowDown' ? Math.min(items.length - 1, i + 1) : Math.max(0, i - 1)];
+      n.classList.add('is-active'); n.scrollIntoView({ block: 'nearest' });
+    } else if(e.key === 'Enter' && cur){ e.preventDefault(); cur.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true })); }
+    else if(e.key === 'Escape'){ dd.style.display = 'none'; e.stopPropagation(); }
+  });
   // Wires a stringFilterPickerHtml(...) field. `items` may be a function
   // (re-evaluated on every focus/keystroke, so the choices reflect the
   // latest STATE) or a plain array. `onChange(value)` fires whenever a
@@ -6103,6 +6091,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
 
   function openFormModal(presetProject){
     resetModalDirty('wmFormModal');
+    STATE.formPresetProject = presetProject || '';
     byId('wmFormTitle').textContent = 'New Task';
     byId('wmFormBody').innerHTML = formFieldsHtml(presetProject ? { project: presetProject } : null, 'f');
     wireLabelsAndAttachments('f', [], []);
@@ -6670,6 +6659,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
      14. NAVIGATION / BOOTSTRAP
      ========================================================= */
   function switchView(view){
+    if(window.REXUSPages && REXUSPages.guardNav(function(){ switchView(view); })) return;   // GEN-09: unsaved form page
     if(view==='resource-planning'){REXUS_ORG_SUBVIEW='resources';view='organization';}
     if(view==='project-financials'){FINANCE_STATE.mode='financials';view='finance';}
     STATE.activeView = view;
@@ -6687,6 +6677,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   }
 
   function openProjectDetail(name){
+    if(window.REXUSPages && REXUSPages.guardNav(function(){ openProjectDetail(name); })) return;
     STATE.activeView = 'project-detail';
     STATE.currentProjectDetail = name;
     location.hash = 'project/' + encodeURIComponent(name);
@@ -6704,8 +6695,25 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   // from (a tab, or a specific Project Detail page), including one level
   // of nesting (e.g. Subtask Detail opened from inside Task Detail).
   var STANDALONE_RETURN_STACK = [];
+  var STANDALONE_PAGES = {
+    'task-form': function(){ return { route: 'task-new' + (STATE.formPresetProject ? '?project=' + encodeURIComponent(STATE.formPresetProject) : ''), title: 'New task', crumbs: [['All Tasks', '#/all']], dirtyKey: 'wmFormModal', back: 'wmFormClose' }; },
+    'task-detail': function(){ var t = STATE.tasks.filter(function(x){ return x.id === STATE.detailTaskId; })[0]; return { route: 'task?id=' + encodeURIComponent(STATE.detailTaskId), title: t ? t.task : 'Task', crumbs: [['All Tasks', '#/all']].concat(t && t.project ? [[t.project, '#project/' + encodeURIComponent(t.project)]] : []), dirtyKey: null, back: null }; },
+    'subtask-detail': function(){ var st = STATE.subtasks.filter(function(x){ return x.id === STATE.detailSubtaskId; })[0], t = st && STATE.tasks.filter(function(x){ return x.id === st.task_id; })[0]; return { route: 'subtask?id=' + encodeURIComponent(STATE.detailSubtaskId), title: st ? st.name : 'Subtask', crumbs: [['All Tasks', '#/all']].concat(t ? [[t.task, '#/f/task?id=' + encodeURIComponent(t.id)]] : []), dirtyKey: 'wmSubtaskModal', back: 'wmSubtaskModalClose' }; }
+  };
   function openStandaloneView(viewId){
+    var pg = STANDALONE_PAGES[viewId] && window.REXUSPages ? STANDALONE_PAGES[viewId]() : null;
+    if(!pg && window.REXUSPages && REXUSPages.guardNav(function(){ openStandaloneView(viewId); })) return;
     STANDALONE_RETURN_STACK.push({ view: STATE.activeView, projectDetail: STATE.currentProjectDetail });
+    if(pg){
+      // GEN-09: a routed page with breadcrumb + Back; the screen underneath is kept as it was.
+      STATE.activeView = viewId;
+      byId('view-' + viewId)._rxPage = REXUSPages.open({ view: byId('view-' + viewId), route: pg.route, title: pg.title, crumbs: pg.crumbs, fromRoute: !!STATE.pageFromRoute, parentHash: '#/all', prepare: function(){ switchView('all'); STATE.activeView = viewId; STANDALONE_RETURN_STACK[STANDALONE_RETURN_STACK.length - 1] = { view: 'all', projectDetail: null }; },
+        isDirty: pg.dirtyKey ? function(){ return !!MODAL_DIRTY[pg.dirtyKey]; } : null, onBack: pg.back ? function(){ byId(pg.back).click(); } : null,
+        onClose: function(){ var prev = STANDALONE_RETURN_STACK.pop(); STATE.activeView = prev && prev.view && prev.view !== viewId ? prev.view : 'overview'; STATE.currentProjectDetail = prev ? prev.projectDetail : null; } });
+      STATE.pageFromRoute = false;
+      positionTabsPill();
+      return;
+    }
     STATE.activeView = viewId;
     document.querySelectorAll('.wm-tab').forEach(function(tab){ tab.classList.remove('active'); });
     document.querySelectorAll('.wm-view').forEach(function(v){
@@ -6714,6 +6722,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     positionTabsPill();
   }
   function closeStandaloneView(){
+    var pv = byId('view-' + STATE.activeView);
+    if(pv && pv._rxPage && window.REXUSPages){ var h = pv._rxPage; pv._rxPage = null; REXUSPages.close(h); return; }
     var prev = STANDALONE_RETURN_STACK.pop();
     if(!prev){ switchView('overview'); return; }
     if(prev.view === 'project-detail' && prev.projectDetail){
@@ -6790,6 +6800,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   // refresh or a shared link lands back on the same Project Detail page).
   var ROUTABLE_VIEWS = ['overview','all','projects','worklog','calendar','organization','resource-planning','approval-center','project-financials','finance'];
   function routeFromHash(){
+    if(window.REXUSPages && /^#\/f\//.test(location.hash)) return REXUSPages.openRoute(location.hash);
     var m = /^#project\/(.+)$/.exec(location.hash);
     if(m){ openProjectDetail(decodeURIComponent(m[1])); return true; }
     var v = /^#\/([a-z-]+)$/.exec(location.hash);
@@ -6806,8 +6817,28 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   }
   function handleInitialRoute(){
     if(!routeFromHash()) renderActiveView();
+    if(window.REXUSPages) REXUSPages.booted();
+  }
+  /* GEN-09 hooks for rexus-pages.js and the routes of the legacy form pages */
+  window.REXUSLegacy = {
+    confirm: function(msg, title){ return askConfirm(msg, title); },
+    showView: function(){ switchView('overview'); },
+    switchView: function(v){ switchView(v); },
+    renderActiveView: function(){ renderActiveView(); }
+  };
+  if(window.REXUSPages){
+    var notFound = function(what, parent){ showAlert(what + ' was not found or you no longer have access to it.'); switchView(parent); };
+    var fromRoute = function(fn){ return function(q){ STATE.pageFromRoute = true; fn(q); STATE.pageFromRoute = false; }; };
+    REXUSPages.register('task-new', fromRoute(function(q){ openFormModal(q.get('project') || ''); }));
+    REXUSPages.register('task', fromRoute(function(q){ var id = q.get('id'); if(STATE.tasks.some(function(t){ return t.id === id; })) openDetailModal(id); else notFound('This task', 'all'); }));
+    REXUSPages.register('subtask', fromRoute(function(q){ var id = q.get('id'); if(STATE.subtasks.some(function(t){ return t.id === id; })) openSubtaskDetail(id); else notFound('This subtask', 'all'); }));
+    REXUSPages.register('project-new', fromRoute(function(){ openProjectModal(); }));
+    REXUSPages.register('project-edit', fromRoute(function(q){ var n = q.get('name'); if(STATE.projects.some(function(p){ return p.name === n; })) openProjectModal(n); else notFound('This project', 'projects'); }));
+    REXUSPages.register('worklog-new', fromRoute(function(q){ openLogModal(null, q.get('task') || undefined, q.get('date') || undefined, q.get('subtask') || undefined); }));
+    REXUSPages.register('worklog-edit', fromRoute(function(q){ var l = (STATE.worklogs || []).filter(function(x){ return x.id === q.get('id'); })[0]; if(l) openLogModal(l); else notFound('This log entry', 'worklog'); }));
   }
   function onRouteChange(){
+    if(window.REXUSPages && REXUSPages.onRoute()) return;
     if(!location.hash && STATE.activeView !== 'overview'){ history.replaceState(null, '', location.pathname + location.search + '#/overview'); }
     if(routeFromHash()) return;
     if(STATE.activeView === 'project-detail') switchView('overview');
@@ -6840,7 +6871,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   byId('wmFormSave').addEventListener('click', saveForm);
   wireModalDirtyTracking('wmFormModal', byId('wmFormBody'));
 
-  byId('wmDetailClose').addEventListener('click', closeDetailModal);
+  byId('wmDetailClose').addEventListener('click', function(){ var pv = byId('view-task-detail'); if(pv._rxPage && window.REXUSPages) REXUSPages.back(pv._rxPage); else closeDetailModal(); });
   byId('wmDetailSave').addEventListener('click', saveDetailForm);
   byId('wmDetailShare').addEventListener('click', function(){
     var t = STATE.tasks.filter(function(x){ return x.id === STATE.detailTaskId; })[0];
@@ -7248,6 +7279,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
      Password) into one page reached from the user menu.
      ========================================================= */
   function openMyAccountPage(){
+    if(window.REXUSPages && REXUSPages.guardNav(function(){ openMyAccountPage(); })) return;
     STATE.accountReturnView = (STATE.activeView && STATE.activeView !== 'project-detail') ? STATE.activeView : 'overview';
     if(location.hash !== '#/my-account') history.pushState(null, '', location.pathname + location.search + '#/my-account');
     document.querySelectorAll('.wm-tab').forEach(function(tab){ tab.classList.remove('active'); });
@@ -7419,6 +7451,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
      old modal did.
      ========================================================= */
   function openConfigurationPage(){
+    if(window.REXUSPages && REXUSPages.guardNav(function(){ openConfigurationPage(); })) return;
     renderConfigurationPage();
     openStandaloneView('configuration');
   }
@@ -8095,7 +8128,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
 
   </script>
   <script src="/rexus-docx-export.js?v=2.0.6"></script>
-  <script src="/rexus-document.js?v=2.2.2"></script>
+  <script src="/rexus-document.js?v=2.2.3"></script>
   <link rel="stylesheet" href="/rexus-liquid-glass.css?v=2.0.5">
   <link rel="stylesheet" href="/rexus-editor.css?v=2.0.6">
   <link rel="stylesheet" href="/rexus-v205.css?v=2.0.5">
@@ -8108,13 +8141,13 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   <link rel="stylesheet" href="/rexus-v211.css?v=2.1.2">
   <link rel="stylesheet" href="/rexus-v213.css?v=2.1.3">
   <!-- v2.2.0 Adaptive Liquid Glass design system: tokens + components. Must stay the LAST stylesheet. -->
-  <link rel="stylesheet" href="/rexus-ui.css?v=2.2.2">
-  <link rel="stylesheet" href="/rexus-dark.css?v=2.2.2">
+  <link rel="stylesheet" href="/rexus-ui.css?v=2.2.3">
+  <link rel="stylesheet" href="/rexus-dark.css?v=2.2.3">
   <script src="/rexus-v210.js?v=2.2.2"></script>
-  <script src="/rexus-v221.js?v=2.2.2"></script>
+  <script src="/rexus-v221.js?v=2.2.3"></script>
 </section>
 
   <script src="/rexus-v211.js?v=2.1.2" defer></script>
-  <script src="/rexus-ui.js?v=2.2.2" defer></script>
+  <script src="/rexus-ui.js?v=2.2.3" defer></script>
 </body>
 </html>

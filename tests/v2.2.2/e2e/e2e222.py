@@ -30,7 +30,7 @@ def ctx_page(b, uid=None, width=1440, height=900, scheme='light', watch=False):
 def go(page, view): page.evaluate("(v)=>{const t=document.querySelector('.wm-tab[data-view=\"'+v+'\"]'); t&&t.click();}", view); page.wait_for_timeout(900)
 def menu(page, action): page.evaluate("(a)=>{const e=document.querySelector('#wmUserMenu [data-action=\"'+a+'\"]'); e&&e.click();}", action); page.wait_for_timeout(1300)
 def hr(page, tab): go(page, 'organization'); page.evaluate("(t)=>document.querySelector('#rxHrTabs [data-tab=\"'+t+'\"]').click()", tab); page.wait_for_timeout(1300)
-def toast(page): return page.evaluate("()=>{const p=document.getElementById('wmConfirmPopup');return p&&p.classList.contains('show')?document.getElementById('wmConfirmPopupText').textContent:''}")
+def toast(page): return page.evaluate("()=>{const l=window.REXUSNotify&&REXUSNotify.last;return l&&Date.now()-l.at<6000?l.text:''}")  # v2.2.3 GEN-10: shared centred notification
 def sync_text(page): return page.evaluate("()=>{const s=document.getElementById('wmSync');return s?s.textContent:''}")
 
 with sync_playwright() as p:
@@ -140,9 +140,9 @@ with sync_playwright() as p:
     check('ACC-01 new account listed with its username', 'qa.duc' in page.inner_text('#cfgEmpTableWrap'))
     check('ACC-02 no delete button on your own row', page.locator('.wm-cfg-emp-row[data-emp-id="ADMIN_TIENNT"] [data-delete-emp]').count() == 0)
     page.click('[data-delete-emp]'); page.wait_for_timeout(500)
-    dlg = page.locator('.rx-dialog').last
+    dlg = page.locator('.rx-dialog, .rx-page.active .rx-page-form').last
     dlg.locator('input[name=confirm]').fill('qa'); dlg.locator('button[type=submit]').click(); page.wait_for_timeout(400)
-    check('ACC-02 confirmation must match the username', dlg.locator('.rx-form-error').is_visible() and page.locator('.rx-dialog').count() >= 1)
+    check('ACC-02 confirmation must match the username', dlg.locator('.rx-form-error').is_visible() and page.locator('.rx-dialog, .rx-page.active .rx-page-form').count() >= 1)
     page.screenshot(path=f'{OUT}/delete-account@1440.png')
     dlg.locator('input[name=confirm]').fill('qa.duc'); dlg.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
     check('ACC-02 deleted account disappears from the list', 'qa.duc' not in page.inner_text('#cfgEmpTableWrap'))
@@ -185,11 +185,11 @@ with sync_playwright() as p:
     check('HRM-02 manager sees each person\'s regular capacity, OT and minimum', all(x in page.inner_text('#rxTeamCapTable').lower() for x in ['regular capacity', 'overtime', 'registered / minimum']))
     check('HRM-04 manager sees the part-time shortfall', page.locator('.rx-warn-text').count() >= 1)
     page.click('#rxSendReq'); page.wait_for_timeout(400)
-    dlg = page.locator('.rx-dialog').last
+    dlg = page.locator('.rx-dialog, .rx-page.active .rx-page-form').last
     dlg.locator('input[name=note]').fill('Please plan next month'); dlg.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
     check('HRM-05 request sent to everyone managed', 'Request sent to' in toast(page), toast(page))
     check('HRM-05 status per person shows the request', 'Sent' in page.inner_text('#rxTeamCapTable'))
-    page.click('#rxSendReq'); page.wait_for_timeout(400); page.locator('.rx-dialog').last.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
+    page.click('#rxSendReq'); page.wait_for_timeout(400); page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.locator('button[type=submit]').click(); page.wait_for_timeout(1500)
     check('HRM-05 sending again re-sends instead of duplicating', 're-sent' in toast(page) and '×2' in page.inner_text('#rxTeamCapTable'), toast(page))
     page.screenshot(path=f'{OUT}/hr-team@1440.png', full_page=True)
     all_errs += errs; ctx.close()

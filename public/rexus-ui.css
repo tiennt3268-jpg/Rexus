@@ -1685,3 +1685,157 @@ table.rx-resized td.rx-nowrap, table.rx-resized th{ overflow: hidden; text-overf
 #rexusDocsShell .rd-section-toggle:hover{ background: rgba(var(--rx-wash), .55) !important; color: var(--rx-ink-1) !important; }
 #rexusDocsShell .rd-section-chevron{ display: inline-flex; width: 12px; justify-content: center; font-size: 13px; line-height: 1; }
 #rexusDocsShell .rd-spaces-tree[hidden]{ display: none !important; }
+
+/* v2.2.3 GEN-09 — form pages (rexus-pages.js) ------------------------------------------------ */
+.wm-app .rx-page-head{ display: flex; flex-direction: column; gap: var(--rx-space-2); margin: 0 0 var(--rx-space-4); }
+.wm-app .rx-page-bar{ display: flex; align-items: center; gap: var(--rx-space-3); flex-wrap: wrap; }
+.wm-app .rx-page-back{ display: inline-flex !important; align-items: center; gap: 4px; min-height: var(--rx-control-h-sm) !important; padding: 0 var(--rx-space-3) 0 var(--rx-space-2) !important; }
+.wm-app .rx-page-back svg{ width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.wm-app .rx-breadcrumb ol{ display: flex; flex-wrap: wrap; align-items: center; gap: 2px; list-style: none; margin: 0; padding: 0; font-size: var(--rx-text-sm); color: var(--rx-ink-3); }
+.wm-app .rx-breadcrumb li + li::before{ content: "›"; margin: 0 6px; color: var(--rx-ink-4); }
+.wm-app .rx-breadcrumb a{ color: var(--rx-ink-2); text-decoration: none; }
+.wm-app .rx-breadcrumb a:hover{ color: var(--rx-accent); text-decoration: underline; }
+.wm-app .rx-breadcrumb [aria-current] span{ color: var(--rx-ink-1); font-weight: var(--rx-weight-semibold); }
+.wm-app .rx-page-title{ margin: 0 !important; font-size: var(--rx-text-2xl) !important; line-height: var(--rx-lh-2xl) !important; }
+.wm-app .rx-page-title:focus{ outline: none; }
+/* A dialog mounted in a page becomes a plain form section: full width (readable max), no overlay chrome. */
+.wm-app .rx-page .wm-modal, .wm-app .rx-page .wm-modal.wm-modal-wide{
+  position: static !important; width: 100% !important; max-width: 1040px !important; height: auto !important; max-height: none !important; margin: 0 !important;
+  overflow: visible !important; animation: none !important; box-shadow: var(--rx-shadow-1) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  background: var(--rx-glass-2-bg) !important; display: block !important;
+}
+.wm-app .rx-page .wm-modal-head{ display: none !important; }
+.wm-app .rx-page .wm-modal-body, .wm-app .rx-page .rx-dialog-form .wm-modal-body{ max-height: none !important; overflow: visible !important; }
+/* Primary actions stay reachable on long forms. */
+.wm-app .rx-page .wm-modal-footer, .wm-app .rx-page-host .wm-page-modal .wm-modal-footer{
+  position: sticky !important; bottom: 0; z-index: var(--rx-z-sticky); background: var(--rx-glass-3-bg) !important;
+  -webkit-backdrop-filter: blur(var(--rx-glass-2-blur)); backdrop-filter: blur(var(--rx-glass-2-blur));
+  border-top: 1px solid var(--rx-hairline) !important; border-radius: 0 0 var(--rx-radius-xl) var(--rx-radius-xl);
+}
+/* Existing full-page editors (task / subtask): Back + breadcrumb replace their own back arrow. */
+.wm-app .rx-page-host .wm-page-modal .wm-modal-head .wm-glass-icon-btn{ display: none !important; }
+@media (max-width: 600px){ .wm-app .rx-page .wm-modal-footer{ border-radius: 0; } .wm-app .rx-page-title{ font-size: var(--rx-text-xl) !important; } }
+
+/* ============================================================================
+   v2.2.3 GEN-08 — searchable selection lists (rexus-ui.js §6)
+   ========================================================================== */
+.rx-combo{ position: relative; display: inline-block; min-width: 150px; max-width: 100%; vertical-align: middle; }
+.wm-form-row .rx-combo, .rx210-field .rx-combo, .rx-inline-field.rx-grow .rx-combo, #rexusDocsShell .rd-dialog .rx-combo,
+#rexusDocsShell .rd-side-section .rx-combo{ display: block; width: 100%; }
+.rx-combo-native{ position: absolute !important; inset: 0; width: 100% !important; height: 100% !important; opacity: 0 !important; pointer-events: none !important; margin: 0 !important; }
+.rx-combo-btn{ display: flex; align-items: center; gap: 8px; width: 100%; min-height: var(--rx-control-h); padding: 6px 10px 6px 12px;
+  font: inherit; font-size: var(--rx-text-md); color: var(--rx-ink-1); text-align: left; cursor: pointer;
+  background: var(--rx-surface); border: 1px solid var(--rx-hairline-strong); border-radius: var(--rx-radius-md); }
+.rx-combo-btn:hover{ border-color: var(--rx-ink-4); }
+.rx-combo-btn:focus-visible, .rx-combo.is-open .rx-combo-btn{ outline: none; border-color: var(--rx-accent); box-shadow: 0 0 0 3px var(--rx-accent-soft); }
+.rx-combo-btn:disabled{ background: var(--rx-surface-muted); color: var(--rx-ink-4); cursor: not-allowed; }
+.rx-combo-label{ flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rx-combo-btn svg{ width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; color: var(--rx-ink-3); }
+.rx-combo-pop{ position: fixed; z-index: 10050; display: flex; flex-direction: column; min-height: 120px; overflow: hidden;
+  background: var(--rx-surface); border: 1px solid var(--rx-hairline-strong); border-radius: var(--rx-radius-md); box-shadow: 0 8px 24px rgba(15,23,42,.14); }
+.rx-combo-q{ margin: 8px; padding: 7px 10px; font: inherit; font-size: var(--rx-text-sm); color: var(--rx-ink-1); background: var(--rx-surface);
+  border: 1px solid var(--rx-hairline-strong); border-radius: var(--rx-radius-sm); }
+.rx-combo-q:focus{ outline: none; border-color: var(--rx-accent); box-shadow: 0 0 0 3px var(--rx-accent-soft); }
+.rx-combo-tools{ display: flex; align-items: center; gap: 4px; padding: 0 8px 6px; font-size: var(--rx-text-xs); color: var(--rx-ink-3); }
+.rx-combo-tools .rx-combo-count{ flex: 1; }
+.rx-combo-tools button{ font: inherit; color: var(--rx-accent-strong); background: none; border: 0; padding: 4px 6px; border-radius: var(--rx-radius-xs); cursor: pointer; }
+.rx-combo-tools button:hover, .rx-combo-tools button:focus-visible{ background: var(--rx-accent-soft); outline: none; }
+.rx-combo-list{ flex: 1; overflow-y: auto; padding: 0 4px 6px; overscroll-behavior: contain; }
+.rx-combo-opt{ display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: var(--rx-radius-sm); cursor: pointer; font-size: var(--rx-text-sm); color: var(--rx-ink-1); }
+.rx-combo-opt.is-active{ background: var(--rx-accent-soft); }
+.rx-combo-opt[aria-selected="true"]{ font-weight: 600; color: var(--rx-accent-strong); }
+.rx-combo-opt.is-disabled{ color: var(--rx-ink-4); cursor: not-allowed; }
+.rx-combo-box{ width: 16px; height: 16px; flex: none; border: 1.5px solid var(--rx-ink-4); border-radius: 4px; background: var(--rx-surface); }
+.rx-combo-opt[aria-selected="true"] .rx-combo-box{ background: var(--rx-accent) center/12px no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E"); border-color: var(--rx-accent); }
+.rx-combo-empty, .rx-combo-more{ padding: 10px 12px 14px; font-size: var(--rx-text-sm); color: var(--rx-ink-3); }
+.rx-pick-bar{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 10px; }
+.rx-pick-bar .rx-pick-q{ flex: 1 1 220px; min-width: 0; min-height: var(--rx-control-h-sm); padding: 6px 10px; font: inherit; font-size: var(--rx-text-sm);
+  color: var(--rx-ink-1); background: var(--rx-surface); border: 1px solid var(--rx-hairline-strong); border-radius: var(--rx-radius-md); }
+.rx-pick-bar .rx-pick-q:focus{ outline: none; border-color: var(--rx-accent); box-shadow: 0 0 0 3px var(--rx-accent-soft); }
+.rx-pick-count{ font-size: var(--rx-text-sm); color: var(--rx-ink-3); min-width: 80px; }
+.rx-pick-empty{ margin: 6px 0 10px; padding: 12px; text-align: center; font-size: var(--rx-text-sm); color: var(--rx-ink-3); background: var(--rx-surface-muted); border-radius: var(--rx-radius-md); }
+[data-rx-searchlist] label[hidden]{ display: none !important; }
+
+/* ============================================================================
+   v2.2.3 GEN-12 — badge palette (full fill: light background + darker text of the same tone,
+   no outline, no dot). WCAG AA ≥ 4.5:1 in light and dark (dark values in rexus-dark.css).
+   GEN-11 — badges are only for Status, Priority and counts; everything else is plain text.
+   ========================================================================== */
+:root{
+  --rx-badge-navy-bg: #E0E7F5;    --rx-badge-navy-fg: #1E3A8A;     /* Assigned to me, Mine            */
+  --rx-badge-info-bg: #DBEAFE;    --rx-badge-info-fg: #1D4ED8;     /* In progress, Submitted          */
+  --rx-badge-success-bg: #DCFCE7; --rx-badge-success-fg: #166534;  /* Done, Approved, Completed       */
+  --rx-badge-warning-bg: #FEF3C7; --rx-badge-warning-fg: #92400E;  /* Pending, Due soon, Draft        */
+  --rx-badge-danger-bg: #FEE2E2;  --rx-badge-danger-fg: #991B1B;   /* Rejected, Overdue, High         */
+  --rx-badge-neutral-bg: #F1F5F9; --rx-badge-neutral-fg: #334155;  /* Not started, Archived, Low      */
+}
+.wm-app .rx-chip, .wm-app .wm-badge, .wm-app .rx210-status, .wm-app .wm-status-badge, .wm-app .wm-subtask-count-badge, .wm-app .rx-count, .rx-chip{
+  border: 0 !important; box-shadow: none !important; background: var(--rx-badge-neutral-bg) !important; color: var(--rx-badge-neutral-fg) !important;
+  height: 22px; padding: 0 9px !important; border-radius: var(--rx-radius-pill) !important; font-weight: 600 !important; text-decoration: none;
+}
+.wm-app .rx-chip::before, .wm-app .wm-badge::before, .rx-chip::before{ content: none !important; display: none !important; }
+.wm-app .rx-chip-info, .wm-app .wm-badge.status-In-Progress, .wm-app .rx210-status:not(.success):not(.warning):not(.danger){ background: var(--rx-badge-info-bg) !important; color: var(--rx-badge-info-fg) !important; }
+.wm-app .rx-chip-success, .wm-app .wm-badge.status-Completed, .wm-app .rx210-status.success, .wm-app .wm-status-badge:not(.inactive){ background: var(--rx-badge-success-bg) !important; color: var(--rx-badge-success-fg) !important; }
+.wm-app .rx-chip-warning, .wm-app .wm-badge.priority-Medium, .wm-app .wm-badge.status-Review, .wm-app .rx210-status.warning{ background: var(--rx-badge-warning-bg) !important; color: var(--rx-badge-warning-fg) !important; }
+.wm-app .rx-chip-danger, .wm-app .wm-badge.priority-High, .wm-app .wm-badge.status-Urgent, .wm-app .wm-badge.status-Overdue, .wm-app .rx210-status.danger{ background: var(--rx-badge-danger-bg) !important; color: var(--rx-badge-danger-fg) !important; }
+.wm-app .rx-chip-navy{ background: var(--rx-badge-navy-bg) !important; color: var(--rx-badge-navy-fg) !important; }
+.wm-app .rx-chip-neutral, .wm-app .wm-badge.priority-Low, .wm-app .wm-badge.status-Not-Started, .wm-app .wm-badge.status-Cancelled, .wm-app .wm-status-badge.inactive{ background: var(--rx-badge-neutral-bg) !important; color: var(--rx-badge-neutral-fg) !important; }
+.wm-app .wm-badge.status-Cancelled{ text-decoration: line-through; }
+/* counts inside tabs stay small */
+.wm-app .rx-count{ height: 18px; min-width: 18px; padding: 0 6px !important; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+/* GEN-11: labels that are not a status / priority / count read as plain text */
+#rexusDocsShell .rd-tag{ background: none !important; border: 0 !important; padding: 0 !important; height: auto !important; color: var(--rx-ink-3) !important; font-weight: 500 !important; }
+#rexusDocsShell .rd-tag + .rd-tag::before{ content: "· "; }
+#rexusDocsShell .rd-tag:hover, #rexusDocsShell .rd-tag:focus-visible{ color: var(--rx-accent-strong) !important; text-decoration: underline; }
+
+/* ============================================================================
+   v2.2.3 GEN-11 — flat design: no glass highlights, light separation by thin lines and whitespace.
+   Floating layers (menus, dialogs, the notification) keep one soft shadow for depth.
+   ========================================================================== */
+:root{
+  --rx-shadow-1: none;
+  --rx-shadow-2: none;
+  --rx-shadow-hover: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --rx-glass-highlight: 0 0 0 transparent;
+  --rx-glass-bevel: 0 0 0 transparent;
+}
+.wm-app .rx-metric::before{ content: none; }
+.wm-app .rx-metric{ padding: 10px 14px; background: var(--rx-surface); border: 1px solid var(--rx-hairline); }
+.wm-app .rx-tone-danger strong{ color: var(--rx-badge-danger-fg); } .wm-app .rx-tone-warning strong{ color: var(--rx-badge-warning-fg); }
+.wm-app .wm-btn.primary, .wm-app .wm-new-btn, .wm-app .wm-stat-card, .wm-app .wm-card, .wm-app .wm-task-row, .wm-app .wm-table-wrap, .wm-app .rx-card,
+.wm-app .wm-project-card, .wm-app .rx213-subnav, .wm-app .wm-glass-chip{ box-shadow: none !important; }
+.wm-app .wm-stat-card, .wm-app .wm-task-row, .wm-app .wm-table-wrap, .wm-app .rx-card, .wm-app .wm-project-card{ border: 1px solid var(--rx-hairline) !important; }
+
+/* ============================================================================
+   v2.2.3 GEN-10 — centred result notification (rexus-notify.js)
+   ========================================================================== */
+.rx-notify-layer{ position: fixed; inset: 0; z-index: 10100; display: flex; align-items: center; justify-content: center; padding: 16px; pointer-events: none; }
+.rx-notify-layer.is-blocking{ pointer-events: auto; background: rgba(15, 23, 42, 0.18); }
+.rx-notify{ pointer-events: auto; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: start; width: min(420px, 100%);
+  padding: 18px 20px; background: var(--rx-surface, #fff); color: var(--rx-ink-1, #14171c); border: 1px solid var(--rx-hairline-strong, rgba(20,23,28,.14));
+  border-radius: 14px; box-shadow: 0 16px 40px rgba(15, 23, 42, 0.18); cursor: default; outline: none;
+  opacity: 0; transform: translateY(6px) scale(.98); transition: opacity .16s ease, transform .16s ease; }
+.rx-notify-layer:not(.is-blocking) .rx-notify{ cursor: pointer; }
+.rx-notify-layer.is-in .rx-notify{ opacity: 1; transform: none; }
+.rx-notify-layer.is-out .rx-notify{ opacity: 0; }
+.rx-notify-icon{ width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; grid-row: span 2; }
+.rx-notify-icon svg{ width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.rx-notify-success .rx-notify-icon{ background: var(--rx-badge-success-bg); color: var(--rx-badge-success-fg); }
+.rx-notify-error .rx-notify-icon{ background: var(--rx-badge-danger-bg); color: var(--rx-badge-danger-fg); }
+.rx-notify-warning .rx-notify-icon{ background: var(--rx-badge-warning-bg); color: var(--rx-badge-warning-fg); }
+.rx-notify-info .rx-notify-icon{ background: var(--rx-badge-info-bg); color: var(--rx-badge-info-fg); }
+.rx-notify-title{ display: block; font-size: 15px; line-height: 22px; font-weight: 700; color: var(--rx-ink-1, #14171c); }
+.rx-notify-msg{ margin: 2px 0 0; font-size: 14px; line-height: 20px; color: var(--rx-ink-2, #3a414b); white-space: pre-line; overflow-wrap: anywhere; }
+.rx-notify-actions{ grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.rx-notify-actions .wm-btn{ min-width: 84px; }
+@media (max-width: 480px){ .rx-notify{ padding: 16px; } .rx-notify-actions .wm-btn{ flex: 1; } }
+@media (prefers-reduced-motion: reduce){ .rx-notify{ transition: none; } }
+
+/* GEN-08: keyboard highlight in the legacy user / filter pickers */
+.wm-app .wm-user-picker-item.is-active{ background: var(--rx-accent-soft) !important; }
+
+.wm-app .rx-page-title:focus, .wm-app .rx-page-host .wm-modal-head h3:focus{ outline: none; }   /* focused by script on open, not interactive */
+@media (max-width: 600px){
+  .rx-pick-bar .rx-pick-q{ flex-basis: 100%; }
+  .rx-pick-bar .rx-pick-count{ flex: 1; min-width: 0; }
+}

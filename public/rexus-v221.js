@@ -41,20 +41,14 @@
     opts = opts || {};
     return (opts.empty ? '<option value="">' + esc(opts.empty) + '</option>' : '') + list.filter(function (u) { return !opts.exclude || opts.exclude.indexOf(u.id) === -1; })
       .filter(function (u) { return !opts.roles || opts.roles.indexOf(u.role) !== -1; })
-      .map(function (u) { return '<option value="' + esc(u.id) + '"' + (u.id === selected ? ' selected' : '') + '>' + esc(u.full_name || u.username) + (u.department ? ' · ' + esc(u.department) : '') + '</option>'; }).join('');
+      .map(function (u) { return '<option value="' + esc(u.id) + '" data-search="' + esc([u.username, u.email].filter(Boolean).join(' ')) + '"' + (u.id === selected ? ' selected' : '') + '>' + esc(u.full_name || u.username) + (u.department ? ' · ' + esc(u.department) : '') + '</option>'; }).join('');
   }
 
   /* ------------------------------------------------------------- ui kit */
-  function toast(message, kind) {
-    var p = $('wmConfirmPopup'), t = $('wmConfirmPopupText'), i = $('wmConfirmPopupIcon');
-    if (!p || !t) return;
-    t.textContent = message; if (i) i.textContent = kind === 'error' ? '✕' : '✓';
-    p.className = 'wm-confirm-popup show' + (kind === 'error' ? ' error' : '');
-    clearTimeout(toast._t); toast._t = setTimeout(function () { p.classList.remove('show'); }, kind === 'error' ? 6000 : 3500);
-  }
+  function toast(message, kind) { return window.REXUSNotify ? window.REXUSNotify(message, kind || 'success') : null; }   // GEN-10 shared notification
   function badge(text, tone) { return '<span class="rx-chip rx-chip-' + (tone || 'neutral') + '">' + esc(text) + '</span>'; }
   var TONE = { Approved: 'success', Completed: 'success', 'Fully Disbursed': 'success', Available: 'success', 'Dependencies Satisfied': 'success', Active: 'success', 'Schedule-based': 'neutral',
-    Pending: 'warning', 'Pending Approval': 'warning', 'Partially Disbursed': 'info', 'Near Capacity': 'warning', 'Changes Requested': 'warning', Draft: 'neutral', 'Waiting for Predecessors': 'warning',
+    Pending: 'warning', 'Pending Approval': 'warning', 'Partially Disbursed': 'info', 'Near Capacity': 'warning', 'Changes Requested': 'warning', Draft: 'warning', Submitted: 'info', Overdue: 'danger', 'Due Soon': 'warning', Archived: 'neutral', Medium: 'warning', 'Waiting for Predecessors': 'warning',
     Rejected: 'danger', Overloaded: 'danger', 'Missing Declaration': 'danger', 'Rejected Declaration': 'danger', Cancelled: 'neutral', Unavailable: 'neutral', Superseded: 'neutral', Revoked: 'neutral', 'No Dependencies': 'neutral',
     'In Progress': 'info', 'Not Started': 'neutral', Review: 'warning', Urgent: 'danger', High: 'danger', Normal: 'neutral', Low: 'neutral' };
   function statusChip(s) { return badge(s || '—', TONE[s] || 'neutral'); }
@@ -71,22 +65,41 @@
   }
   function field(label, html, opts) { opts = opts || {}; return '<div class="wm-form-row' + (opts.cls ? ' ' + opts.cls : '') + '"><label' + (opts.for ? ' for="' + opts.for + '"' : '') + '>' + esc(label) + (opts.req ? ' <span class="rx-req" aria-hidden="true">*</span>' : '') + '</label>' + html + (opts.help ? '<div class="rx-help">' + esc(opts.help) + '</div>' : '') + '</div>'; }
 
+  /** GEN-09 page options. parent = the hash of the screen underneath; view = the view to show there on a direct link. */
+  function pageOpts(route, crumbs, parent, ctx, prep, view) {
+    return { route: route, crumbs: crumbs, parentHash: '#/' + parent, fromRoute: !!(ctx && ctx.fromRoute), initial: ctx && ctx.initial,
+      prepare: function () { if (prep) prep(); window.REXUSLegacy.switchView(view || parent); } };
+  }
+  /** Route builder helper: load what the form needs, then open it unless the person has navigated away meanwhile. */
+  function routeLoad(ctx, parent, view, load, open) {
+    Promise.resolve().then(load).then(function (data) { if (location.hash === ctx.hash) open(data); })
+      .catch(function (e) { if (location.hash !== ctx.hash) return; history.replaceState(null, '', location.pathname + location.search + '#/' + parent); window.REXUSLegacy.switchView(view || parent); toast(e.message || String(e), 'error'); });
+  }
+  function routeDone() { if (window.REXUSLegacy) window.REXUSLegacy.renderActiveView(); }
+  var enc = encodeURIComponent;
+
   /** Dialog built from the shared modal anatomy, so it inherits focus trap / Escape / scroll lock. */
   function dialog(o) {
     var app = document.querySelector('.wm-app') || document.body;
-    var wrap = document.createElement('div');
-    wrap.className = 'wm-modal-overlay open rx-dialog'; wrap.style.zIndex = o.nested ? 'var(--rx-z-modal-nested)' : '';
-    wrap.innerHTML = '<div class="wm-modal' + (o.wide ? ' rx-modal-wide' : '') + '" style="max-width:' + (o.width || 560) + 'px">' +
-      '<div class="wm-modal-head"><h3>' + esc(o.title) + '</h3><button type="button" class="wm-glass-icon-btn" data-close title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button></div>' +
-      '<form class="rx-dialog-form" novalidate><div class="wm-modal-body">' + (o.body || '') + '<p class="rx-form-error" role="alert" hidden></p></div>' +
-      '<div class="wm-modal-footer">' + (o.footer || ('<button type="button" class="wm-btn" data-close>Cancel</button>' + (o.submit ? '<button type="submit" class="wm-btn primary">' + esc(o.submit) + '</button>' : ''))) + '</div></form></div>';
-    app.appendChild(wrap);
+    var formHtml = '<form class="rx-dialog-form" novalidate><div class="wm-modal-body">' + (o.body || '') + '<p class="rx-form-error" role="alert" hidden></p></div>' +
+      '<div class="wm-modal-footer">' + (o.footer || ('<button type="button" class="wm-btn" data-close>Cancel</button>' + (o.submit ? '<button type="submit" class="wm-btn primary">' + esc(o.submit) + '</button>' : ''))) + '</div></form>';
+    var wrap = document.createElement('div'), page = null;
+    if (o.page && window.REXUSPages) {   // GEN-09: forms with more than four fields open as their own page
+      wrap.className = 'wm-modal rx-page-form'; wrap.innerHTML = formHtml;
+      page = window.REXUSPages.open({ node: wrap, route: o.page.route, title: o.title, crumbs: o.page.crumbs, fromRoute: o.page.fromRoute, parentHash: o.page.parentHash, prepare: o.page.prepare, initial: o.page.initial, initial: o.page.initial,
+        onClose: function () { if (o.onClose) o.onClose(); } });
+    } else {
+      wrap.className = 'wm-modal-overlay open rx-dialog'; wrap.style.zIndex = o.nested ? 'var(--rx-z-modal-nested)' : '';
+      wrap.innerHTML = '<div class="wm-modal' + (o.wide ? ' rx-modal-wide' : '') + '" style="max-width:' + (o.width || 560) + 'px">' +
+        '<div class="wm-modal-head"><h3>' + esc(o.title) + '</h3><button type="button" class="wm-glass-icon-btn" data-close title="Close"><svg viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="M6 6l12 12"/></svg></button></div>' + formHtml + '</div>';
+    }
+    if (!page) app.appendChild(wrap);
     var form = wrap.querySelector('form'), err = wrap.querySelector('.rx-form-error');
-    function close() { wrap.remove(); if (o.onClose) o.onClose(); }
-    wrap.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', close); });
-    wrap.addEventListener('mousedown', function (e) { if (e.target === wrap && !o.sticky) close(); });
+    function close() { if (page) { window.REXUSPages.markClean(page); window.REXUSPages.close(page); return; } wrap.remove(); if (o.onClose) o.onClose(); }
+    wrap.querySelectorAll('[data-close]').forEach(function (b) { b.addEventListener('click', function () { if (page) window.REXUSPages.back(page); else close(); }); });
+    if (!page) wrap.addEventListener('mousedown', function (e) { if (e.target === wrap && !o.sticky) close(); });
     var api_ = {
-      el: wrap, form: form, close: close,
+      el: wrap, form: form, close: close, page: page,
       val: function (name) { var el = form.elements[name]; if (!el) return ''; if (el.type === 'checkbox') return el.checked; return el.value; },
       error: function (m) { if (!m) { err.hidden = true; return; } err.textContent = m; err.hidden = false; err.scrollIntoView({ block: 'nearest' }); }
     };
@@ -238,9 +251,10 @@
       }), { min: 560 }) + '</details>' : '');
     if ($('rxEditEmp')) $('rxEditEmp').onclick = function () { editEmployment(x, pr, function () { profile(node, x, u); }); };
   }
-  function editEmployment(x, pr, done) {
+  function editEmployment(x, pr, done, ctx) {
     users().then(function (list) {
-      dialog({ title: 'Employment — ' + (x.full_name || x.username), width: 620, submit: 'Save', body:
+      dialog({ title: 'Employment — ' + (x.full_name || x.username), width: 620, submit: 'Save',
+        page: pageOpts('hr-employment?user=' + enc(x.id), [['HRM', '#/organization'], ['Employee Search', null]], 'organization', ctx, function () { HR_STATE.sub = 'employees'; }), body:
         '<div class="wm-form-grid">' + field('Employment type', '<select name="employment_type">' + ['Full-time', 'Part-time', 'Freelancer', 'Contractor', 'Collaborator', 'Other'].map(function (t) { return '<option' + (t === pr.employment_type ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>') +
         field('Capacity method', '<select name="capacity_method"><option value="schedule"' + (pr.capacity_method === 'schedule' ? ' selected' : '') + '>Working schedule (working days × hours − leave)</option><option value="declaration"' + (pr.capacity_method === 'declaration' ? ' selected' : '') + '>Monthly declaration (approved availability)</option></select>') + '</div>' +
         '<div class="wm-form-grid">' + field('Daily working hours', '<input name="hours_per_day" type="number" min="0" max="24" step="0.5" value="' + esc(pr.hours_per_day) + '">') + field('Effective from', '<input name="effective_from" type="date" value="' + todayStr() + '">', { help: 'Earlier periods keep their previous schedule.' }) + '</div>' +
@@ -287,10 +301,11 @@
       node.querySelectorAll('[data-cancel]').forEach(function (b) { b.onclick = function () { confirmDialog('Cancel leave request', 'Cancel this leave request? Approved leave that is cancelled no longer reduces your capacity.', 'Cancel request', true).then(function (ok) { if (!ok) return; api('/api/hr/leave', { method: 'POST', body: { action: 'cancel', id: b.dataset.cancel } }).then(function () { toast('Leave cancelled'); refresh(); }).catch(function (e) { toast(e.message, 'error'); }); }); }; });
     }).catch(function (e) { errorBox(node, e); });
   }
-  function leaveForm(l, done) {
+  function leaveForm(l, done, ctx) {
     users().then(function (list) {
       l = l || {};
       dialog({ title: l.id ? 'Edit leave request' : 'New leave request', width: 600,
+        page: pageOpts(l.id ? 'hr-leave-edit?id=' + enc(l.id) : 'hr-leave-new', [['HRM', '#/organization'], ['Leave Management', null]], 'organization', ctx, function () { HR_STATE.sub = 'leave'; LEAVE_STATE.view = 'mine'; }),
         footer: '<button type="button" class="wm-btn" data-close>Cancel</button><button type="submit" class="wm-btn" data-action="save">Save draft</button><button type="submit" class="wm-btn primary" data-action="submit">Submit for approval</button>',
         body: '<div class="wm-form-grid">' + field('Leave type', '<select name="leave_type">' + ['Annual Leave', 'Sick Leave', 'Unpaid Leave', 'Personal Leave', 'Other'].map(function (t) { return '<option' + (t === l.leave_type ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select>', { req: true }) +
           field('Duration type', '<select name="unit"><option value="full"' + (l.unit === 'full' || !l.unit ? ' selected' : '') + '>Full day(s)</option><option value="half"' + (l.unit === 'half' ? ' selected' : '') + '>Half day</option><option value="hourly"' + (l.unit === 'hourly' ? ' selected' : '') + '>Hourly</option></select>') + '</div>' +
@@ -383,12 +398,16 @@
       $('rxTeamCapTable').innerHTML = table(['', 'Employee', 'Employment', 'Status', 'Regular capacity', 'Overtime', 'Registered / minimum', 'Request'], rows, { min: 900, empty: 'No employees match.' });
     }
     $('rxTeamCapFilter').onchange = function () { render(this.value); }; render('');
-    $('rxSendReq').onclick = function () {
-      var picked = [].slice.call(node.querySelectorAll('.rx-req-pick:checked')).map(function (c) { return c.value; });
-      var people = t.employees.map(function (e) { return '<label class="rx-check rx-req-person"><input type="checkbox" name="p_' + esc(e.id) + '"' + (picked.indexOf(e.id) !== -1 ? ' checked' : '') + '> ' + esc(e.name) + (e.request ? ' <small class="rx-muted">(sent)</small>' : '') + '</label>'; }).join('');
+    $('rxSendReq').onclick = function () { requestSchedules(t, [].slice.call(node.querySelectorAll('.rx-req-pick:checked')).map(function (c) { return c.value; }), refresh); };
+  }
+  function requestSchedules(t, picked, refresh, ctx) {
+    users().catch(function () { return []; }).then(function (all) {
+      var byId = {}; all.forEach(function (u) { byId[u.id] = u; });
+      var people = t.employees.map(function (e) { var u = byId[e.id] || {}; return '<label class="rx-check rx-req-person" data-search="' + esc([u.username, u.email].filter(Boolean).join(' ')) + '"><input type="checkbox" name="p_' + esc(e.id) + '"' + (picked.indexOf(e.id) !== -1 ? ' checked' : '') + '> ' + esc(e.name) + (e.request ? ' <small class="rx-muted">(sent)</small>' : '') + '</label>'; }).join('');
       dialog({ title: 'Request schedules for ' + monthLabel(t.month), width: 600, submit: 'Send request',
+        page: pageOpts('hr-request-schedules?month=' + t.month, [['HRM', '#/organization'], ['Monthly Schedule', null]], 'organization', ctx, function () { HR_STATE.sub = 'capacity'; CAP_STATE.tab = 'team'; CAP_STATE.month = t.month; }),
         body: '<fieldset class="rx-fieldset"><legend>Recipients</legend><label class="rx-check"><input type="radio" name="scope" value="all"' + (picked.length ? '' : ' checked') + '> All people I manage (' + t.employees.length + ')</label>' +
-          '<label class="rx-check"><input type="radio" name="scope" value="selected"' + (picked.length ? ' checked' : '') + '> Selected people</label><div class="rx-req-people">' + people + '</div></fieldset>' +
+          '<label class="rx-check"><input type="radio" name="scope" value="selected"' + (picked.length ? ' checked' : '') + '> Selected people</label><div class="rx-req-people" data-rx-searchlist>' + people + '</div></fieldset>' +
           '<div class="wm-form-grid">' + field('Due date', '<input type="date" name="due_date">') + field('Message', '<input name="note" maxlength="500" placeholder="Optional">') + '</div>' +
           '<p class="rx-muted">Each person gets an in-app notification with a link to the form. Sending again to someone who already has a request for this month re-sends it instead of creating a duplicate.</p>',
         onOpen: function (d) {
@@ -403,7 +422,7 @@
           return api('/api/hr/requests', { method: 'POST', body: { month: t.month, scope: scope, user_ids: ids, due_date: d.val('due_date') || null, note: d.val('note') } })
             .then(function (r) { toast('Request sent to ' + r.recipients + (r.resent ? ' (' + r.resent + ' re-sent)' : '')); refresh(); });
         } });
-    };
+    });
   }
   function myCapacity(node, u) {
     var m = CAP_STATE.month, from = m + '-01', to = monthEnd(from);
@@ -702,8 +721,9 @@
       }; });
     }).catch(function (e) { errorBox(box, e); });
   }
-  function newRequest(meta, list, done) {
-    dialog({ title: 'New approval request', width: 600, submit: 'Submit', body:
+  function newRequest(meta, list, done, ctx) {
+    dialog({ title: 'New approval request', width: 600, submit: 'Submit',
+      page: pageOpts('approval-new', [['Approval Center', '#/approval-center']], 'approval-center', ctx, function () { AP.tab = 'mine'; }), body:
       '<p class="rx-muted">Leave, capacity, expense and disbursement approvals are created from their own screens so the business record stays linked.</p>' +
       field('Request type', '<select name="type">' + meta.direct_types.map(function (t) { return '<option value="' + t + '">' + esc(meta.labels[t]) + '</option>'; }).join('') + '</select>', { req: true }) +
       field('Title', '<input name="title" required maxlength="200">', { req: true }) + field('Details', '<textarea name="description" rows="3"></textarea>') +
@@ -724,8 +744,12 @@
     });
     node.innerHTML = '<div class="rx-toolbar"><p class="rx-muted">A delegate can decide your approvals while the delegation is active. Expired delegations stop automatically.</p><button type="button" class="wm-btn primary" id="apDelNew">New delegation</button></div>' + table(['Delegator', 'Delegate', 'Period', 'Categories', 'Status', ''], rows, { min: 760, empty: 'No delegations.' });
     node.querySelectorAll('[data-revoke]').forEach(function (b) { b.onclick = function () { confirmDialog('Revoke delegation', 'Stop this delegation now?', 'Revoke', true).then(function (ok) { if (ok) api('/api/approval-center', { method: 'POST', body: { action: 'revoke_delegation', id: b.dataset.revoke } }).then(function () { toast('Delegation revoked'); refresh(); }).catch(function (e) { toast(e.message, 'error'); }); }); }; });
-    $('apDelNew').onclick = function () {
-      dialog({ title: 'Delegate my approvals', width: 560, submit: 'Create delegation', body:
+    $('apDelNew').onclick = function () { delegationForm(meta, list, refresh); };
+  }
+  function delegationForm(meta, list, refresh, ctx) {
+    {
+      dialog({ title: 'Delegate my approvals', width: 560, submit: 'Create delegation',
+        page: pageOpts('approval-delegation-new', [['Approval Center', '#/approval-center'], ['Delegations', null]], 'approval-center', ctx, function () { AP.tab = 'delegations'; }), body:
         (meta.is_admin ? field('Delegator', '<select name="delegator">' + userOptions(list, ME && ME.id) + '</select>') : '') +
         field('Delegate', '<select name="delegate" required>' + userOptions(list, '', { empty: 'Select…', exclude: [ME && ME.id] }) + '</select>', { req: true }) +
         '<div class="wm-form-grid">' + field('Start date', '<input type="date" name="start" value="' + todayStr() + '" required>', { req: true }) + field('End date', '<input type="date" name="end" value="' + addDays(todayStr(), 7) + '" required>', { req: true }) + '</div>' +
@@ -734,21 +758,26 @@
           var cats = Array.prototype.slice.call(d.form.querySelectorAll('input[name=cat]:checked')).map(function (x) { return x.value; });
           return api('/api/approval-center', { method: 'POST', body: { action: 'delegate', delegator_id: meta.is_admin ? d.val('delegator') : undefined, delegate_id: d.val('delegate'), start_date: d.val('start'), end_date: d.val('end'), categories: cats } }).then(function () { toast('Delegation created'); refresh(); });
         } });
-    };
+    }
   }
   function routing(node, meta, list, refresh) {
     var types = Object.keys(meta.labels);
     node.innerHTML = '<div class="rx-toolbar"><p class="rx-muted">Order: explicit approver → most specific active rule (lowest priority number) → employee manager / capacity approver → department head. No eligible approver = a clear error, never a silent assignment.</p><button type="button" class="wm-btn primary" id="apRuleNew">Add rule</button></div>' +
       table(['Priority', 'Category', 'Type', 'Department', 'Project', 'Approver', 'Active', ''], meta.routing_rules.map(function (r) { return '<tr><td>' + r.priority + '</td><td>' + esc(r.category || 'Any') + '</td><td>' + esc(r.request_type ? meta.labels[r.request_type] : 'Any') + '</td><td>' + esc(r.department || 'Any') + '</td><td>' + esc(r.project_key ? r.project_key.split('::')[1] : 'Any') + '</td><td>' + esc(r.approver_name) + '</td><td>' + statusChip(r.active ? 'Active' : 'Revoked') + '</td><td class="rx-actions">' + (r.active ? '<button type="button" class="wm-btn rx-btn-sm danger" data-off="' + esc(r.id) + '">Disable</button>' : '') + '</td></tr>'; }), { min: 820, empty: 'No routing rules yet.' });
     node.querySelectorAll('[data-off]').forEach(function (b) { b.onclick = function () { api('/api/approval-center', { method: 'POST', body: { action: 'routing_delete', id: b.dataset.off } }).then(refresh).catch(function (e) { toast(e.message, 'error'); }); }; });
-    $('apRuleNew').onclick = function () {
+    $('apRuleNew').onclick = function () { ruleForm(meta, list, refresh); };
+  }
+  function ruleForm(meta, list, refresh, ctx) {
+    var types = Object.keys(meta.labels);
+    {
       var deps = {}; list.forEach(function (u) { if (u.department) deps[u.department] = 1; });
-      dialog({ title: 'Add routing rule', width: 560, submit: 'Save rule', body:
+      dialog({ title: 'Add routing rule', width: 560, submit: 'Save rule',
+        page: pageOpts('approval-rule-new', [['Approval Center', '#/approval-center'], ['Routing rules', null]], 'approval-center', ctx, function () { AP.tab = 'routing'; }), body:
         '<div class="wm-form-grid">' + field('Category', '<select name="category"><option value="">Any</option>' + Object.keys(meta.categories).map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select>') + field('Request type', '<select name="type"><option value="">Any</option>' + types.map(function (t) { return '<option value="' + t + '">' + esc(meta.labels[t]) + '</option>'; }).join('') + '</select>') + '</div>' +
         '<div class="wm-form-grid">' + field('Department', '<select name="department"><option value="">Any</option>' + Object.keys(deps).sort().map(function (d) { return '<option>' + esc(d) + '</option>'; }).join('') + '</select>') + field('Priority', '<input type="number" name="priority" value="100" min="1" max="1000">', { help: 'Lower runs first.' }) + '</div>' +
         field('Approver', '<select name="approver" required>' + userOptions(list, '', { empty: 'Select…' }) + '</select>', { req: true }),
         onSubmit: function (d) { return api('/api/approval-center', { method: 'POST', body: { action: 'routing_save', category: d.val('category'), request_type: d.val('type'), department: d.val('department'), priority: d.val('priority'), approver_id: d.val('approver') } }).then(function () { toast('Rule saved'); refresh(); }); } });
-    };
+    }
   }
 
   /* =============================================================== PROJECT FINANCE (Module 7) */
@@ -807,7 +836,7 @@
           if (t.status === 'Completed' && !t.reverses_id && !f.transactions.some(function (x) { return x.reverses_id === t.id && x.status !== 'Cancelled'; })) acts += '<button type="button" class="wm-btn rx-btn-sm danger" data-act="reverse_transaction" data-id="' + esc(t.id) + '">Reverse</button>';
         }
         acts += '<button type="button" class="wm-icon-btn" data-hist="' + esc(t.id) + '" title="View history"><svg viewBox="0 0 24 24"><path d="M3 11a9 9 0 1 1 3 7M3 4v7h7M12 7v5l4 2"/></svg></button>';
-        return '<tr class="' + (t.reverses_id ? 'rx-row-reversal' : '') + '"><td><code>' + esc(t.id.slice(0, 10)) + '</code></td><td>' + fmtDay(t.transaction_date || t.created_at) + '</td><td>' + statusChip(t.type === 'Income' ? 'Income' : 'Expense').replace('rx-chip-neutral', t.type === 'Income' ? 'rx-chip-success' : 'rx-chip-warning') + (t.reverses_id ? '<small class="rx-sub">Reversal</small>' : '') + '</td><td>' + esc(t.category || '—') + '</td><td class="rx-cell-wrap">' + esc(t.description || '') + (t.attachment_url ? ' <a href="' + esc(t.attachment_url) + '" target="_blank" rel="noopener">📎</a>' : '') + '</td>' +
+        return '<tr class="' + (t.reverses_id ? 'rx-row-reversal' : '') + '"><td><code>' + esc(t.id.slice(0, 10)) + '</code></td><td>' + fmtDay(t.transaction_date || t.created_at) + '</td><td>' + esc(t.type === 'Income' ? 'Income' : 'Expense') + (t.reverses_id ? '<small class="rx-sub">Reversal</small>' : '') + '</td><td>' + esc(t.category || '—') + '</td><td class="rx-cell-wrap">' + esc(t.description || '') + (t.attachment_url ? ' <a href="' + esc(t.attachment_url) + '" target="_blank" rel="noopener">📎</a>' : '') + '</td>' +
           '<td class="rx-num">' + (t.reverses_id ? '−' : '') + money(t.amount) + '</td><td>' + esc(t.currency) + '</td><td>' + esc(t.payment_method || '—') + '</td><td>' + esc(t.reference) + '</td><td>' + esc(t.created_by_name || '') + '</td><td>' + esc(t.approved_by_name || '—') + '</td><td>' + statusChip(t.status) + '</td><td class="rx-actions">' + acts + '</td></tr>';
       });
       body.querySelector('#fnLedgerTable').innerHTML = table(['Transaction ID', 'Date', 'Type', 'Category', 'Description', 'Amount', 'Currency', 'Payment method', 'Reference', 'Created by', 'Approved by', 'Status', ''], rows, { min: 1400, empty: 'No transactions yet.' });
@@ -825,9 +854,11 @@
     if (f.can_manage) { body.querySelector('#fnAddIncome').onclick = function () { txForm('Income', f, ref, list, reload); }; body.querySelector('#fnAddExpense').onclick = function () { txForm('Expense', f, ref, list, reload); }; }
     draw();
   }
-  function txForm(type, f, ref, list, reload) {
+  function finQ(ref) { return 'owner=' + enc(ref.owner) + '&project=' + enc(ref.project); }
+  function txForm(type, f, ref, list, reload, ctx) {
     var cats = (f.categories || {})[type] || [];
-    dialog({ title: 'Add ' + type.toLowerCase(), width: 660, submit: type === 'Expense' ? 'Save' : 'Save draft', body:
+    dialog({ title: 'Add ' + type.toLowerCase(), width: 660, submit: type === 'Expense' ? 'Save' : 'Save draft',
+      page: pageOpts('finance-transaction-new?' + finQ(ref) + '&type=' + type, [['Project Finance', '#/finance'], [ref.project, null]], 'finance', ctx, function () { FN.open = { owner: ref.owner, project: ref.project }; FN.tab = 'ledger'; }, 'project-financials'), body:
       '<div class="wm-form-grid">' + field('Date', '<input type="date" name="date" value="' + todayStr() + '" required>', { req: true }) + field('Category', '<select name="category">' + cats.map(function (c) { return '<option>' + esc(c) + '</option>'; }).join('') + '</select>') + '</div>' +
       '<div class="wm-form-grid">' + field('Amount', '<input type="number" name="amount" min="0.01" step="0.01" required inputmode="decimal">', { req: true }) + field('Currency', '<input name="currency" value="' + esc(f.budget_currency) + '" maxlength="3" required pattern="[A-Za-z]{3}">', { req: true }) + '</div>' +
       '<div class="wm-form-grid rx-fx" hidden>' + field('Exchange rate to ' + esc(f.budget_currency), '<input type="number" name="rate" min="0" step="any">', { help: 'Optional. Without a rate, totals stay grouped by currency.' }) + '<div></div></div>' +
@@ -858,8 +889,14 @@
     body.innerHTML = '<div class="rx-metrics">' + metric('Approved budget', money(f.approved_budget, f.approved_budget === null ? '' : f.budget_currency), 'info') + metric('Total disbursed', money(main.disbursed, f.budget_currency), 'indigo') + metric('Remaining budget to disburse', main.remaining_budget_to_disburse === null || main.remaining_budget_to_disburse === undefined ? '—' : money(main.remaining_budget_to_disburse, f.budget_currency), 'neutral') + metric('Approved, not yet paid', money(main.remaining_undisbursed_allocation, f.budget_currency), 'warning') + '</div>' +
       '<div class="rx-toolbar"><p class="rx-muted">Workflow: Pending Approval → Approved → Partially / Fully Disbursed. Only recorded payments count as disbursed.</p>' + (f.can_manage ? '<button type="button" class="wm-btn primary" id="fnNewDisb">New disbursement</button>' : '') + '</div>' +
       table(['Request ID', 'Purpose', 'Requested', 'Requested amt', 'Approved amt', 'Disbursed', 'Remaining', 'Status', ''], rows, { min: 1100, empty: 'No disbursement requests yet.' });
-    if ($('fnNewDisb')) $('fnNewDisb').onclick = function () {
-      dialog({ title: 'New disbursement request', width: 620, submit: 'Submit for approval', body:
+    if ($('fnNewDisb')) $('fnNewDisb').onclick = function () { disbursementForm(f, ref, list, reload); };
+    body.querySelectorAll('[data-pay]').forEach(function (b) { b.onclick = function () { paymentForm(f, ref, b.dataset.pay, Number(b.dataset.remain), reload); }; });
+    body.querySelectorAll('[data-hist]').forEach(function (b) { b.onclick = function () { historyDialog(ref, 'disbursement:' + b.dataset.hist); }; });
+  }
+  function disbursementForm(f, ref, list, reload, ctx) {
+    {
+      dialog({ title: 'New disbursement request', width: 620, submit: 'Submit for approval',
+        page: pageOpts('finance-disbursement-new?' + finQ(ref), [['Project Finance', '#/finance'], [ref.project, null]], 'finance', ctx, function () { FN.open = { owner: ref.owner, project: ref.project }; FN.tab = 'disbursements'; }, 'project-financials'), body:
         '<div class="wm-form-grid">' + field('Requested amount', '<input type="number" name="amount" min="0.01" step="0.01" required>', { req: true }) + field('Currency', '<input name="currency" value="' + esc(f.budget_currency) + '" maxlength="3" required>', { req: true }) + '</div>' +
         field('Purpose', '<input name="purpose" required maxlength="1000">', { req: true }) + '<div class="wm-form-grid">' + field('Recipient', '<input name="recipient" maxlength="200">') + field('Payment method', '<select name="method"><option value="">—</option>' + (f.methods || []).map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('') + '</select>') + '</div>' +
         '<div class="wm-form-grid">' + field('Requested date', '<input type="date" name="date" value="' + todayStr() + '">') + field('Approver', '<select name="approver">' + userOptions(list, '', { empty: 'Automatic (routing rules)', exclude: [ME && ME.id], roles: ['System Admin', 'Project Manager'] }) + '</select>') + '</div>' +
@@ -869,19 +906,20 @@
           return api('/api/project-financials', { method: 'POST', body: { owner: ref.owner, project: ref.project, action: 'request_disbursement', amount: amount, currency: d.val('currency').toUpperCase(), purpose: d.val('purpose'), recipient: d.val('recipient'), payment_method: d.val('method'), requested_date: d.val('date'), approver_id: d.val('approver') || null, attachment_url: d.val('attachment'), notes: d.val('notes') } })
             .then(function () { toast('Disbursement submitted to the Approval Center'); reload(); });
         } });
-    };
-    body.querySelectorAll('[data-pay]').forEach(function (b) { b.onclick = function () {
-      var remain = Number(b.dataset.remain);
-      dialog({ title: 'Record payment', width: 560, submit: 'Record payment', body: '<p class="rx-muted">Remaining approved amount: <strong>' + money(remain, f.budget_currency) + '</strong>. Each payment is stored separately and never overwritten.</p>' +
+    }
+  }
+  function paymentForm(f, ref, id, remain, reload, ctx) {
+    {
+      dialog({ title: 'Record payment', width: 560, submit: 'Record payment',
+        page: pageOpts('finance-payment-new?' + finQ(ref) + '&id=' + enc(id), [['Project Finance', '#/finance'], [ref.project, null]], 'finance', ctx, function () { FN.open = { owner: ref.owner, project: ref.project }; FN.tab = 'disbursements'; }, 'project-financials'), body: '<p class="rx-muted">Remaining approved amount: <strong>' + money(remain, f.budget_currency) + '</strong>. Each payment is stored separately and never overwritten.</p>' +
         '<div class="wm-form-grid">' + field('Payment amount', '<input type="number" name="amount" min="0.01" max="' + remain + '" step="0.01" required value="' + remain + '">', { req: true }) + field('Payment date', '<input type="date" name="date" value="' + todayStr() + '" required>', { req: true }) + '</div>' +
         '<div class="wm-form-grid">' + field('Reference', '<input name="reference" required maxlength="120">', { req: true }) + field('Payment method', '<select name="method"><option value="">—</option>' + (f.methods || []).map(function (m) { return '<option>' + esc(m) + '</option>'; }).join('') + '</select>') + '</div>' + field('Recipient', '<input name="recipient" maxlength="200">'),
         onSubmit: function (d) {
           var amount = Number(d.val('amount')); if (!(amount > 0)) throw new Error('Enter a positive amount.'); if (amount > remain + 0.0001) throw new Error('Amount exceeds the remaining approved amount.');
-          return api('/api/project-financials', { method: 'POST', body: { owner: ref.owner, project: ref.project, action: 'pay_disbursement', id: b.dataset.pay, amount: amount, reference: d.val('reference'), payment_date: d.val('date'), payment_method: d.val('method'), recipient: d.val('recipient') } })
+          return api('/api/project-financials', { method: 'POST', body: { owner: ref.owner, project: ref.project, action: 'pay_disbursement', id: id, amount: amount, reference: d.val('reference'), payment_date: d.val('date'), payment_method: d.val('method'), recipient: d.val('recipient') } })
             .then(function (r) { toast('Payment recorded — ' + r.status); reload(); });
         } });
-    }; });
-    body.querySelectorAll('[data-hist]').forEach(function (b) { b.onclick = function () { historyDialog(ref, 'disbursement:' + b.dataset.hist); }; });
+    }
   }
   function historyDialog(ref, key) {
     var d = dialog({ title: 'Audit history', width: 640, footer: '<button type="button" class="wm-btn primary" data-close>Close</button>', body: '<div id="fnHist"></div>' });
@@ -1044,6 +1082,27 @@
   }
 
   /* =============================================================== boot */
+  /* GEN-09: direct links / refresh for the form pages. Data is re-loaded; the server checks permissions exactly as before. */
+  if (window.REXUSPages) (function (R) {
+    var noAccess = function (m) { throw new Error(m || 'You do not have access to this form.'); };
+    var fin = function (q) { var ref = { owner: q.get('owner') || '', project: q.get('project') || '' }; return Promise.all([api('/api/project-financials?' + finQ(ref)), users()]).then(function (r) { if (!r[0].can_manage) noAccess(); return { ref: ref, f: r[0], list: r[1] }; }); };
+    var apMeta = function () { return Promise.all([api('/api/approval-center?meta=1'), users()]); };
+    R.register('hr-employment', function (q, ctx) { routeLoad(ctx, 'organization', null, function () { return api('/api/hr/profile?user_id=' + enc(q.get('user') || '')).then(function (p) { if (!p.can_edit) noAccess(); return p; }); }, function (p) { editEmployment(p.user, p.profile, routeDone, ctx); }); });
+    R.register('hr-leave-new', function (q, ctx) { routeLoad(ctx, 'organization', null, null, function () { leaveForm(null, routeDone, ctx); }); });
+    R.register('hr-leave-edit', function (q, ctx) { routeLoad(ctx, 'organization', null, function () { return api('/api/hr/leave?scope=mine').then(function (j) { var l = j.leave.find(function (x) { return x.id === q.get('id'); }); if (!l || ['Draft', 'Changes Requested'].indexOf(l.status) === -1) noAccess('This leave request was not found or can no longer be edited.'); return l; }); }, function (l) { leaveForm(l, routeDone, ctx); }); });
+    R.register('hr-request-schedules', function (q, ctx) { var m = /^\d{4}-\d{2}$/.test(q.get('month') || '') ? q.get('month') : CAP_STATE.month; routeLoad(ctx, 'organization', null, function () { return api('/api/hr/team?month=' + m).then(function (t) { if (!t.is_admin && !(t.employees || []).length) noAccess(); return t; }); }, function (t) { requestSchedules(t, [], routeDone, ctx); }); });
+    R.register('approval-new', function (q, ctx) { routeLoad(ctx, 'approval-center', null, apMeta, function (r) { newRequest(r[0], r[1], routeDone, ctx); }); });
+    R.register('approval-delegation-new', function (q, ctx) { routeLoad(ctx, 'approval-center', null, apMeta, function (r) { delegationForm(r[0], r[1], routeDone, ctx); }); });
+    R.register('approval-rule-new', function (q, ctx) { routeLoad(ctx, 'approval-center', null, function () { return apMeta().then(function (r) { if (!r[0].is_admin) noAccess(); return r; }); }, function (r) { ruleForm(r[0], r[1], routeDone, ctx); }); });
+    R.register('finance-transaction-new', function (q, ctx) { var type = q.get('type') === 'Income' ? 'Income' : 'Expense'; routeLoad(ctx, 'finance', 'project-financials', function () { return fin(q); }, function (x) { txForm(type, x.f, x.ref, x.list, routeDone, ctx); }); });
+    R.register('finance-disbursement-new', function (q, ctx) { routeLoad(ctx, 'finance', 'project-financials', function () { return fin(q); }, function (x) { disbursementForm(x.f, x.ref, x.list, routeDone, ctx); }); });
+    R.register('finance-payment-new', function (q, ctx) { routeLoad(ctx, 'finance', 'project-financials', function () { return fin(q); }, function (x) {
+      var d = x.f.disbursements.find(function (r) { return r.id === q.get('id'); });
+      if (!d || ['Approved', 'Partially Disbursed'].indexOf(d.status) === -1 || d.approved_amount === null) { history.replaceState(null, '', location.pathname + location.search + '#/finance'); window.REXUSLegacy.switchView('project-financials'); return toast('This disbursement is not open for payment.', 'error'); }
+      var paid = x.f.payments.filter(function (p) { return p.request_id === d.id; }).reduce(function (s, p) { return s + Number(p.amount); }, 0);
+      paymentForm(x.f, x.ref, d.id, Number(d.approved_amount) - paid, routeDone, ctx); }); });
+  })(window.REXUSPages);
+
   window.REXUS221 = { openSchedule: openSchedule, dialog: dialog, field: field, esc: esc, hr: hr, resource: resource, approvals: approvals, financials: financials, financeDetail: financeDetail, wbs: wbs, bindAppearance: bindAppearance, applyTheme: applyTheme, syncThemeFromServer: syncThemeFromServer, FN: FN };
   // Keep the v2.1.0 entry points working, now backed by the v2.2.1 screens.
   window.REXUS210 = { organization: function (n) { hr(n, 'employees'); }, resource: function (n) { resource(n); }, approvals: approvals, financials: financials };

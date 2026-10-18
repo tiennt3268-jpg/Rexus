@@ -266,11 +266,12 @@
     };
     wrap.addEventListener('click',function(e){if(e.target===wrap)closeDialog();});
   }
+  // GEN-10: the shared centred notification. Guidance ("Select text first") is a warning, progress an info.
   function toast(text, bad) {
-    var old = el('rdToast'); if (old) old.remove();
-    var node = document.createElement('div'); node.id = 'rdToast'; node.className = 'rd-toast'; node.style.background = bad ? '#a73042' : '#214b71'; node.textContent = text;
-    document.body.appendChild(node);
-    setTimeout(function () { if (node.parentNode) node.remove(); }, 4400);
+    var t = String(text || ''), kind = bad || /failed|unable to|could not/i.test(t) ? 'error'
+      : /…$/.test(t) ? 'info'
+      : /^(select|place|save your|save changes|open a|only |no items|use |share from|share folders|this cell|you cannot|title required)|unavailable|still loading|first\.?$/i.test(t) ? 'warning' : 'success';
+    if (window.REXUSNotify) return window.REXUSNotify(t, kind);
   }
   async function request(path, method, data) {
     var opts = { method: method || 'GET', credentials: 'same-origin' };

@@ -145,7 +145,7 @@
 :root[data-rx-mode="dark"] .wm-modal-overlay{ background: rgba(0, 0, 0, 0.55) !important; }
 
 /* Status / priority chips keep their meaning on dark tints */
-:root[data-rx-mode="dark"] .wm-app [class*="rx-chip-"], :root[data-rx-mode="dark"] .wm-app .wm-badge{ border-color: currentColor; }
+/* v2.2.3 GEN-12: badges are full-fill, no outline */
 
 /* Login screen */
 :root[data-rx-mode="dark"] .wm-auth-screen{ background: linear-gradient(160deg, #0f141b, #141b26) !important; }
@@ -205,3 +205,16 @@
 :root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-paper, .rd-editor) input.rd-paper-title{ background: transparent !important; border-color: transparent !important; }
 :root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-paper, .rd-editor) input.rd-paper-title:focus{ border-bottom-color: var(--rx-accent) !important; }
 :root[data-rx-mode="dark"] #rexusDocsShell :is(.rd-hero, .rd-edit-top, .rd-toolbar){ border-color: var(--rx-hairline) !important; }
+
+/* v2.2.3 GEN-12 — badge palette, dark values (AA ≥ 4.5:1 on their own background) */
+:root[data-rx-mode="dark"]{
+  --rx-badge-navy-bg: #1E2A4A;    --rx-badge-navy-fg: #C7D2FE;
+  --rx-badge-info-bg: #172554;    --rx-badge-info-fg: #93C5FD;
+  --rx-badge-success-bg: #052E16; --rx-badge-success-fg: #86EFAC;
+  --rx-badge-warning-bg: #3B2506; --rx-badge-warning-fg: #FCD34D;
+  --rx-badge-danger-bg: #450A0A;  --rx-badge-danger-fg: #FCA5A5;
+  --rx-badge-neutral-bg: #1E293B; --rx-badge-neutral-fg: #CBD5E1;
+}
+:root[data-rx-mode="dark"] .rx-notify-layer.is-blocking{ background: rgba(0, 0, 0, 0.45); }
+:root[data-rx-mode="dark"] .rx-notify{ box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5); }
+:root[data-rx-mode="dark"] .rx-combo-pop{ box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5); }

@@ -129,6 +129,8 @@
   }
   function topDialog(){ var d = dialogs(); return d.length ? d[d.length - 1] : null; }
   doc.addEventListener('keydown', function(e){
+    if (e.target && e.target.closest && e.target.closest('.rx-combo-pop')) return;   // GEN-08 list handles its own keys
+    if (doc.querySelector('.rx-notify-layer:not(.is-out)')) return;                 // GEN-10 notification on top handles Esc / Tab
     var top = topDialog(); if (!top) return;
     if (e.key === 'Escape') {
       // Re-use the dialog's own close/cancel control so app logic (promise resolution etc.) runs unchanged.
@@ -296,18 +298,182 @@
 
   /* ---------------------------------------------------------------- 5 */
   function liveRegions(){
-    [['wmSync', 'status'], ['wmConfirmPopup', 'status']].forEach(function(p){
+    [['wmSync', 'status']].forEach(function(p){
       var el = doc.getElementById(p[0]); if (el && !el.hasAttribute('role')) { el.setAttribute('role', p[1]); el.setAttribute('aria-live', 'polite'); el.setAttribute('aria-atomic', 'true'); }
     });
-    var popup = doc.getElementById('wmConfirmPopup');
-    if (popup) popup.classList.contains('error') ? popup.setAttribute('aria-live', 'assertive') : popup.setAttribute('aria-live', 'polite');
+  }
+
+
+  /* ---------------------------------------------------------------- 6  GEN-08 searchable selection lists
+     Every <select> with more than 7 options becomes a searchable combobox (multi-selects get checkboxes,
+     a count, "Select all" for the filtered results and "Clear"). The native <select> stays in the form as the
+     source of truth, so form code, validation and saved values are unchanged. Checkbox lists marked
+     [data-rx-searchlist] get the same search toolbar. Matching ignores case and Vietnamese diacritics and
+     looks at the visible text plus data-search (username / email). */
+  var PICK_MIN = 8, PICK_DEBOUNCE = 300, PICK_MAX_ROWS = 300, pickSeq = 0;
+  function fold(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd').toLowerCase(); }
+  function optHay(o){ return fold(o.text + ' ' + (o.getAttribute('data-search') || '')); }
+  function escH(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function debounce(fn, ms){ var t; return function(){ clearTimeout(t); t = setTimeout(fn, ms); }; }
+  var openCombo = null;
+  function enhanceSelects(){
+    doc.querySelectorAll('select:not([data-rx-pick]):not([data-rx-nosearch])').forEach(function(sel){
+      if (sel.options.length < PICK_MIN || sel.closest('.rd-editor, [contenteditable]')) return;
+      combo(sel);
+    });
+    doc.querySelectorAll('[data-rx-searchlist]:not([data-rx-pick])').forEach(searchList);
+  }
+  function combo(sel){
+    var multi = sel.multiple, id = 'rxPick' + (++pickSeq);
+    sel.setAttribute('data-rx-pick', '1');
+    var cs = getComputedStyle(sel), h = sel.offsetHeight, look = { fontSize: cs.fontSize, fontWeight: cs.fontWeight, minHeight: h && !multi ? h + 'px' : '' };   // match the field it replaces
+    var box = doc.createElement('div'); box.className = 'rx-combo' + (multi ? ' is-multi' : '');
+    sel.parentNode.insertBefore(box, sel);
+    var btn = doc.createElement('button'); btn.type = 'button'; btn.className = 'rx-combo-btn'; btn.setAttribute('aria-haspopup', 'listbox'); btn.setAttribute('aria-expanded', 'false'); btn.id = sel.id ? sel.id + 'Pick' : id + 'b';
+    btn.innerHTML = '<span class="rx-combo-label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+    box.appendChild(btn); box.appendChild(sel);
+    if (look.minHeight || h) Object.keys(look).forEach(function(k){ if (look[k]) btn.style[k] = look[k]; });
+    sel.classList.add('rx-combo-native'); sel.tabIndex = -1; sel.setAttribute('aria-hidden', 'true');
+    // keep the field's <label for=…> pointing at something focusable
+    if (sel.id) doc.querySelectorAll('label[for="' + sel.id + '"]').forEach(function(l){ l.setAttribute('for', btn.id); });
+    var lab = sel.getAttribute('aria-label') || (sel.closest('label') ? sel.closest('label').textContent : '') || (box.closest('.wm-form-row') && box.closest('.wm-form-row').querySelector('label') ? box.closest('.wm-form-row').querySelector('label').textContent : '');
+    if (lab) btn.setAttribute('aria-label', lab.replace(/\s+/g, ' ').trim());
+    var pop = null, q, list, empty, count, active = -1, shown = [], navMoved = false;
+    function label(){
+      var picked = [].filter.call(sel.options, function(o){ return o.selected; });
+      var t = multi ? (picked.length ? (picked.length <= 2 ? picked.map(function(o){ return o.text; }).join(', ') : picked.length + ' selected') : 'None selected') : (picked[0] ? picked[0].text : '');
+      btn.querySelector('.rx-combo-label').textContent = t || ' '; btn.disabled = sel.disabled; btn.title = t;
+    }
+    function place(){
+      if (!pop) return;
+      var r = btn.getBoundingClientRect(), vh = window.innerHeight, w = Math.max(r.width, 260);
+      pop.style.width = Math.min(w, window.innerWidth - 16) + 'px';
+      pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - Math.min(w, window.innerWidth - 16) - 8)) + 'px';
+      var below = vh - r.bottom, h = Math.min(360, Math.max(below, r.top) - 12);
+      pop.style.maxHeight = h + 'px';
+      if (below < 220 && r.top > below) { pop.style.top = ''; pop.style.bottom = (vh - r.top + 4) + 'px'; } else { pop.style.bottom = ''; pop.style.top = (r.bottom + 4) + 'px'; }
+    }
+    function render(){
+      var f = fold(q.value.trim()), html = '', n = 0; shown = [];
+      [].forEach.call(sel.options, function(o, i){
+        if (o.hidden || (f && optHay(o).indexOf(f) === -1)) return;
+        shown.push(i); if (n++ >= PICK_MAX_ROWS) return;
+        html += '<div role="option" id="' + id + 'o' + i + '" data-i="' + i + '" class="rx-combo-opt' + (o.disabled ? ' is-disabled' : '') + '" aria-selected="' + o.selected + '"' + (o.disabled ? ' aria-disabled="true"' : '') + '>' + (multi ? '<span class="rx-combo-box" aria-hidden="true"></span>' : '') + '<span>' + escH(o.text || ' ') + '</span></div>';
+      });
+      if (shown.length > PICK_MAX_ROWS) html += '<div class="rx-combo-more">' + (shown.length - PICK_MAX_ROWS) + ' more — keep typing to narrow the list</div>';
+      list.innerHTML = html; empty.hidden = shown.length > 0;
+      if (count) count.textContent = [].filter.call(sel.options, function(o){ return o.selected && o.value !== ''; }).length + ' selected';
+      if (active >= 0 && shown.indexOf(active) === -1) active = -1;
+      if (active === -1 && shown.length && !f && !multi) active = sel.selectedIndex >= 0 ? sel.selectedIndex : shown[0];
+      if (active === -1 && shown.length && f) active = shown[0];
+      mark();
+    }
+    function mark(){
+      list.querySelectorAll('.is-active').forEach(function(e){ e.classList.remove('is-active'); });
+      var el = active >= 0 ? doc.getElementById(id + 'o' + active) : null;
+      if (el) { el.classList.add('is-active'); q.setAttribute('aria-activedescendant', el.id); el.scrollIntoView({ block: 'nearest' }); } else q.removeAttribute('aria-activedescendant');
+    }
+    function changed(){ sel.dispatchEvent(new Event('input', { bubbles: true })); sel.dispatchEvent(new Event('change', { bubbles: true })); label(); }
+    function choose(i){
+      var o = sel.options[i]; if (!o || o.disabled) return;
+      if (multi) { o.selected = !o.selected; changed(); render(); return; }
+      sel.selectedIndex = i; changed(); close(true);
+    }
+    function open(){
+      if (sel.disabled) return;
+      if (openCombo && openCombo !== api) openCombo.close();
+      pop = doc.createElement('div'); pop.className = 'rx-combo-pop'; pop.setAttribute('data-rx-nodirty', '');
+      pop.innerHTML = '<input type="search" class="rx-combo-q" placeholder="Search…" autocomplete="off" role="combobox" aria-expanded="true" aria-autocomplete="list" aria-controls="' + id + 'l" aria-label="Search ' + escH(btn.getAttribute('aria-label') || 'options') + '">' +
+        (multi ? '<div class="rx-combo-tools"><span class="rx-combo-count" aria-live="polite"></span><button type="button" data-all>Select all</button><button type="button" data-clear>Clear</button></div>' : '') +
+        '<div class="rx-combo-list" role="listbox" id="' + id + 'l"' + (multi ? ' aria-multiselectable="true"' : '') + '></div><div class="rx-combo-empty" role="status" hidden>No results found</div>';
+      doc.body.appendChild(pop);   // fixed layer above every page / dialog (sticky bars included)
+      q = pop.querySelector('.rx-combo-q'); list = pop.querySelector('.rx-combo-list'); empty = pop.querySelector('.rx-combo-empty'); count = pop.querySelector('.rx-combo-count');
+      active = -1; render(); place(); btn.setAttribute('aria-expanded', 'true'); box.classList.add('is-open');
+      q.addEventListener('input', debounce(function(){ navMoved = false; active = -1; render(); }, PICK_DEBOUNCE));
+      q.addEventListener('keydown', function(e){
+        var k = shown.indexOf(active);
+        if (e.key === 'ArrowDown') { e.preventDefault(); navMoved = true; active = shown[Math.min(shown.length - 1, k + 1)]; if (active === undefined) active = -1; mark(); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); navMoved = true; active = shown[Math.max(0, k - 1)]; if (active === undefined) active = -1; mark(); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (active >= 0) choose(active); }
+        else if (e.key === ' ' && navMoved && active >= 0) { e.preventDefault(); choose(active); }
+        else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
+      });
+      list.addEventListener('mousedown', function(e){ e.preventDefault(); });
+      list.addEventListener('click', function(e){ var o = e.target.closest('[data-i]'); if (o) { active = +o.dataset.i; choose(active); if (multi) q.focus(); } });
+      if (multi) {
+        pop.querySelector('[data-all]').onclick = function(){ shown.forEach(function(i){ var o = sel.options[i]; if (!o.disabled && o.value !== '') o.selected = true; }); changed(); render(); q.focus(); };
+        pop.querySelector('[data-clear]').onclick = function(){ [].forEach.call(sel.options, function(o){ o.selected = false; }); changed(); render(); q.focus(); };
+      }
+      pop.addEventListener('keydown', function(e){
+        if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(true); }
+        else if (e.key === 'Tab') {   // stay inside the list: search ↔ Select all ↔ Clear; single lists close back to the field
+          e.preventDefault(); if (!multi) return close(true);
+          var f = [].slice.call(pop.querySelectorAll('input, button')), i = f.indexOf(doc.activeElement);
+          f[(i + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+        }
+      });
+      setTimeout(function(){ q.focus(); }, 0);
+      openCombo = api;
+    }
+    function close(refocus){
+      if (!pop) return; pop.remove(); pop = null; btn.setAttribute('aria-expanded', 'false'); box.classList.remove('is-open');
+      if (openCombo === api) openCombo = null; if (refocus) btn.focus();
+    }
+    var api = { close: close, place: place, el: box, contains: function(n){ return box.contains(n) || (pop && pop.contains(n)); } };
+    btn.addEventListener('click', function(){ pop ? close(true) : open(); });
+    btn.addEventListener('keydown', function(e){ if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !pop) { e.preventDefault(); open(); } });
+    sel.addEventListener('change', label);
+    new MutationObserver(function(){ label(); if (pop) render(); }).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'hidden', 'style'] });
+    // programmatic sel.value = … fires no event: re-read the label whenever the field is shown or focused
+    box.addEventListener('focusin', label);
+    sel._rxPick = api; label();
+  }
+  doc.addEventListener('mousedown', function(e){ if (openCombo && !openCombo.contains(e.target)) openCombo.close(false); }, true);
+  window.addEventListener('resize', function(){ if (openCombo) openCombo.place(); });
+  doc.addEventListener('scroll', function(e){ if (openCombo && !(e.target.closest && e.target.closest('.rx-combo-pop'))) openCombo.place(); }, true);
+
+  function searchList(box){
+    box.setAttribute('data-rx-pick', '1');
+    var items = function(){ return [].slice.call(box.querySelectorAll('label')).filter(function(l){ return l.querySelector('input[type=checkbox]'); }); };
+    if (items().length < PICK_MIN) return;
+    var bar = doc.createElement('div'); bar.className = 'rx-pick-bar'; bar.setAttribute('data-rx-nodirty', '');
+    bar.innerHTML = '<input type="search" class="rx-pick-q" placeholder="Search by name, username or email…" aria-label="Search the list" autocomplete="off">' +
+      '<span class="rx-pick-count" aria-live="polite"></span><button type="button" class="wm-btn rx-btn-sm" data-all>Select all</button><button type="button" class="wm-btn rx-btn-sm" data-clear>Clear</button>';
+    box.parentNode.insertBefore(bar, box);
+    var emptyEl = doc.createElement('p'); emptyEl.className = 'rx-pick-empty'; emptyEl.setAttribute('role', 'status'); emptyEl.textContent = 'No results found'; emptyEl.hidden = true;
+    box.parentNode.insertBefore(emptyEl, box.nextSibling);
+    var q = bar.querySelector('.rx-pick-q'), cnt = bar.querySelector('.rx-pick-count');
+    function boxes(visibleOnly){ return items().filter(function(l){ return !visibleOnly || !l.hidden; }).map(function(l){ return l.querySelector('input[type=checkbox]'); }); }
+    function sync(){
+      var all = boxes(false), on = all.filter(function(c){ return c.checked; }).length, dis = all.every(function(c){ return c.disabled; });
+      cnt.textContent = on + ' selected'; [q].concat([].slice.call(bar.querySelectorAll('button'))).forEach(function(x){ x.disabled = dis; });
+    }
+    function filter(){
+      var f = fold(q.value.trim()), n = 0;
+      items().forEach(function(l){ var hit = !f || fold(l.textContent + ' ' + (l.getAttribute('data-search') || '')).indexOf(f) !== -1; l.hidden = !hit; if (hit) n++; });
+      emptyEl.hidden = n > 0;
+    }
+    function fire(c){ c.dispatchEvent(new Event('change', { bubbles: true })); }
+    q.addEventListener('input', debounce(filter, PICK_DEBOUNCE));
+    q.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); filter(); } if (e.key === 'ArrowDown') { e.preventDefault(); var c = boxes(true).filter(function(x){ return !x.disabled; })[0]; if (c) c.focus(); } });
+    box.addEventListener('keydown', function(e){
+      if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp' && e.key !== 'Enter') return;
+      var vis = boxes(true).filter(function(x){ return !x.disabled; }), i = vis.indexOf(doc.activeElement); if (i === -1) return;
+      e.preventDefault();
+      if (e.key === 'Enter') { vis[i].checked = !vis[i].checked; fire(vis[i]); sync(); return; }
+      var nx = vis[i + (e.key === 'ArrowDown' ? 1 : -1)]; if (nx) nx.focus(); else if (e.key === 'ArrowUp') q.focus();
+    });
+    bar.querySelector('[data-all]').onclick = function(){ boxes(true).forEach(function(c){ if (!c.disabled && !c.checked) { c.checked = true; fire(c); } }); sync(); };
+    bar.querySelector('[data-clear]').onclick = function(){ boxes(false).forEach(function(c){ if (!c.disabled && c.checked) { c.checked = false; fire(c); } }); sync(); };
+    (box.closest('form') || box).addEventListener('change', function(){ setTimeout(sync, 0); });
+    sync();
   }
 
   /* ---------------------------------------------------------------- boot */
   var scheduled = false;
-  function run(){ scheduled = false; enhanceControls(); syncDialogs(); liveRegions(); tidyTables(); resizableTables(); }
+  function run(){ scheduled = false; enhanceSelects(); enhanceControls(); syncDialogs(); liveRegions(); tidyTables(); resizableTables(); }
   function schedule(){ if (!scheduled) { scheduled = true; requestAnimationFrame(run); } }
   new MutationObserver(schedule).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
   run();
-  window.REXUSui = { refresh: run, version: '2.2.2' };
+  window.REXUSui = { refresh: run, fold: fold, version: '2.2.3' };
 })();
