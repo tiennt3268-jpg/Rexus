@@ -2,9 +2,10 @@ import type { Context, Config } from "@netlify/functions";
 import { getDatabase } from "@netlify/database";
 import { getUserFromRequest, clearSessionCookieHeader } from "./lib/auth.mts";
 import { serializeUserWithRole } from "./lib/rbac.mts";
+import { gateState } from "./lib/survey.mts";
 
 export default async (req: Request, context: Context) => {
-  const session = await getUserFromRequest(req);
+  const session = await getUserFromRequest(req, { allowGate: true });
   if (!session) return Response.json({ user: null });
 
   const db = getDatabase();
@@ -23,7 +24,8 @@ export default async (req: Request, context: Context) => {
     });
   }
 
-  return Response.json({ user: serializeUserWithRole(rows[0]) });
+  // v2.3.0: outstanding First Login step / mandatory surveys — the app shows the matching fullscreen step.
+  return Response.json({ user: serializeUserWithRole(rows[0]), onboarding: await gateState(db, session.uid) });
 };
 
 export const config: Config = {

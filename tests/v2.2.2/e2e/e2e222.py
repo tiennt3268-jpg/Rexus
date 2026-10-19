@@ -56,13 +56,17 @@ with sync_playwright() as p:
     ctx, page, errs = ctx_page(b, None, watch=True)
     page.goto(BASE + '/'); page.wait_for_selector('#wmAuthScreen', state='visible', timeout=15000)
     page.fill('#wmAuthIdentifier', 'login.tester'); page.fill('#wmAuthPassword', acct.get('temp_password', '')); page.click('#wmAuthSubmit')
+    # v2.3.0 (F07): a new account first replaces its temporary password and completes the required profile fields
+    page.wait_for_selector('#rxGate .sv-pw', timeout=15000)
+    page.fill('#pw_current_password', acct.get('temp_password', '')); page.fill('#pw_new_password', 'LoginTest2026'); page.fill('#pw_confirm_password', 'LoginTest2026'); page.click('.sv-pw [type=submit]')
+    page.wait_for_selector('#rxGate .sv-profile', timeout=15000); page.fill('#pf_date_of_birth', '1995-05-05'); page.select_option('#pf_education_level', 'Bachelor'); page.click('.sv-profile [type=submit]')
     page.wait_for_selector('.wm-app', state='visible', timeout=15000); page.wait_for_timeout(800)
     check('GEN-05 sign in with username through the form', page.locator('#wmAuthScreen').is_hidden())
     page.add_init_script(WATCH_AUTH); page.reload(); page.wait_for_selector('.wm-app', state='visible'); page.wait_for_timeout(800)
     check('GEN-05 refresh keeps the session without flashing the login screen', page.evaluate('window.__authSeen') is False)
     ctx.clear_cookies(); go(page, 'approval-center'); page.wait_for_timeout(1500)
     check('GEN-05 expired session returns to the login screen', page.locator('#wmAuthScreen').is_visible())
-    page.fill('#wmAuthIdentifier', 'login.tester'); page.fill('#wmAuthPassword', acct.get('temp_password', '')); page.click('#wmAuthSubmit')
+    page.fill('#wmAuthIdentifier', 'login.tester'); page.fill('#wmAuthPassword', 'LoginTest2026'); page.click('#wmAuthSubmit')
     page.wait_for_selector('.wm-app', state='visible', timeout=15000); page.wait_for_timeout(800)
     page.evaluate("()=>document.getElementById('wmUserMenuBtn').click()"); page.wait_for_timeout(300)
     page.evaluate("()=>{const e=document.querySelector('#wmUserMenu [data-action=\"logout\"]'); e&&e.click();}"); page.wait_for_timeout(1800)
@@ -126,7 +130,8 @@ with sync_playwright() as p:
     page.fill('#wmAccountUsername', 'tiennt'); page.click('#wmAccountSaveBtn'); page.wait_for_timeout(1500)
     page.reload(); page.wait_for_selector('.wm-app', state='visible'); page.wait_for_timeout(1000); menu(page, 'my-account')
     check('ACC-03 saved values shown after reload', page.input_value('#wmAccountPosition') == 'Teaching Assistant (QA)')
-    check('ACC-03 role stays read-only', page.locator('#view-my-account select, #view-my-account input[id*=Role]').count() == 0 and 'System Admin' in page.inner_text('#view-my-account'))
+    # v2.3.0: the Personal information card in My Account has its own selects; the role must still have none
+    check('ACC-03 role stays read-only', page.locator('#view-my-account select:not(#rxMyPersonal select), #view-my-account input[id*=Role]').count() == 0 and 'System Admin' in page.inner_text('#view-my-account'))
 
     # ------------------------------------------------------------------ ACC-01 / ACC-02
     menu(page, 'configuration')

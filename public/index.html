@@ -1288,6 +1288,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
             <div class="rx-launcher-heading">My applications</div>
             <button class="rx-launcher-item rx-selected" type="button" role="menuitem" aria-current="page" data-rexus-app="rexus"><span class="rx-app-emoji rx-app-work" aria-hidden="true">💼</span><span><strong>REXUS</strong><small>Work Management</small></span><span class="rx-selected-mark">✓</span></button>
             <button class="rx-launcher-item" type="button" role="menuitem" data-rexus-app="document"><span class="rx-app-emoji rx-app-document" aria-hidden="true">📚</span><span><strong>REXUS <em>Document</em></strong><small>Knowledge &amp; documents</small></span><span class="rx-selected-mark">✓</span></button>
+            <button class="rx-launcher-item" type="button" role="menuitem" data-rexus-app="survey"><span class="rx-app-emoji rx-app-survey" aria-hidden="true">📝</span><span><strong>REXUS <em>Survey</em></strong><small>Surveys &amp; feedback</small></span><span class="rx-selected-mark">✓</span></button>
           </div>
         </div>
       </div>
@@ -1598,7 +1599,9 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   <!-- Task Detail Modal -->
 
   <script src="/rexus-notify.js?v=2.2.3"></script>  <!-- GEN-10: shared result notification -->
-  <script src="/rexus-pages.js?v=2.2.3"></script>  <!-- GEN-09: before the app script, which registers its form routes -->
+  <script src="/rexus-pages.js?v=2.2.3"></script>
+  <!-- GEN-09 (rexus-pages) goes before the app script, which registers its form routes -->
+  <script src="/rexus-gate.js?v=2.3.0"></script>  <!-- v2.3.0: First Login + mandatory survey steps, survey form -->
   <script>
 (function(){
 
@@ -1644,7 +1647,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   function apiGet(path){
     return fetch(path).then(function(r){
       return r.json().then(function(json){
-        if(r.status === 401){ showAuthScreen(); throw new Error('Not signed in'); }
+        if(r.status === 401){ onUnauthorized(); throw new Error('Not signed in'); }
         if(json && json.error) throw new Error(json.error);
         return json;
       });
@@ -1657,7 +1660,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       body: JSON.stringify(body || {})
     }).then(function(r){
       return r.json().then(function(json){
-        if(r.status === 401){ showAuthScreen(); throw new Error('Not signed in'); }
+        if(r.status === 401){ onUnauthorized(); throw new Error('Not signed in'); }
         if(json && json.error) throw new Error(json.error);
         return json;
       });
@@ -6824,7 +6827,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     confirm: function(msg, title){ return askConfirm(msg, title); },
     showView: function(){ switchView('overview'); },
     switchView: function(v){ switchView(v); },
-    renderActiveView: function(){ renderActiveView(); }
+    renderActiveView: function(){ renderActiveView(); },
+    currentUserId: function(){ return STATE.currentUser ? STATE.currentUser.id : ''; }
   };
   if(window.REXUSPages){
     var notFound = function(what, parent){ showAlert(what + ' was not found or you no longer have access to it.'); switchView(parent); };
@@ -6947,8 +6951,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       }).catch(function(){ /* keep the hard-coded footer fallback */ });
     }).catch(function(err){
       if(String(err.message).indexOf('signed in') !== -1){
-        showAuthScreen();
-        return;
+        return;   // onUnauthorized() already chose the login screen or the required step
       }
       showLoaderError('Could not load data: ' + err.message);
     });
@@ -6978,6 +6981,19 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     if(byId('wmFinanceTab')) byId('wmFinanceTab').style.display = isManagerOrAdmin ? '' : 'none';
     applyTabsCollapsedState();
     setHeaderHeightVar();
+  }
+
+  // v2.3.0: First Login steps and mandatory surveys come before the workspace (the server enforces the same order).
+  function enterApp(user, onboarding){
+    if(onboarding && onboarding.step && window.REXUSGate){ window.REXUSGate.start(user, onboarding); return; }
+    hideAuthScreenAndShowApp(user);
+    bootApp();
+  }
+  // A 401 can also mean "signed in, but a required step is pending" (e.g. a mandatory survey was published meanwhile).
+  function onUnauthorized(){
+    fetch('/api/auth/me').then(function(r){ return r.json(); }).then(function(j){
+      if(j && j.user && j.onboarding && j.onboarding.step && window.REXUSGate) window.REXUSGate.start(j.user, j.onboarding); else showAuthScreen();
+    }).catch(showAuthScreen);
   }
 
   function submitAuthForm(){
@@ -7011,8 +7027,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           errEl.style.display = 'block';
           return;
         }
-        hideAuthScreenAndShowApp(result.json);
-        bootApp();
+        enterApp(result.json, result.json.onboarding);
       })
       .catch(function(){
         btn.disabled = false;
@@ -7386,6 +7401,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     byId('wmAccountSaveBtn').addEventListener('click', saveMyAccountDetails);
     byId('wmAccountPwSaveBtn').addEventListener('click', saveMyAccountPassword);
     if(window.REXUS221)window.REXUS221.bindAppearance();
+    // v2.3.0: self-service personal information (same rules as the first sign-in step).
+    if(window.REXUSGate){ var pi = document.createElement('div'); pi.id = 'rxMyPersonal'; pi.className = 'rx-my-personal'; byId('view-my-account').appendChild(pi); window.REXUSGate.mountProfile(pi, { submitLabel: 'Save personal information' }); }
   }
 
   function saveMyAccountDetails(){
@@ -7421,7 +7438,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     errEl.style.display = 'none';
     if(!current || !next){ errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
     if(next !== confirmPw){ errEl.textContent = 'New password and confirmation do not match.'; errEl.style.display = 'block'; return; }
-    if(next.length < 6){ errEl.textContent = 'New password must be at least 6 characters.'; errEl.style.display = 'block'; return; }
+    if(!(next.length >= 8 && /[A-Za-z]/.test(next) && /\d/.test(next))){ errEl.textContent = 'Password must be at least 8 characters and contain a letter and a digit.'; errEl.style.display = 'block'; return; }
 
     fetch('/api/auth/change-password', {
       method: 'POST',
@@ -8002,7 +8019,9 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           var entityId = el.getAttribute('data-entity-id');
           NotificationsAPI.markRead(id).then(refreshNotifications);
           byId('wmNotifPanel').style.display = 'none';
-          if(entityType === 'task' || entityType === 'subtask'){
+          if(entityType === 'survey' && entityId && window.REXUSSurvey){
+            window.REXUSSurvey.open('answer/' + encodeURIComponent(entityId));
+          } else if(entityType === 'task' || entityType === 'subtask'){
             var taskId = entityType === 'task' ? entityId : (STATE.subtasks.filter(function(s){ return s.id === entityId; })[0] || {}).task_id;
             if(taskId) openDetailModal(taskId);
           } else if(entityType === 'project' && entityId){
@@ -8115,8 +8134,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   // deciding whether to show the login screen or the app itself.
   fetch('/api/auth/me').then(function(r){ return r.json(); }).then(function(json){
     if(json && json.user){
-      hideAuthScreenAndShowApp(json.user);
-      bootApp();
+      enterApp(json.user, json.onboarding);
     } else {
       showAuthScreen();
     }
@@ -8129,6 +8147,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   </script>
   <script src="/rexus-docx-export.js?v=2.0.6"></script>
   <script src="/rexus-document.js?v=2.2.3"></script>
+  <script src="/rexus-survey.js?v=2.3.0"></script>
   <link rel="stylesheet" href="/rexus-liquid-glass.css?v=2.0.5">
   <link rel="stylesheet" href="/rexus-editor.css?v=2.0.6">
   <link rel="stylesheet" href="/rexus-v205.css?v=2.0.5">
@@ -8143,11 +8162,12 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   <!-- v2.2.0 Adaptive Liquid Glass design system: tokens + components. Must stay the LAST stylesheet. -->
   <link rel="stylesheet" href="/rexus-ui.css?v=2.2.3">
   <link rel="stylesheet" href="/rexus-dark.css?v=2.2.3">
+  <link rel="stylesheet" href="/rexus-survey.css?v=2.3.0">
   <script src="/rexus-v210.js?v=2.2.2"></script>
   <script src="/rexus-v221.js?v=2.2.3"></script>
 </section>
 
   <script src="/rexus-v211.js?v=2.1.2" defer></script>
-  <script src="/rexus-ui.js?v=2.2.3" defer></script>
+  <script src="/rexus-ui.js?v=2.3.0" defer></script>
 </body>
 </html>

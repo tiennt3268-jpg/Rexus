@@ -3,6 +3,7 @@ import { getDatabase } from "@netlify/database";
 import { verifyPassword, createSessionToken, sessionCookieHeader } from "./lib/auth.mts";
 import { serializeUserWithRole } from "./lib/rbac.mts";
 import { logAudit } from "./lib/rexus-audit.mts";
+import { gateState } from "./lib/survey.mts";
 
 export default async (req: Request, context: Context) => {
   if (req.method !== "POST") return Response.json({ error: "Unsupported method" }, { status: 405 });
@@ -26,7 +27,7 @@ export default async (req: Request, context: Context) => {
     }
     const token = await createSessionToken(user.id, user.username || user.email);
     await logAudit(db, { actorId: user.id, actorName: user.username || user.email, action: 'login', entityType: 'session', entityId: user.id, summary: 'Signed in to REXUS' });
-    return new Response(JSON.stringify(serializeUserWithRole(user)), {
+    return new Response(JSON.stringify({ ...serializeUserWithRole(user), onboarding: await gateState(db, user.id) }), {
       status: 200,
       headers: { "Content-Type": "application/json", "Set-Cookie": sessionCookieHeader(token, remember) }
     });

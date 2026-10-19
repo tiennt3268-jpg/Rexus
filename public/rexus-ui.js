@@ -318,7 +318,7 @@
   var openCombo = null;
   function enhanceSelects(){
     doc.querySelectorAll('select:not([data-rx-pick]):not([data-rx-nosearch])').forEach(function(sel){
-      if (sel.options.length < PICK_MIN || sel.closest('.rd-editor, [contenteditable]')) return;
+      if ((sel.options.length < PICK_MIN && !sel.hasAttribute('data-rx-search')) || sel.closest('.rd-editor, [contenteditable]')) return;   // data-rx-search: always searchable
       combo(sel);
     });
     doc.querySelectorAll('[data-rx-searchlist]:not([data-rx-pick])').forEach(searchList);

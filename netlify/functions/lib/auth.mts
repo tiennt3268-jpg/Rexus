@@ -1,5 +1,6 @@
 import { scryptSync, randomBytes, timingSafeEqual, createHmac } from "node:crypto";
 import { getDatabase } from "@netlify/database";
+import { gateState } from "./survey.mts";
 
 /* =========================================================
    Password hashing (Node's built-in scrypt — no extra deps).
@@ -165,8 +166,10 @@ function parseCookies(header: string | null): Record<string, string> {
 
 export const SESSION_COOKIE = "wm_session";
 
-/** Returns the authenticated user (uid, username) for a request, or null. */
-export async function getUserFromRequest(req: Request): Promise<{ uid: string; username: string } | null> {
+/** Returns the authenticated user (uid, username) for a request, or null.
+ *  v2.3.0 (F07 / F02–F04): while the account still has a First Login step or a mandatory survey to complete,
+ *  business APIs see it as signed out. Only the endpoints that run those steps pass { allowGate: true }. */
+export async function getUserFromRequest(req: Request, opts: { allowGate?: boolean } = {}): Promise<{ uid: string; username: string } | null> {
   const cookies = parseCookies(req.headers.get("cookie"));
   const token = cookies[SESSION_COOKIE];
   if (!token) return null;
@@ -176,6 +179,8 @@ export async function getUserFromRequest(req: Request): Promise<{ uid: string; u
   // not only on the next page load — signed tokens themselves cannot be revoked.
   const rows = await getDatabase().sql`SELECT status, deleted_at FROM users WHERE id = ${session.uid}`;
   if (!rows.length || (rows[0].status && rows[0].status !== "Active") || rows[0].deleted_at) return null;
+  // shortcut: one extra query per request; cache it for a few seconds if traffic grows to thousands of concurrent users.
+  if (!opts.allowGate && (await gateState(getDatabase(), session.uid)).step) return null;
   return session;
 }
 

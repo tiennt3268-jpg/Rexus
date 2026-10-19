@@ -57,6 +57,15 @@ export default async (req: Request, context: Context) => {
     if (req.method === "POST" && targetId) {
       // ACC-02: restore a soft-deleted account (it comes back Inactive; an admin re-activates it explicitly).
       const body = await req.json().catch(() => ({}));
+      if (body.action === "reset_password") {
+        // v2.3.0: a new temporary password; the person must replace it at the next sign-in. Never logged.
+        const target = await db.sql`SELECT id, username, deleted_at FROM users WHERE id = ${targetId}`;
+        if (!target.length || target[0].deleted_at) return Response.json({ error: "Account not found" }, { status: 404 });
+        const temp = generateTempPassword();
+        await db.sql`UPDATE users SET password_hash = ${hashPassword(temp)}, must_change_password = TRUE, updated_at = ${new Date().toISOString()} WHERE id = ${targetId}`;
+        await logAudit(db, { actorId: session.uid, actorName: requester.username, action: "account_password_reset", entityType: "account", entityId: targetId, summary: `Reset the password of ${target[0].username}` });
+        return Response.json({ ok: true, temp_password: temp });
+      }
       if (body.action !== "restore") return Response.json({ error: "Unknown action" }, { status: 400 });
       const rows = await db.sql`UPDATE users SET deleted_at = NULL, deleted_by = NULL, updated_at = ${new Date().toISOString()} WHERE id = ${targetId} AND deleted_at IS NOT NULL RETURNING id, username, full_name`;
       if (!rows.length) return Response.json({ error: "Deleted account not found" }, { status: 404 });
@@ -121,8 +130,8 @@ export default async (req: Request, context: Context) => {
       const now = new Date().toISOString();
 
       await db.sql`
-        INSERT INTO users (id, email, username, full_name, password_hash, status, role, position, department, created_at, updated_at)
-        VALUES (${id}, ${email}, ${uniqueUsername}, ${fullName}, ${passwordHash}, 'Active', ${role}, ${position}, ${department}, ${now}, ${now})
+        INSERT INTO users (id, email, username, full_name, password_hash, status, role, position, department, created_at, updated_at, must_change_password, profile_gate)
+        VALUES (${id}, ${email}, ${uniqueUsername}, ${fullName}, ${passwordHash}, 'Active', ${role}, ${position}, ${department}, ${now}, ${now}, TRUE, TRUE)
       `;
       await logActivity(db, {
         userId: session.uid, project: "", action: "create_account",

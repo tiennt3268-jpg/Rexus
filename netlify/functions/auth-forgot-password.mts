@@ -1,6 +1,7 @@
 import type { Context, Config } from "@netlify/functions";
 import { getDatabase } from "@netlify/database";
 import { hashPassword, createPasswordResetToken, verifyPasswordResetToken } from "./lib/auth.mts";
+import { passwordPolicyError } from "./lib/account-rules.mts";
 
 // This deployment has no outbound email infrastructure, so "forgot password"
 // is implemented as a two-step, in-app identity check instead of an emailed
@@ -45,16 +46,15 @@ export default async (req: Request, context: Context) => {
     if (action === "reset") {
       const token = String(body.token || "");
       const newPassword = String(body.new_password || "");
-      if (newPassword.length < 8) {
-        return Response.json({ error: "Password must be at least 8 characters." }, { status: 400 });
-      }
+      const weak = passwordPolicyError(newPassword);
+      if (weak) return Response.json({ error: weak }, { status: 400 });
       const verified = await verifyPasswordResetToken(token);
       if (!verified) {
         return Response.json({ error: "This reset session has expired. Please verify your identity again." }, { status: 401 });
       }
 
       const passwordHash = hashPassword(newPassword);
-      await db.sql`UPDATE users SET password_hash = ${passwordHash}, updated_at = NOW() WHERE id = ${verified.uid}`;
+      await db.sql`UPDATE users SET password_hash = ${passwordHash}, must_change_password = FALSE, updated_at = NOW() WHERE id = ${verified.uid}`;  // the person chose this password
       return Response.json({ ok: true });
     }
 

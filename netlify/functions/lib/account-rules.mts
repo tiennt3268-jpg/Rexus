@@ -16,3 +16,8 @@ export async function takenError(db: any, field: 'username' | 'email', value: st
     : await db.sql`SELECT id FROM users WHERE LOWER(email) = LOWER(${value}) AND id <> ${exceptId || ''}`;
   return rows.length ? (field === 'username' ? 'This username is already taken.' : 'An account with this email already exists.') : null;
 }
+/** v2.3.0 password policy (F07): at least 8 characters with a letter and a digit. */
+export const PASSWORD_RULE = 'Password must be at least 8 characters and contain a letter and a digit.';
+export function passwordPolicyError(p: string): string | null {
+  return p.length >= 8 && p.length <= 200 && /[A-Za-z]/.test(p) && /\d/.test(p) ? null : PASSWORD_RULE;
+}

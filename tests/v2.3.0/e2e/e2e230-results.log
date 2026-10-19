@@ -1,0 +1,69 @@
+PASS setup: two new accounts with temporary passwords
+PASS App Switcher lists REXUS Survey next to Work Management and Document
+PASS Survey workspace opens with its own navigation (Overview, My Surveys, Builder, Settings, Analytics)
+PASS work views are hidden in Survey mode
+PASS create → Survey Builder with the template questions
+PASS add a question (dropdown) after the selected one, required
+PASS duplicate a question
+PASS delete a question (with confirmation)
+PASS reorder (move up)
+PASS save draft
+PASS preview opens (desktop)
+PASS preview on mobile width
+PASS publish → version 1, then Survey Settings
+PASS AC03 target by department with the searchable list; unique estimate shown (OR rule explained)
+PASS AC03 settings saved: mandatory, Finance Ops department
+PASS AC01 new user signs in but lands on Change password (not the workspace)
+PASS UIAC06 no Skip / Close / Later on the password step
+PASS Esc does not leave the step
+PASS UIAC06 typing a module URL still shows the password step
+PASS AC01 business API refused while the step is pending (server-side gate)
+PASS validation at the field (weak password)
+PASS server error shown at the field (wrong temporary password)
+PASS AC02 after the password: Complete personal profile
+PASS UIAC06 no Skip / Close on the profile step
+PASS managed fields (name, department, position) are read-only
+PASS required DOB and Education errors shown at the fields
+PASS AC02 refresh keeps the profile step (no Dashboard)
+PASS AC03/AC04 targeted user gets the Mandatory Intro
+PASS UIAC07 intro fills 100% of the viewport (not a centred card)
+PASS AC04 only Start survey (+ Sign out); no Skip / Close / Dashboard
+PASS intro shows name, question count, estimate and the User ID note
+PASS UIAC07 form fills 100% of the viewport
+PASS form: progress, navigator, Previous / Next, no exit buttons
+PASS required question validated at the question
+PASS keyboard: arrow keys choose on a rating scale
+PASS AC05 refresh before submit → back in the mandatory flow
+PASS AC05 sign out + sign in again → still the missing step
+PASS draft answers kept on this device after refresh
+PASS AC06 submit → workspace opens
+PASS AC06 response linked to the signed-in User ID
+PASS business APIs open after server confirmation
+PASS AC03 a user outside the target group goes straight to the workspace
+PASS AC08 an employee cannot read another person's demographics
+PASS AC08 …nor identified responses
+PASS adding a group gates that group on the next sign-in
+PASS AC07 survey closed → the user is not blocked any more
+PASS AC07 server refuses new answers after closing
+PASS a survey published mid-session: the next request shows the intro (not the login screen)
+PASS mobile: intro shown for the targeted PM
+PASS UIAC08 mobile intro: full width, no horizontal overflow
+PASS UIAC08 mobile form: 100vw, no overflow, Next reachable in the viewport
+PASS UIAC10 dark mode applies to the mandatory form
+PASS Analytics: one valid response, choice bars with counts
+PASS CSV export with User ID column (authenticated survey)
+PASS responses list shows the respondent to the owner
+PASS re-publishing after an edit creates version 2 (answers stay on version 1)
+PASS public survey opens without signing in, no account shown
+PASS public answer saved (thank-you page)
+PASS a Member sees "Surveys for you" and no builder
+PASS Member answers a non-mandatory survey and returns to the overview
+PASS My Account has the Personal information card
+PASS self-service personal information saved from My Account
+PASS Employee Profiles: status + personal information for System Admin
+PASS reset password shows the temporary password once and waits for OK
+PASS a hidden field cannot be required (UI)
+PASS field configuration saved
+PASS No JavaScript errors
+
+67/67 passed

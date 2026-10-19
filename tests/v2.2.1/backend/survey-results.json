@@ -1,0 +1,487 @@
+[
+ {
+  "section": "Migration 035",
+  "name": "users has must_change_password / profile_gate / onboarding_completed_at",
+  "pass": true
+ },
+ {
+  "section": "Migration 035",
+  "name": "survey + demographic tables exist",
+  "pass": true
+ },
+ {
+  "section": "Migration 035",
+  "name": "existing accounts are not gated after the migration",
+  "pass": true
+ },
+ {
+  "section": "Migration 035",
+  "name": "existing account keeps working",
+  "pass": true
+ },
+ {
+  "section": "Migration 035",
+  "name": "default fields: DOB + Education required (D1), others optional",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "admin creates the account with a temporary password",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "sign-in succeeds and reports the password step",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "/auth/me works while gated and shows step=password",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "business API blocked while gated: /api/tasks",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "business API blocked while gated: /api/projects",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "business API blocked while gated: /api/rexus-documents",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "business API blocked while gated: /api/surveys",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "business API blocked while gated: /api/hr/team",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "profile cannot be filled before the password step",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "weak password rejected (policy)",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "confirmation must match",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "wrong temporary password rejected",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "cannot reuse the temporary password",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "password changed → next step is profile",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "flag cleared only after the server saved it",
+  "pass": true
+ },
+ {
+  "section": "AC01 First Login: password",
+  "name": "passwords never written to the audit log",
+  "pass": true
+ },
+ {
+  "section": "AC02 First Login: profile",
+  "name": "still blocked before the profile is complete",
+  "pass": true
+ },
+ {
+  "section": "AC02 First Login: profile",
+  "name": "profile step lists the visible fields and missing required ones",
+  "pass": true
+ },
+ {
+  "section": "AC02 First Login: profile",
+  "name": "missing DOB → field error, nothing completed",
+  "pass": true
+ },
+ {
+  "section": "AC02 First Login: profile",
+  "name": "future DOB and unknown option rejected per field",
+  "pass": true
+ },
+ {
+  "section": "AC02 First Login: profile",
+  "name": "admin-managed field cannot be self-edited",
+  "pass": true
+ },
+ {
+  "section": "AC02 First Login: profile",
+  "name": "valid profile saved → no step left",
+  "pass": true
+ },
+ {
+  "section": "AC02 First Login: profile",
+  "name": "workspace reachable after onboarding",
+  "pass": true
+ },
+ {
+  "section": "AC02 First Login: profile",
+  "name": "demographic values not in the audit log",
+  "pass": true
+ },
+ {
+  "section": "AC08 Demographic privacy",
+  "name": "another employee cannot read demographics",
+  "pass": true
+ },
+ {
+  "section": "AC08 Demographic privacy",
+  "name": "a Project Manager cannot read demographics either",
+  "pass": true
+ },
+ {
+  "section": "AC08 Demographic privacy",
+  "name": "System Admin can (authorised)",
+  "pass": true
+ },
+ {
+  "section": "AC08 Demographic privacy",
+  "name": "admin edits an admin-managed field",
+  "pass": true
+ },
+ {
+  "section": "AC08 Demographic privacy",
+  "name": "only admin configures fields",
+  "pass": true
+ },
+ {
+  "section": "AC08 Demographic privacy",
+  "name": "a hidden field is never required",
+  "pass": true
+ },
+ {
+  "section": "Survey builder",
+  "name": "a Member cannot create surveys",
+  "pass": true
+ },
+ {
+  "section": "Survey builder",
+  "name": "a Project Manager creates from a template",
+  "pass": true
+ },
+ {
+  "section": "Survey builder",
+  "name": "only admin can make a survey mandatory",
+  "pass": true
+ },
+ {
+  "section": "Survey builder",
+  "name": "single choice needs ≥2 options",
+  "pass": true
+ },
+ {
+  "section": "Survey builder",
+  "name": "unknown question type rejected",
+  "pass": true
+ },
+ {
+  "section": "Survey builder",
+  "name": "all 9 question types saved",
+  "pass": true
+ },
+ {
+  "section": "Survey builder",
+  "name": "PM publishes own survey",
+  "pass": true
+ },
+ {
+  "section": "Survey builder",
+  "name": "non-owner cannot open the builder",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "mandatory needs a target group",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "estimate counts unique users (OR)",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "mandatory settings saved",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "draft mandatory survey does not gate anyone",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "publish → version 1",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "targeted by User ID → step survey",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "targeted by department (Finance) → business API blocked",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "user outside every group is not gated",
+  "pass": true
+ },
+ {
+  "section": "AC03 Mandatory targeting",
+  "name": "intro data: name, question count, estimate",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "respondent sees the published questions",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "required question missing → error points at the question",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "invalid option rejected",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "rating out of range rejected",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "text length limit enforced",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "AC05: still gated after failed attempts (nothing saved)",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "submit succeeds → gate released",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "AC06: response stored with the session user, not the user_id in the request",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "re-sending the same submission is idempotent",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "a second, different submission is refused",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "exactly one response counted",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "workspace open again",
+  "pass": true
+ },
+ {
+  "section": "AC05/AC06 Responses",
+  "name": "a person outside the target cannot answer",
+  "pass": true
+ },
+ {
+  "section": "Versioning",
+  "name": "editing after publish keeps the published set and flags unpublished changes",
+  "pass": true
+ },
+ {
+  "section": "Versioning",
+  "name": "re-publish creates version 2",
+  "pass": true
+ },
+ {
+  "section": "Versioning",
+  "name": "the earlier answer stays linked to version 1",
+  "pass": true
+ },
+ {
+  "section": "Versioning",
+  "name": "a stale form (old version) is asked to reload",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "quota reached → gate released for people who did not answer (D3)",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "server refuses new responses over quota",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "closing date passed → no gate",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "opening date in the future → Scheduled",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "scheduled survey does not gate",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "closing before opening rejected",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "open again → gated again",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "manual close",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "closed manually → gate released",
+  "pass": true
+ },
+ {
+  "section": "AC07 Availability",
+  "name": "reopen → gated again",
+  "pass": true
+ },
+ {
+  "section": "Priority",
+  "name": "higher priority survey comes first",
+  "pass": true
+ },
+ {
+  "section": "Analytics",
+  "name": "summary per question (choice counts)",
+  "pass": true
+ },
+ {
+  "section": "Analytics",
+  "name": "rating average",
+  "pass": true
+ },
+ {
+  "section": "Analytics",
+  "name": "respondent shown to the owner for an authenticated survey",
+  "pass": true
+ },
+ {
+  "section": "Analytics",
+  "name": "a non-owner cannot read responses",
+  "pass": true
+ },
+ {
+  "section": "Analytics",
+  "name": "export includes User ID column for authenticated surveys",
+  "pass": true
+ },
+ {
+  "section": "Analytics",
+  "name": "excluding a response needs a reason",
+  "pass": true
+ },
+ {
+  "section": "Analytics",
+  "name": "response excluded with a logged reason",
+  "pass": true
+ },
+ {
+  "section": "Analytics",
+  "name": "the original answers are kept (not edited)",
+  "pass": true
+ },
+ {
+  "section": "Public survey",
+  "name": "a public survey cannot be mandatory",
+  "pass": true
+ },
+ {
+  "section": "Public survey",
+  "name": "anyone with the link can answer a public survey",
+  "pass": true
+ },
+ {
+  "section": "Public survey",
+  "name": "no user id stored even when a signed-in person answers",
+  "pass": true
+ },
+ {
+  "section": "Public survey",
+  "name": "public export has no respondent columns",
+  "pass": true
+ },
+ {
+  "section": "Public survey",
+  "name": "authenticated survey needs sign-in",
+  "pass": true
+ },
+ {
+  "section": "Rollout and reset",
+  "name": "admin enforces required fields for existing accounts",
+  "pass": true
+ },
+ {
+  "section": "Rollout and reset",
+  "name": "existing account without DOB now has the profile step",
+  "pass": true
+ },
+ {
+  "section": "Rollout and reset",
+  "name": "admin reset gives a temporary password and forces a change",
+  "pass": true
+ },
+ {
+  "section": "Rollout and reset",
+  "name": "…and the account is gated until it is changed",
+  "pass": true
+ }
+]

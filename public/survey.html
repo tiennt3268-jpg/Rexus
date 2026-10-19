@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REXUS Survey</title>
+<meta name="robots" content="noindex">
+<script>/* public surveys follow the device's light / dark setting */ try { if (matchMedia('(prefers-color-scheme: dark)').matches) document.documentElement.setAttribute('data-rx-mode', 'dark'); } catch (e) {}</script>
+<link rel="stylesheet" href="/rexus-ui.css?v=2.2.3">
+<link rel="stylesheet" href="/rexus-dark.css?v=2.2.3">
+<link rel="stylesheet" href="/rexus-survey.css?v=2.3.0">
+<style>body{ margin: 0; background: var(--sv-bg); font-family: Inter, Arial, sans-serif; } #pub{ min-height: 100vh; min-height: 100dvh; } .sv-pub-msg{ max-width: 560px; margin: 12vh auto; padding: 0 16px; color: var(--sv-navy); }</style>
+</head>
+<body>
+<main id="pub" aria-live="polite"><p class="sv-pub-msg">Loading…</p></main>
+<script src="/rexus-notify.js?v=2.2.3"></script>
+<script src="/rexus-gate.js?v=2.3.0"></script>
+<script>
+/* REXUS v2.3.0 — public survey page (mode "public": anyone with the link, no account, no user id stored). */
+(function () {
+  var host = document.getElementById('pub'), id = new URLSearchParams(location.search).get('id') || '';
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  function msg(title, text) { host.innerHTML = '<section class="sv-pub-msg"><h1>' + esc(title) + '</h1><p>' + esc(text) + '</p></section>'; }
+  function load() {
+    window.REXUSGate.api('/api/survey-respond?id=' + encodeURIComponent(id)).then(function (d) {
+      document.title = d.survey.name + ' · REXUS Survey';
+      if (d.closed_reason) return msg(d.survey.name, d.closed_reason);
+      if (d.answered_at) return msg(d.survey.name, 'You have already answered this survey. Thank you.');
+      window.REXUSSurveyForm.mount(host, d, { fullscreen: true, onReload: load, onDone: function (r) { msg(d.survey.name, r.closed ? r.message : 'Thank you — your answers were saved.'); } });
+    }).catch(function (e) { e.status === 401 ? (location.href = '/#survey/answer/' + encodeURIComponent(id)) : msg('Survey unavailable', e.message); });
+  }
+  if (!id) msg('Survey unavailable', 'This link is incomplete.'); else load();
+})();
+</script>
+</body>
+</html>

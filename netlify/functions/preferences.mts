@@ -8,7 +8,7 @@ import { getUserFromRequest, unauthorized } from './lib/auth.mts';
 
 const THEMES = ['mono', 'navy'], MODES = ['light', 'dark', 'system'], DENSITIES = ['compact', 'comfortable'];
 export default async (req: Request, _ctx: Context) => {
-  const session = await getUserFromRequest(req); if (!session) return unauthorized();
+  const session = await getUserFromRequest(req, { allowGate: true }); if (!session) return unauthorized();
   const db = getDatabase();
   try {
     if (req.method === 'GET') {
