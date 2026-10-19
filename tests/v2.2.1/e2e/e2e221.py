@@ -38,6 +38,7 @@ with sync_playwright() as p:
     check('M4 employee search returns results', page.locator('.rx-result').count() >= 1, page.locator('#rxEmpHint').inner_text())
     page.keyboard.press('ArrowDown'); page.keyboard.press('Enter'); page.wait_for_timeout(900)
     check('M4 keyboard selection opens profile; results hidden', page.locator('#rxEmpProfile').is_visible() and page.locator('#rxEmpList').is_hidden())
+    page.click('#rxEmpTabs [data-tab="employment"]'); page.wait_for_timeout(900)   # v2.3.1: the HRM record opens on Overview; employment has its own tab
     check('M4 own profile shows employment & capacity', 'Employment & capacity' in page.inner_text('#rxEmpProfile'))
     page.screenshot(path=f'{OUT}/hr-profile@1440.png', full_page=True)
     page.click('#rxHrTabs [data-tab="leave"]'); page.wait_for_timeout(900)
@@ -157,7 +158,7 @@ with sync_playwright() as p:
     check('M5 dependency line drawn', page.locator('#pdWbs .rx-gt-link').count() >= 1)
     page.screenshot(path=f'{OUT}/wbs@1440.png', full_page=True)
     page.click('#wbsMode [data-tab="wbs"]'); page.wait_for_timeout(300); page.screenshot(path=f'{OUT}/wbs-only@1440.png', full_page=False)
-    check('M7 project financials section inside project detail', page.locator('#pdFinance .rx-metric').count() >= 7)
+    check('M7 project financials section inside project detail', page.locator('#pdFinance .rx-metric').count() >= 5 and page.locator('#pdFinOpen').count() == 1)   # v2.3.1: summary + link to Project Finance
     page.locator('#pdWbs [data-deps]').first.click(); page.wait_for_timeout(400)
     check('M5 dependency dialog opens', 'Predecessors' in page.locator('.rx-dialog, .rx-page.active .rx-page-form').last.inner_text())
     page.keyboard.press('Escape'); page.wait_for_timeout(300)

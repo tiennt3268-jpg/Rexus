@@ -81,7 +81,7 @@ with sync_playwright() as p:
     check('GEN-06 Gantt timeline still shows bars and dependency links', page.locator('.rx-gt-bar').count() > 0 and page.locator('.rx-gt-link').count() >= 1)
     go(page, 'approval-center')
     check('GEN-04 redundant page subtitle removed (Approval Center)', page.locator('.rx-page-head p').count() == 0)
-    go(page, 'project-financials')
+    page.evaluate("()=>REXUSLegacy.switchView('project-financials')"); page.wait_for_timeout(1200)   # v2.3.1: hidden duplicate tab removed; the route alias stays
     check('GEN-04 helpful guidance kept (Project Finance budget note)', page.locator('.rx-page-head p').count() == 1)
 
     # ------------------------------------------------------------------ GEN-07 column resize
@@ -134,7 +134,7 @@ with sync_playwright() as p:
     check('ACC-03 role stays read-only', page.locator('#view-my-account select:not(#rxMyPersonal select), #view-my-account input[id*=Role]').count() == 0 and 'System Admin' in page.inner_text('#view-my-account'))
 
     # ------------------------------------------------------------------ ACC-01 / ACC-02
-    menu(page, 'configuration')
+    hr(page, 'employees')   # v2.3.1: the account list moved from Configuration to HRM → Employee Search
     page.click('#cfgAddEmployeeBtn'); page.fill('#cfgEmpNewFullName', 'Trần Thị QA Đức'); page.fill('#cfgEmpNewEmail', 'qa.duc@ueh.edu.vn')
     check('ACC-01 username suggested from the full name', page.input_value('#cfgEmpNewUsername') == 'tran.thi.qa.duc', page.input_value('#cfgEmpNewUsername'))
     page.fill('#cfgEmpNewUsername', 'tiennt'); page.click('#cfgEmpNewSubmit'); page.wait_for_timeout(1000)

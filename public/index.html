@@ -1370,9 +1370,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         <span class="wm-tab-label">Calendar</span>
         <span class="wm-tab-icon"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path stroke-linecap="round" d="M3.5 9.5h17M8 3v4M16 3v4"/></svg></span>
       </div>
-      <div class="wm-tab" data-view="resource-planning" hidden aria-hidden="true"><span class="wm-tab-label">Resource Planning</span><span class="wm-tab-icon"><svg viewBox="0 0 24 24"><path d="M3 20h18M6 17V9h4v8M14 17V5h4v12M3 7l5-4 4 3 5-4"/></svg></span></div>
       <div class="wm-tab" data-view="approval-center"><span class="wm-tab-label">Approval Center</span><span class="wm-tab-icon"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v13H6zM15 3v5h4M9 14l2.5 2.5L16 12"/></svg></span></div>
-      <div class="wm-tab" data-view="project-financials" hidden aria-hidden="true"><span class="wm-tab-label">Project Financials</span><span class="wm-tab-icon"><svg viewBox="0 0 24 24"><path d="M3 19h18M5 14l5-5 4 3 5-8M16 4h3v4"/></svg></span></div>
       <div class="wm-tab" data-view="organization">
         <span class="wm-tab-label">Human Resources Management</span>
         <span class="wm-tab-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.3"/><circle cx="5.5" cy="18.5" r="2.3"/><circle cx="18.5" cy="18.5" r="2.3"/><path stroke-linecap="round" d="M12 7.3v4M12 11.3 5.5 16.2M12 11.3l6.5 4.9"/></svg></span>
@@ -1390,9 +1388,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       <div class="wm-view" id="view-worklog"></div>
       <div class="wm-view" id="view-calendar"></div>
       <div class="wm-view" id="view-organization"></div>
-      <div class="wm-view" id="view-resource-planning"></div>
       <div class="wm-view" id="view-approval-center"></div>
-      <div class="wm-view" id="view-project-financials"></div>
       <div class="wm-view" id="view-finance"></div>
       <div class="wm-view" id="view-project-detail"></div>
       <div class="wm-view" id="view-my-account"></div>
@@ -1601,7 +1597,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   <script src="/rexus-notify.js?v=2.2.3"></script>  <!-- GEN-10: shared result notification -->
   <script src="/rexus-pages.js?v=2.2.3"></script>
   <!-- GEN-09 (rexus-pages) goes before the app script, which registers its form routes -->
-  <script src="/rexus-gate.js?v=2.3.0"></script>  <!-- v2.3.0: First Login + mandatory survey steps, survey form -->
+  <script src="/rexus-gate.js?v=2.3.1"></script>  <!-- v2.3.0: First Login + mandatory survey steps, survey form -->
   <script>
 (function(){
 
@@ -3190,7 +3186,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     // manage this project's costs (PM of this project or Admin); hidden
     // silently for everyone else rather than guessed from role labels.
     html += '<div id="pdCostSection"></div>';
-    // 4d. Project Financials (v2.2.1) — same records as Finance → Project Financials.
+    // 4d. Project Financials — summary; the records are managed in Finance → Project Financials.
     if(window.REXUS221) html += '<section id="pdFinance" class="rx-card rx-pd-finance" aria-label="Project financials"></section>';
 
     // 6. Activity / History
@@ -3251,7 +3247,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         newTask: function(){ openFormModal(name); },
         refresh: function(){ return reloadPageAfterAction(); }
       });
-      if(byId('pdFinance')) window.REXUS221.financeDetail(byId('pdFinance'), { owner: pdOwner, project: name }, function(){}, true);
+      if(byId('pdFinance')) window.REXUS221.financeSummary(byId('pdFinance'), { owner: pdOwner, project: name });
     }
     renderProjectCostSection(name);
   }
@@ -3689,142 +3685,17 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     return html;
   }
   var REXUS_ORG_SUBVIEW = 'employees';
+  // HRM (Employee records, Leave, Monthly Schedule, HR Settings, Resource Planning) is rendered by rexus-v221.js.
   function renderOrganization(){
-    var container=byId('view-organization');
-    container.innerHTML='<div class="rx213-subnav" role="tablist" aria-label="Organization sections">'+
-      '<button type="button" role="tab" data-org-sub="employees" aria-selected="'+(REXUS_ORG_SUBVIEW==='employees')+'">Employee search</button>'+
-      '<button type="button" role="tab" data-org-sub="resources" aria-selected="'+(REXUS_ORG_SUBVIEW==='resources')+'">Resource Planning</button></div>'+
-      '<div id="rx213OrganizationContent" class="rx213-subcontent"></div>';
-    container.querySelectorAll('[data-org-sub]').forEach(function(b){b.addEventListener('click',function(){
-      if(REXUS_ORG_SUBVIEW===b.dataset.orgSub)return;
-      REXUS_ORG_SUBVIEW=b.dataset.orgSub;renderOrganization();
-    });});
-    if(window.REXUS221){ window.REXUS221.hr(container, REXUS_ORG_SUBVIEW==='resources'?'resources':undefined); REXUS_ORG_SUBVIEW='employees'; return; }
-    var target=byId('rx213OrganizationContent');
-    if(window.REXUS210){
-      if(REXUS_ORG_SUBVIEW==='resources')window.REXUS210.resource(target);
-      else window.REXUS210.organization(target);
-    }else target.innerHTML='<p>Loading organization…</p>';
+    var sub = REXUS_ORG_SUBVIEW === 'resources' ? 'resources' : undefined;
+    REXUS_ORG_SUBVIEW = 'employees';
+    window.REXUS221.hr(byId('view-organization'), sub);
   }
 
-  /* =========================================================
-     EMPLOYEE LIST + DETAIL — replaces the old standalone
-     "Manage Accounts" modal. Everyone can browse the list and open
-     an employee's info; only a System Admin sees/edits the account
-     tab (login/role/status), reusing AdminAPI under the hood.
-     ========================================================= */
-  function employeeListSectionHtml(admin){
-    var deptOptions = (STATE.departments || []).map(function(d){
-      return '<option value="' + escapeHtml(d.name) + '">' + escapeHtml(d.name) + '</option>';
-    }).join('');
-    return '' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin:28px 0 12px;padding-top:18px;border-top:1px solid var(--line,#e5e7eb);">' +
-        '<h2 style="margin:0;">Employees</h2>' +
-        (admin ? '<button class="wm-new-btn" id="orgAddEmployeeBtn" style="background:var(--navy);">+ Create Account</button>' : '') +
-      '</div>' +
-      (admin ? '<div id="orgAddEmployeeForm" style="display:none;background:var(--line-soft);border-radius:10px;padding:14px;margin-bottom:16px;">' +
-        '<div class="wm-form-grid">' +
-          '<div class="wm-form-row"><label>Full Name</label><input id="empNewFullName" placeholder="Full name"></div>' +
-          '<div class="wm-form-row"><label>Email</label><input id="empNewEmail" type="email" placeholder="name@ueh.edu.vn"></div>' +
-        '</div>' +
-        '<div class="wm-form-grid">' +
-          '<div class="wm-form-row"><label>Position</label><input id="empNewPosition" placeholder="Teaching Assistant"></div>' +
-          '<div class="wm-form-row"><label>Department</label><input id="empNewDepartment" placeholder="UEH Nexus Campus Nha Trang"></div>' +
-        '</div>' +
-        '<div class="wm-form-row"><label>Role</label>' +
-          '<select id="empNewRole"><option value="Member">Member</option><option value="Project Manager">Project Manager</option><option value="System Admin">System Admin</option></select>' +
-        '</div>' +
-        '<p class="wm-auth-error" id="empNewError" style="display:none;background:#FBEAEA;color:var(--danger);font-size:14px;padding:9px 12px;border-radius:8px;"></p>' +
-        '<div style="display:flex;gap:8px;justify-content:flex-end;">' +
-          '<button class="wm-btn" id="empNewCancel">Cancel</button>' +
-          '<button class="wm-btn primary" id="empNewSubmit">Create Account</button>' +
-        '</div>' +
-      '</div>' : '') +
-      '<div style="display:flex;gap:8px;margin-bottom:12px;">' +
-        '<input id="empListSearch" placeholder="Search name, email, department…" style="flex:1;">' +
-        '<select id="empListDeptFilter" style="max-width:220px;"><option value="">All departments</option>' + deptOptions + '</select>' +
-      '</div>' +
-      '<div id="empListTableWrap"></div>';
-  }
-  function renderEmployeesTable(){
-    var wrap = byId('empListTableWrap');
-    if(!wrap) return;
-    var q = (byId('empListSearch') ? byId('empListSearch').value : '').trim().toLowerCase();
-    var deptFilter = byId('empListDeptFilter') ? byId('empListDeptFilter').value : '';
-    var list = (STATE.allUsers || []).filter(function(u){
-      if(deptFilter && (u.department || '') !== deptFilter) return false;
-      if(!q) return true;
-      var hay = [u.full_name, u.username, u.email, u.department, u.position].filter(Boolean).join(' ').toLowerCase();
-      return hay.indexOf(q) !== -1;
-    });
-    if(!list.length){
-      wrap.innerHTML = '<div class="wm-empty">No employees match.</div>';
-      return;
-    }
-    wrap.innerHTML =
-      '<table style="width:100%;border-collapse:collapse;font-size:14px;">' +
-        '<thead><tr style="text-align:left;color:var(--ink-soft);font-size:12.5px;">' +
-          '<th style="padding:8px;">Name</th><th style="padding:8px;">Department</th><th style="padding:8px;">Position</th><th style="padding:8px;">Status</th>' +
-        '</tr></thead>' +
-        '<tbody>' + list.map(function(u){
-          var status = u.status || 'Active';
-          return '<tr class="wm-emp-row" data-emp-id="' + u.id + '" style="cursor:pointer;">' +
-            '<td style="padding:8px;">' + avatarHtml(u, 24) + ' ' + escapeHtml(u.full_name || u.username) + '</td>' +
-            '<td style="padding:8px;">' + escapeHtml(u.department || '—') + '</td>' +
-            '<td style="padding:8px;">' + escapeHtml(u.position || '—') + '</td>' +
-            '<td style="padding:8px;"><span class="wm-status-badge' + (status === 'Inactive' ? ' inactive' : '') + '">' + escapeHtml(status) + '</span></td>' +
-          '</tr>';
-        }).join('') + '</tbody>' +
-      '</table>';
-    wrap.querySelectorAll('.wm-emp-row').forEach(function(row){
-      row.addEventListener('click', function(){
-        var u = userById(row.getAttribute('data-emp-id'));
-        if(u) openEmployeeDetail(u);
-      });
-    });
-  }
-  function wireEmployeeListSection(admin){
-    if(byId('empListSearch')) byId('empListSearch').addEventListener('input', renderEmployeesTable);
-    if(byId('empListDeptFilter')) byId('empListDeptFilter').addEventListener('change', renderEmployeesTable);
-    if(admin && byId('orgAddEmployeeBtn')){
-      byId('orgAddEmployeeBtn').addEventListener('click', function(){
-        var form = byId('orgAddEmployeeForm');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-      });
-      byId('empNewCancel').addEventListener('click', function(){ byId('orgAddEmployeeForm').style.display = 'none'; });
-      byId('empNewSubmit').addEventListener('click', submitCreateEmployeeAccount);
-    }
-    renderEmployeesTable();
-  }
-  function submitCreateEmployeeAccount(){
-    var fullName = byId('empNewFullName').value.trim();
-    var email = byId('empNewEmail').value.trim();
-    var position = byId('empNewPosition').value.trim();
-    var department = byId('empNewDepartment').value.trim();
-    var role = byId('empNewRole').value;
-    var errEl = byId('empNewError');
-    errEl.style.display = 'none';
-    if(!fullName || !email){
-      errEl.textContent = 'Full name and email are required.';
-      errEl.style.display = 'block';
-      return;
-    }
-    showSync('Creating account…');
-    AdminAPI.createUser({ full_name: fullName, email: email, position: position, department: department, role: role })
-      .then(function(result){
-        showSync('Account created', 'ok');
-        byId('orgAddEmployeeForm').style.display = 'none';
-        showAlert('Account created for ' + fullName + '.\n\nUsername: ' + result.user.username +
-          '\nTemporary password: ' + result.temp_password +
-          '\n\nShare these with them securely — they can change the password after logging in.');
-        return UsersAPI.getUsers().then(function(list){ STATE.allUsers = list; renderEmployeesTable(); });
-      })
-      .catch(function(err){
-        errEl.textContent = err.message || 'Could not create account.';
-        errEl.style.display = 'block';
-      });
-  }
-
+  /* Account editor (System Admin): role / department / status. Opened from the
+     HRM employee record → Account tab; the list itself lives in HRM → Employee Search. */
+  var ACCOUNTS_CHANGED = null;
+  var ACCOUNT_SAVED_ONCE = null;  // refreshes the open HRM record after its account was edited   // set by renderAccounts so the HRM list refreshes after an edit
   var employeeDetailCurrentId = null;
   function wireEmployeeModalOnce(){
     if(byId('wmEmployeeModal')._wired) return;
@@ -3856,8 +3727,9 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           if(updated.id === STATE.currentUser.id) hideAuthScreenAndShowApp(updated);
           return UsersAPI.getUsers().then(function(list){
             STATE.allUsers = list;
-            renderEmployeesTable();
             if(byId('cfgEmpTableWrap')) renderCfgEmployeesTable();
+            if(ACCOUNTS_CHANGED) ACCOUNTS_CHANGED(employeeDetailCurrentId);
+            if(ACCOUNT_SAVED_ONCE){ var after = ACCOUNT_SAVED_ONCE; ACCOUNT_SAVED_ONCE = null; after(); }
             var fresh = userById(employeeDetailCurrentId);
             if(fresh) populateEmployeeDetail(fresh);
           });
@@ -3886,15 +3758,14 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       byId('empAcctStatus').value = u.status || 'Active';
     }
   }
-  function openEmployeeDetail(u){
+  function openEmployeeDetail(u, tab){
     wireEmployeeModalOnce();
     employeeDetailCurrentId = u.id;
     populateEmployeeDetail(u);
-    // Always reset to the Info tab on open.
-    byId('wmEmployeeTabs').querySelectorAll('[data-emp-tab]').forEach(function(b){ b.classList.remove('active'); });
-    byId('wmEmployeeTabs').querySelector('[data-emp-tab="info"]').classList.add('active');
-    byId('wmEmployeeInfoPane').style.display = 'block';
-    byId('wmEmployeeAccountPane').style.display = 'none';
+    var which = tab === 'account' && isAdminUser() ? 'account' : 'info';
+    byId('wmEmployeeTabs').querySelectorAll('[data-emp-tab]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-emp-tab') === which); });
+    byId('wmEmployeeInfoPane').style.display = which === 'info' ? 'block' : 'none';
+    byId('wmEmployeeAccountPane').style.display = which === 'account' ? 'block' : 'none';
     byId('wmEmployeeModal').classList.add('open');
   }
 
@@ -3914,7 +3785,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     // The mode toggle stays on screen while its body reloads underneath it.
     container.innerHTML = financeModeToggleHtml() + '<div id="finModeBody"><div style="padding:20px 0;color:var(--ink-soft);">Loading Finance…</div></div>';
     wireFinanceModeToggle();
-    if(FINANCE_STATE.mode === 'financials') { if(window.REXUS210)window.REXUS210.financials(byId('finModeBody')); }
+    if(FINANCE_STATE.mode === 'financials') window.REXUS221.financials(byId('finModeBody'));
     else if(FINANCE_STATE.mode === 'project') renderFinanceByProject();
     else renderFinanceByPersonnel();
   }
@@ -4063,8 +3934,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         '<input id="finListSearch" placeholder="Search name, email, department…" style="flex:1;">' +
         '<select id="finListDeptFilter" style="max-width:220px;"><option value="">All departments</option>' + deptOptions + '</select>' +
       '</div>' +
-      '<div id="finListTableWrap"></div>' +
-      '<div id="finDetailWrap" style="margin-top:22px;"></div>';
+      '<p style="font-size:12.5px;color:var(--ink-soft);margin:0 0 8px;">Open an employee to see salary, hourly-rate and performance history in their HRM record (Compensation tab).</p>' +
+      '<div id="finListTableWrap"></div>';
   }
   function wireFinanceShell(){
     byId('finListSearch').addEventListener('input', renderFinanceTable);
@@ -4102,12 +3973,15 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         }).join('') + '</tbody>' +
       '</table>';
     wrap.querySelectorAll('.wm-fin-row').forEach(function(row){
-      row.addEventListener('click', function(){ renderFinanceDetail(row.getAttribute('data-fin-id')); });
+      row.addEventListener('click', function(){ window.REXUS221.openEmployee(row.getAttribute('data-fin-id'), 'compensation'); });
     });
   }
-  function renderFinanceDetail(employeeId){
+  // Salary / hourly-rate / performance history of one employee. Shown in the HRM employee
+  // record (Compensation tab); /api/finance still limits Managers to their managed scope.
+  function renderFinanceDetail(employeeId, target){
     FINANCE_STATE.detailId = employeeId;
-    var wrap = byId('finDetailWrap');
+    var wrap = FINANCE_STATE.detailWrap = target || FINANCE_STATE.detailWrap;
+    if(!wrap || !wrap.isConnected) return;
     wrap.innerHTML = '<div style="color:var(--ink-soft);">Loading employee detail…</div>';
     FinanceAPI.getEmployeeDetail(employeeId).then(function(data){
       if(FINANCE_STATE.detailId !== employeeId) return; // a newer click superseded this one
@@ -4115,15 +3989,10 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       var salaryHist = data.salary_history || [];
       var rateHist = data.rate_history || [];
       wrap.innerHTML =
-        '<div style="border-top:1px solid var(--line,#e5e7eb);padding-top:16px;">' +
-          '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">' +
-            '<div style="display:flex;align-items:center;gap:10px;">' + avatarHtml(u, 32) +
-              '<div><div style="font-weight:700;">' + escapeHtml(u.full_name || u.username) + '</div>' +
-              '<div style="font-size:12.5px;color:var(--ink-soft);">' + escapeHtml(u.department || 'No department') + ' · ' + escapeHtml(u.position || '—') + '</div></div>' +
-            '</div>' +
-            '<button type="button" class="wm-btn primary" id="finEditSalaryBtn">Edit Salary</button>' +
+        '<div class="rx-card">' +
+          '<div class="rx-card-head"><h4>Salary history</h4>' +
+            '<button type="button" class="wm-btn primary rx-btn-sm" id="finEditSalaryBtn">Edit Salary</button>' +
           '</div>' +
-          '<h4 style="margin:0 0 8px;">Salary history</h4>' +
           financeHistoryTableHtml(salaryHist, [
             { key: 'base_salary', label: 'Base Salary', fmt: fmtMoney },
             { key: 'allowances', label: 'Allowances', fmt: fmtMoney }
@@ -4295,8 +4164,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       showSync('Salary saved', 'ok');
       byId('wmSalaryModal').classList.remove('open');
       return FinanceAPI.getEmployees().then(function(json){
-        FINANCE_STATE.employees = json.employees || [];
-        renderFinanceTable();
+          FINANCE_STATE.employees = json.employees || [];
+        if(byId('finListTableWrap')) renderFinanceTable();
         renderFinanceDetail(salaryModalEmployeeId);
       });
     }).catch(function(err){
@@ -6811,8 +6680,9 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       if(v[1] === 'my-account'){ openMyAccountPage(); return true; }
       if(v[1] === 'configuration' && isAdminUser()){ openConfigurationPage(); return true; }
       if(ROUTABLE_VIEWS.indexOf(v[1]) !== -1){
-        if(v[1] === 'finance' && byId('wmFinanceTab') && byId('wmFinanceTab').style.display === 'none'){ switchView('overview'); return true; }
-        if(STATE.activeView !== v[1] || !byId('view-' + v[1]).classList.contains('active')) switchView(v[1]);
+        var target = { 'resource-planning': 'organization', 'project-financials': 'finance' }[v[1]] || v[1];   // old links keep working
+        if(target === 'finance' && byId('wmFinanceTab') && byId('wmFinanceTab').style.display === 'none'){ switchView('overview'); return true; }
+        if(target !== v[1] || STATE.activeView !== v[1] || !byId('view-' + v[1]).classList.contains('active')) switchView(v[1]);
         return true;
       }
     }
@@ -6828,7 +6698,15 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     showView: function(){ switchView('overview'); },
     switchView: function(v){ switchView(v); },
     renderActiveView: function(){ renderActiveView(); },
-    currentUserId: function(){ return STATE.currentUser ? STATE.currentUser.id : ''; }
+    currentUserId: function(){ return STATE.currentUser ? STATE.currentUser.id : ''; },
+    // v2.3.1 HRM employee record hooks (the data stays in the modules that own it)
+    renderAccounts: function(host, onOpen){ renderAccounts(host, onOpen); },
+    renderCompensation: function(host, uid){ renderCompensation(host, uid); },
+    workSummary: function(uid){ return workSummary(uid); },
+    openTask: function(id){ if(STATE.tasks.some(function(t){ return t.id === id; })) openDetailModal(id); },
+    openProject: function(name){ openProjectDetail(name); },
+    editAccount: function(uid, done){ var u = userById(uid); if(u){ ACCOUNT_SAVED_ONCE = done || null; openEmployeeDetail(u, 'account'); } },
+    deleteAccount: function(uid, done){ var u = userById(uid); if(u) confirmDeleteAccount(u, done); }
   };
   if(window.REXUSPages){
     var notFound = function(what, parent){ showAlert(what + ' was not found or you no longer have access to it.'); switchView(parent); };
@@ -6858,9 +6736,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       case 'worklog': renderWorkLog(); break;
       case 'calendar': renderCalendar(); break;
       case 'organization': renderOrganization(); break;
-      case 'resource-planning': if(window.REXUS210)window.REXUS210.resource(byId('view-resource-planning')); break;
-      case 'approval-center': if(window.REXUS210)window.REXUS210.approvals(byId('view-approval-center')); break;
-      case 'project-financials': if(window.REXUS210)window.REXUS210.financials(byId('view-project-financials')); break;
+      case 'approval-center': window.REXUS221.approvals(byId('view-approval-center')); break;
       case 'finance': renderFinance(); break;
       case 'project-detail': if(STATE.currentProjectDetail) renderProjectDetail(STATE.currentProjectDetail); break;
     }
@@ -7508,7 +7384,30 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           '<button type="button" class="wm-btn primary" id="wmAdminAddTaskTypeBtn">Add</button>' +
         '</div>' +
 
-        '<h3 style="margin:26px 0 6px;padding-top:18px;border-top:1px solid var(--line);">Employee Hourly Rates</h3>' +
+        performancePaySectionHtml(s) +
+
+        '<div class="rx-cfg-moved" style="margin:26px 0 6px;padding-top:18px;border-top:1px solid var(--line);">' +
+          '<h3 style="margin:0 0 6px;">Employees, accounts and pay</h3>' +
+          '<p style="font-size:13px;color:var(--ink-soft);margin:0 0 10px;">Accounts (create, edit, delete, restore), personal information, salary and hourly rates are kept in one place: the employee record in Human Resources Management. Profile fields and working schedules are under HRM → HR Settings.</p>' +
+          '<div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="wm-btn" id="cfgOpenHrEmployees">Open employees in HRM</button><button type="button" class="wm-btn" id="cfgOpenHrSettings">Open HR Settings</button></div>' +
+        '</div>' +
+      '</div>';
+
+    byId('view-configuration').innerHTML = html;
+
+    byId('wmCfgBack').addEventListener('click', closeConfigurationPage);
+    wireCompanyInfoSection();
+    renderAdminTaskTypesList();
+    wireAdminTaskTypesSection();
+    wirePerformancePaySection();
+    byId('cfgOpenHrEmployees').addEventListener('click', function(){ window.REXUS221.openEmployee(null); });
+    byId('cfgOpenHrSettings').addEventListener('click', function(){ window.REXUS221.openHrSettings(); });
+  }
+
+  // Moved from Configuration in v2.3.1; rendered inside HRM by renderAccounts / renderCompensation.
+  function rateSectionHtml(){
+    return '' +
+        '<h4 style="margin:0 0 6px;">Set hourly rate</h4>' +
         '<p style="font-size:13px;color:var(--ink-soft);margin:0 0 10px;">Each change adds a new effective-dated rate — past work-log costs are never affected by a later rate change.</p>' +
         '<div class="wm-form-grid">' +
           '<div class="wm-form-row"><label>Employee</label><select id="wmRateEmployee"></select></div>' +
@@ -7530,12 +7429,12 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         '</div>' +
         '<div style="display:flex;justify-content:flex-end;">' +
           '<button type="button" class="wm-btn primary" id="wmRateSaveBtn">Save New Rate</button>' +
-        '</div>' +
-
-        performancePaySectionHtml(s) +
-
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px;padding-top:18px;border-top:1px solid var(--line);">' +
-          '<h3 style="margin:0;">Employees</h3>' +
+        '</div>';
+  }
+  function accountsSectionHtml(){
+    return '' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 12px;">' +
+          '<h3 style="margin:0;">Accounts</h3>' +
           '<button class="wm-new-btn" id="cfgAddEmployeeBtn">+ Create Account</button>' +
         '</div>' +
         '<div id="cfgAddEmployeeForm" style="display:none;background:var(--line-soft);border-radius:10px;padding:14px;margin-bottom:16px;">' +
@@ -7563,18 +7462,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           '<input id="cfgEmpSearch" placeholder="Search name, email, department…" style="flex:1;">' +
           '<label class="rx-inline-check"><input type="checkbox" id="cfgEmpShowDeleted"> Show deleted accounts</label>' +
         '</div>' +
-        '<div id="cfgEmpTableWrap"></div>' +
-      '</div>';
-
-    byId('view-configuration').innerHTML = html;
-
-    byId('wmCfgBack').addEventListener('click', closeConfigurationPage);
-    wireCompanyInfoSection();
-    renderAdminTaskTypesList();
-    wireAdminTaskTypesSection();
-    wireRateManagement();
-    wirePerformancePaySection();
-    wireCfgEmployeeSection();
+        '<div id="cfgEmpTableWrap"></div>';
   }
 
   /* ---- Performance-based pay settings (Configuration page, Admin only):
@@ -7720,10 +7608,12 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
      work-log costs always look up the rate that was effective on
      their own date, never today's rate.
      ========================================================= */
-  function wireRateManagement(){
-    byId('wmRateEmployee').innerHTML = (STATE.allUsers || []).map(function(u){
+  function wireRateManagement(fixedUid){
+    var rateUsers = (STATE.allUsers || []).filter(function(u){ return !fixedUid || u.id === fixedUid; });
+    byId('wmRateEmployee').innerHTML = rateUsers.map(function(u){
       return '<option value="' + u.id + '">' + escapeHtml(u.full_name || u.username) + '</option>';
     }).join('');
+    if(fixedUid) byId('wmRateEmployee').closest('.wm-form-row').hidden = true;
     byId('wmRateProject').innerHTML = allProjectNames().map(function(p){
       return '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + '</option>';
     }).join('');
@@ -7800,6 +7690,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       showSync('Rate saved', 'ok');
       byId('wmRateNewAmount').value = '';
       renderRateHistory();
+      if(byId('rxCompFinance')) renderFinanceDetail(employeeId, byId('rxCompFinance'));   // keep the read-only history in step
     }).catch(function(err){ showSync('Could not save rate: ' + err.message, 'error'); });
   }
 
@@ -7903,23 +7794,14 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       row.addEventListener('click', function(e){
         if(showDeleted || e.target.closest('button')) return;
         var u = userById(row.getAttribute('data-emp-id'));
-        if(u) openEmployeeDetail(u);
+        if(u && ACCOUNTS_OPEN) ACCOUNTS_OPEN(u);
       });
     });
     wrap.querySelectorAll('[data-delete-emp]').forEach(function(btn){
       btn.addEventListener('click', function(e){
         e.stopPropagation();
         var u = userById(btn.getAttribute('data-delete-emp')); if(!u) return;
-        var R = window.REXUS221;
-        R.dialog({ title: 'Delete account', width: 480, submit: 'Delete account',
-          body: '<p class="rx-confirm-text">Delete <strong>' + escapeHtml(u.full_name || u.username) + '</strong>? The account is locked and hidden immediately and signed out everywhere. ' +
-            'Tasks, work logs, documents, HR records and history are kept, and an admin can restore the account later.</p>' +
-            R.field('Type the username “' + u.username + '” to confirm', '<input name="confirm" autocomplete="off" spellcheck="false" required>', { req: true }),
-          onOpen: function(d){ var b = d.form.querySelector('button[type=submit]'); b.classList.remove('primary'); b.classList.add('danger'); setTimeout(function(){ d.form.elements.confirm.focus(); }, 30); },
-          onSubmit: function(d){
-            if(d.val('confirm').trim() !== u.username) throw new Error('The username does not match.');
-            return AdminAPI.deleteUser(u.id, d.val('confirm').trim()).then(function(){ showSync('Account deleted', 'ok'); return reloadUsers(); });
-          } });
+        confirmDeleteAccount(u, reloadUsers);
       });
     });
     wrap.querySelectorAll('[data-restore-emp]').forEach(function(btn){
@@ -7929,6 +7811,45 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           .catch(function(err){ btn.disabled = false; showSync('Could not restore: ' + err.message, 'error'); });
       });
     });
+  }
+  function confirmDeleteAccount(u, done){
+        var R = window.REXUS221;
+        R.dialog({ title: 'Delete account', width: 480, submit: 'Delete account',
+          body: '<p class="rx-confirm-text">Delete <strong>' + escapeHtml(u.full_name || u.username) + '</strong>? The account is locked and hidden immediately and signed out everywhere. ' +
+            'Tasks, work logs, documents, HR records and history are kept, and an admin can restore the account later.</p>' +
+            R.field('Type the username “' + u.username + '” to confirm', '<input name="confirm" autocomplete="off" spellcheck="false" required>', { req: true }),
+          onOpen: function(d){ var b = d.form.querySelector('button[type=submit]'); b.classList.remove('primary'); b.classList.add('danger'); setTimeout(function(){ d.form.elements.confirm.focus(); }, 30); },
+          onSubmit: function(d){
+            if(d.val('confirm').trim() !== u.username) throw new Error('The username does not match.');
+            return AdminAPI.deleteUser(u.id, d.val('confirm').trim()).then(function(){ showSync('Account deleted', 'ok'); return UsersAPI.getUsers().then(function(l){ STATE.allUsers = l; }); }).then(function(){ if(done) done(); });
+          } });
+  }
+  var ACCOUNTS_OPEN = null;
+  // HRM → Employee Search (System Admin): account list with create / delete / restore.
+  function renderAccounts(host, onOpen){
+    host.innerHTML = accountsSectionHtml();
+    ACCOUNTS_OPEN = onOpen;
+    ACCOUNTS_CHANGED = function(){ if(byId('cfgEmpTableWrap')) renderCfgEmployeesTable(); };
+    wireCfgEmployeeSection();
+  }
+  // HRM employee record → Compensation tab.
+  function renderCompensation(host, uid){
+    var admin = isAdminUser();
+    host.innerHTML = '<div id="rxCompFinance"></div>' + (admin ? '<div class="rx-card" id="rxCompRates">' + rateSectionHtml() + '</div>' : '');
+    renderFinanceDetail(uid, byId('rxCompFinance'));
+    if(admin) wireRateManagement(uid);
+  }
+  // HRM employee record → Overview: the person's work as far as the viewer can see it.
+  function workSummary(uid){
+    var month = TODAY_STR.slice(0, 7);
+    var tasks = (STATE.tasks || []).filter(function(t){ return t.assignee_id === uid; });
+    var open = tasks.filter(function(t){ return t.status !== 'Completed' && t.status !== 'Cancelled'; })
+      .sort(function(a, b){ return (a.due_date || '9999').localeCompare(b.due_date || '9999'); });
+    var projects = {};
+    tasks.forEach(function(t){ if(t.project) projects[t.project] = true; });
+    var hours = (STATE.worklogs || []).filter(function(l){ return l.logged_by === uid && (l.date || '').slice(0, 7) === month; })
+      .reduce(function(sum, l){ return sum + (Number(l.hours) || 0); }, 0);
+    return { tasks: open, open: open.length, projects: Object.keys(projects).sort(), hoursMonth: Math.round(hours * 100) / 100 };
   }
 
   /* =========================================================
@@ -8147,7 +8068,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   </script>
   <script src="/rexus-docx-export.js?v=2.0.6"></script>
   <script src="/rexus-document.js?v=2.2.3"></script>
-  <script src="/rexus-survey.js?v=2.3.0"></script>
+  <script src="/rexus-survey.js?v=2.3.1"></script>
   <link rel="stylesheet" href="/rexus-liquid-glass.css?v=2.0.5">
   <link rel="stylesheet" href="/rexus-editor.css?v=2.0.6">
   <link rel="stylesheet" href="/rexus-v205.css?v=2.0.5">
@@ -8160,14 +8081,12 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   <link rel="stylesheet" href="/rexus-v211.css?v=2.1.2">
   <link rel="stylesheet" href="/rexus-v213.css?v=2.1.3">
   <!-- v2.2.0 Adaptive Liquid Glass design system: tokens + components. Must stay the LAST stylesheet. -->
-  <link rel="stylesheet" href="/rexus-ui.css?v=2.2.3">
+  <link rel="stylesheet" href="/rexus-ui.css?v=2.3.1">
   <link rel="stylesheet" href="/rexus-dark.css?v=2.2.3">
   <link rel="stylesheet" href="/rexus-survey.css?v=2.3.0">
-  <script src="/rexus-v210.js?v=2.2.2"></script>
-  <script src="/rexus-v221.js?v=2.2.3"></script>
+  <script src="/rexus-v221.js?v=2.3.1"></script>
 </section>
 
-  <script src="/rexus-v211.js?v=2.1.2" defer></script>
   <script src="/rexus-ui.js?v=2.3.0" defer></script>
 </body>
 </html>

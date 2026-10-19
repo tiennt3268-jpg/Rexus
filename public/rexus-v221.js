@@ -2,7 +2,7 @@
    REXUS v2.2.1 — UI for Modules 1–9 (HR, Resource Planning, Approval Center,
    Project Finance, WBS + Gantt, workflow, Connected Accounts, Appearance).
    Talks only to the authenticated /api endpoints; no sample business data.
-   Replaces the v2.1.0 screens registered on window.REXUS210 (same entry points).
+   (v2.3.1: the v2.1.0 window.REXUS210 screens and their alias were removed.)
    ========================================================================== */
 (function () {
   'use strict';
@@ -184,13 +184,13 @@
     me().then(function (u) {
       var admin = u.role === 'System Admin';
       var items = [['employees', 'Employee Search'], ['leave', 'Leave Management'], ['capacity', 'Monthly Schedule'], ['resources', 'Resource Planning']];
-      if (admin) items.splice(3, 0, ['schedules', 'Working Schedules & Holidays']);
+      if (admin) items.splice(3, 0, ['schedules', 'HR Settings']);
       node.innerHTML = header('Human Resources Management', '') + tabs('rxHrTabs', items, HR_STATE.sub) + '<div id="rxHrBody" class="rx-hr-body"></div>';
       node.querySelectorAll('#rxHrTabs [data-tab]').forEach(function (b) { b.onclick = function () { HR_STATE.sub = b.dataset.tab; hr(node); }; });
       var body = $('rxHrBody');
       if (HR_STATE.sub === 'leave') return leave(body, u);
       if (HR_STATE.sub === 'capacity') return capacity(body, u);
-      if (HR_STATE.sub === 'schedules') return schedules(body, u);
+      if (HR_STATE.sub === 'schedules') { schedules(body, u); var pf = document.createElement('div'); pf.id = 'rxProfileFields'; body.appendChild(pf); return window.REXUSGate && window.REXUSGate.mountFields(pf); }
       if (HR_STATE.sub === 'resources') return resource(body, true);
       return employeeSearch(body, u);
     }).catch(function (e) { errorBox(node, e); });
@@ -199,10 +199,11 @@
   function employeeSearch(node, u) {
     node.innerHTML = '<div class="rx-card rx-search-card"><label class="rx-search-field"><span class="rx-sr-only">Search employees</span><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>' +
       '<input id="rxEmpQ" type="search" autocomplete="off" placeholder="Search by name, email, employee ID, department or job title…" aria-controls="rxEmpList" aria-expanded="false" role="combobox"></label>' +
-      '<div id="rxEmpList" class="rx-results" role="listbox" hidden></div><p id="rxEmpHint" class="rx-muted">Search for an employee to view their information.</p></div><section id="rxEmpProfile" class="rx-profile" hidden aria-live="polite"></section>';
+      '<div id="rxEmpList" class="rx-results" role="listbox" hidden></div><p id="rxEmpHint" class="rx-muted">Search for an employee to view their information.</p></div><section id="rxEmpProfile" class="rx-profile" hidden aria-live="polite"></section>' +
+      (u.role === 'System Admin' ? '<section id="rxAccounts" class="rx-card rx-accounts"></section>' : '');
     var q = $('rxEmpQ'), list = $('rxEmpList'), hint = $('rxEmpHint'), prof = $('rxEmpProfile'), timer, seq = 0, found = [], idx = -1;
     function setActive(i) { idx = i; list.querySelectorAll('[role=option]').forEach(function (o, k) { o.setAttribute('aria-selected', String(k === i)); if (k === i) o.scrollIntoView({ block: 'nearest' }); }); }
-    function choose(i) { var e = found[i]; if (!e) return; list.hidden = true; q.setAttribute('aria-expanded', 'false'); hint.hidden = true; profile(prof, e, u); }
+    function choose(i) { var e = found[i]; if (!e) return; list.hidden = true; q.setAttribute('aria-expanded', 'false'); openRecord(e); }
     q.addEventListener('input', function () {
       clearTimeout(timer); var v = q.value.trim(), turn = ++seq; prof.hidden = true;
       if (v.length < 2) { list.hidden = true; hint.hidden = false; hint.textContent = v ? 'Type at least two characters.' : 'Search for an employee to view their information.'; return; }
@@ -225,23 +226,94 @@
       else if (e.key === 'Escape') { list.hidden = true; q.setAttribute('aria-expanded', 'false'); }
     });
     document.addEventListener('pointerdown', function (e) { if (!node.isConnected) return; if (!e.target.closest('#rxEmpQ,#rxEmpList')) list.hidden = true; });
-    q.focus();
+    function openRecord(e) { hint.hidden = true; var acc = $('rxAccounts'); if (acc) acc.hidden = true; profile(prof, e, u); prof.scrollIntoView({ block: 'start' }); }
+    // System Admin: the account list (create / delete / restore) lives here, not in Configuration.
+    if ($('rxAccounts') && L().renderAccounts) L().renderAccounts($('rxAccounts'), function (x) { openRecord(x); });
+    var want = HR_STATE.openId; HR_STATE.openId = null;
+    if (want) users().then(function (all) { var x = all.find(function (y) { return y.id === want; }); openRecord(x || { id: want }); });
+    else q.focus();
   }
 
+  /* ---------------------------------------------------------------- employee record (v2.3.1)
+     HRM is the single home for people data. One record per employee, with tabs:
+     Overview (account + linked work) · Employment & leave · Personal information · Compensation · Account.
+     Each tab calls the API that owns the data, so the server keeps deciding who sees what:
+     /api/hr/profile (self, manager, HR) · /api/onboarding (self, System Admin) · /api/finance (PM/Admin, managed scope)
+     · /api/rates and /api/admin/users (System Admin). Other modules link here with REXUS221.openEmployee(id, tab). */
+  var L = function () { return window.REXUSLegacy || {}; };
   function profile(node, e, u) {
     node.hidden = false; loading(node, 'Loading employee…');
-    api('/api/hr/profile?user_id=' + encodeURIComponent(e.id)).then(function (p) { renderProfile(node, p, u); }).catch(function () {
-      // Not the viewer's own record and not someone they manage: directory information only.
-      node.innerHTML = '<div class="rx-card">' + profileHead(e) + '<div class="rx-kv">' + kv([['Employee ID', e.id], ['Email', e.email], ['Department', e.department], ['Job title', e.position], ['Employment status', e.status]]) + '</div><p class="rx-muted">Employment, leave and capacity details are visible to the employee, their manager and HR.</p></div>';
-    });
+    var admin = u.role === 'System Admin', self = e.id === u.id;
+    Promise.all([api('/api/hr/profile?user_id=' + encodeURIComponent(e.id)).catch(function () { return null; }), users().catch(function () { return []; })]).then(function (res) {
+      var p = res[0], x = (p && p.user) || res[1].find(function (y) { return y.id === e.id; }) || e;
+      var tabsList = [['overview', 'Overview']];
+      if (p) tabsList.push(['employment', 'Employment & leave']);
+      if (self || admin) tabsList.push(['personal', 'Personal information']);
+      if (admin || u.role === 'Project Manager') tabsList.push(['compensation', 'Compensation']);
+      if (admin) tabsList.push(['account', 'Account']);
+      var want = HR_STATE.openTab && tabsList.some(function (t) { return t[0] === HR_STATE.openTab; }) ? HR_STATE.openTab : 'overview';
+      HR_STATE.openTab = null;
+      node.innerHTML = '<div class="rx-card rx-emp-head">' + profileHead(x) + '</div>' + tabs('rxEmpTabs', tabsList, want) + '<div id="rxEmpTabBody" class="rx-emp-body"></div>';
+      var body = node.querySelector('#rxEmpTabBody');
+      function show(t) {
+        node.querySelectorAll('#rxEmpTabs [data-tab]').forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tab === t)); });
+        if (t === 'overview') return overviewTab(body, x, p);
+        if (t === 'employment') return renderProfile(body, p, u, function () { HR_STATE.openTab = 'employment'; profile(node, x, u); });
+        if (t === 'personal') return window.REXUSGate ? window.REXUSGate.mountProfile(body, { userId: self ? undefined : x.id, submitLabel: 'Save personal information' }) : null;
+        if (t === 'compensation') return L().renderCompensation ? L().renderCompensation(body, x.id) : null;
+        if (t === 'account') return accountTab(body, x, function () { HR_STATE.openTab = 'account'; profile(node, x, u); });
+      }
+      node.querySelectorAll('#rxEmpTabs [data-tab]').forEach(function (b) { b.onclick = function () { show(b.dataset.tab); }; });
+      show(want);
+    }).catch(function (err) { errorBox(node, err); });
   }
+  function overviewTab(node, x, p) {
+    var w = L().workSummary ? L().workSummary(x.id) : { tasks: [], projects: [], hoursMonth: 0, open: 0 };
+    node.innerHTML = '<div class="rx-card"><div class="rx-kv">' + kv([['Employee ID', x.id], ['Email', x.email], ['Department', x.department], ['Job title', x.position], ['Manager', p && p.profile ? p.profile.manager_name : ''], ['Employment status', x.status]]) + '</div>' +
+        (p ? '' : '<p class="rx-muted">Employment, leave, schedule and pay details are visible to the employee, their manager and HR.</p>') + '</div>' +
+      '<div class="rx-card"><div class="rx-card-head"><h4>Work in REXUS</h4><span class="rx-muted">Tasks and projects you can see</span></div>' +
+        '<div class="rx-metrics">' + metric('Open tasks', w.open, 'info') + metric('Projects', w.projects.length, 'neutral') + metric('Hours logged this month', fmt(w.hoursMonth) + ' h', 'neutral') + '</div>' +
+        (w.tasks.length ? table(['Task', 'Project', 'Status', 'Due'], w.tasks.slice(0, 8).map(function (t) { return '<tr><td><button type="button" class="rx-link" data-task="' + esc(t.id) + '">' + esc(t.task) + '</button></td><td>' + (t.project ? '<button type="button" class="rx-link" data-project="' + esc(t.project) + '">' + esc(t.project) + '</button>' : '—') + '</td><td>' + statusChip(t.status) + '</td><td>' + fmtDay(t.due_date) + '</td></tr>'; }), { min: 520 }) : '<p class="rx-muted">No open tasks.</p>') +
+        (w.projects.length ? '<p class="rx-emp-projects"><span class="rx-muted">Projects:</span> ' + w.projects.map(function (n) { return '<button type="button" class="rx-link" data-project="' + esc(n) + '">' + esc(n) + '</button>'; }).join(', ') + '</p>' : '') + '</div>';
+    node.querySelectorAll('[data-task]').forEach(function (b) { b.onclick = function () { L().openTask(b.dataset.task); }; });
+    node.querySelectorAll('[data-project]').forEach(function (b) { b.onclick = function () { L().openProject(b.dataset.project); }; });
+  }
+  function accountTab(node, x, refresh) {
+    loading(node);
+    api('/api/onboarding?user_id=' + encodeURIComponent(x.id)).then(function (d) {
+      var st = d.status, me = ME || {};
+      node.innerHTML = '<div class="rx-card"><div class="rx-card-head"><h4>Sign-in account</h4><div class="rx-btn-row"><button type="button" class="wm-btn rx-btn-sm" id="rxAccEdit">Edit role, department, status</button><button type="button" class="wm-btn rx-btn-sm" id="rxAccReset">Reset password</button>' +
+          (x.id !== me.id ? '<button type="button" class="wm-btn rx-btn-sm danger" id="rxAccDelete">Delete account</button>' : '') + '</div></div>' +
+          '<div class="rx-kv">' + kv([['Username', x.username], ['Email', x.email], ['Role', x.role], ['Status', x.status || 'Active']]) + '</div></div>' +
+        '<div class="rx-card"><div class="rx-card-head"><h4>First sign-in</h4></div><ul class="rx-status-list">' +
+          '<li>' + statusChip(st.must_change_password ? 'Pending' : 'Completed') + ' Personal password</li>' +
+          '<li>' + (st.onboarding_completed_at ? statusChip('Completed') + ' Personal profile — ' + fmtTime(st.onboarding_completed_at) : st.profile_gate ? statusChip('Pending') + ' Personal profile' : badge('Not required', 'neutral') + ' Personal profile (account created before v2.3.0)') + '</li></ul>' +
+          '<p class="rx-muted">Required surveys are listed in REXUS Survey → Analytics of each survey.</p></div>';
+      $('rxAccEdit').onclick = function () { L().editAccount(x.id, function () { USERS = null; refresh(); }); };
+      $('rxAccReset').onclick = function () {
+        confirmDialog('Reset password', 'Create a new temporary password for ' + (x.full_name || x.username) + '? They must replace it at the next sign-in.', 'Reset password').then(function (ok) {
+          if (!ok) return;
+          api('/api/admin/users/' + encodeURIComponent(x.id), { method: 'POST', body: { action: 'reset_password' } }).then(function (r) {
+            window.REXUSNotify('Temporary password for ' + x.username + ': ' + r.temp_password + '\nShare it privately. It is shown only once.', 'success', { sticky: true, title: 'Password reset' }); refresh();
+          }).catch(function (e) { toast(e.message, 'error'); });
+        });
+      };
+      if ($('rxAccDelete')) $('rxAccDelete').onclick = function () { L().deleteAccount(x.id, function () { HR_STATE.sub = 'employees'; var t = document.querySelector('.wm-tab[data-view="organization"]'); if (t) t.click(); }); };
+    }).catch(function (e) { errorBox(node, e); });
+  }
+  /** Open an employee record from any module (Finance, Configuration, Approval Center…). */
+  function openEmployee(id, tab) {
+    HR_STATE.sub = 'employees'; HR_STATE.openId = id; HR_STATE.openTab = tab || null;
+    if (window.REXUSLegacy && window.REXUSLegacy.switchView) window.REXUSLegacy.switchView('organization');
+  }
+  function openHrSettings() { HR_STATE.sub = 'schedules'; if (window.REXUSLegacy && window.REXUSLegacy.switchView) window.REXUSLegacy.switchView('organization'); }
   function profileHead(x) { return '<div class="rx-profile-head"><span class="rx-avatar rx-avatar-lg">' + esc((x.full_name || x.username || '?').split(' ').map(function (p) { return p[0]; }).slice(-2).join('').toUpperCase()) + '</span><div><h3>' + esc(x.full_name || x.username) + '</h3><p class="rx-muted">' + esc([x.position, x.department].filter(Boolean).join(' · ') || '—') + '</p></div></div>'; }
   function kv(pairs) { return pairs.map(function (p) { return '<div><small>' + esc(p[0]) + '</small><strong>' + (p[2] ? p[1] : esc(p[1] || '—')) + '</strong></div>'; }).join(''); }
-  function renderProfile(node, p, u) {
+  function renderProfile(node, p, u, refresh) {
     var x = p.user, pr = p.profile;
     var wd = (pr.workdays || []).map(function (d) { return DOW[d]; }).join(', ');
     var leaveRows = (p.leave_summary || []).map(function (l) { return '<tr><td>' + esc(l.leave_type) + '</td><td>' + statusChip(l.status) + '</td><td>' + l.n + '</td><td>' + fmt(l.hours) + ' h</td></tr>'; });
-    node.innerHTML = '<div class="rx-card">' + profileHead(x) + '<div class="rx-kv">' + kv([['Employee ID', x.id], ['Email', x.email], ['Department', x.department], ['Job title', x.position], ['Manager', pr.manager_name], ['Employment status', x.status]]) + '</div></div>' +
+    node.innerHTML =
       '<div class="rx-card"><div class="rx-card-head"><h4>Employment & capacity</h4>' + (p.can_edit ? '<button type="button" class="wm-btn rx-btn-sm" id="rxEditEmp">Edit employment</button>' : '') + '</div>' +
       '<div class="rx-kv">' + kv([['Employment type', pr.employment_type], ['Capacity method', pr.capacity_method === 'declaration' ? 'Monthly declaration (approved availability)' : 'Working schedule'], ['Working schedule', fmt(pr.hours_per_day) + ' h/day · ' + (wd || '—')],
         ['Capacity approver', pr.approver_name], ['Effective from', fmtDay(pr.effective_from)], ['Capacity status (this month)', statusChip(p.capacity_status), true]]) + '</div></div>' +
@@ -249,7 +321,7 @@
       (p.history && p.history.length > 1 ? '<details class="rx-card rx-details"><summary>Schedule history (' + p.history.length + ')</summary>' + table(['Effective from', 'Type', 'Method', 'Hours/day', 'Workdays', 'Changed by'], p.history.map(function (h) {
         var w = []; try { w = JSON.parse(h.workdays); } catch (e) {} return '<tr><td>' + (day(h.effective_from) === '1900-01-01' ? 'Before first change' : fmtDay(h.effective_from)) + '</td><td>' + esc(h.employment_type) + '</td><td>' + esc(h.capacity_method) + '</td><td>' + fmt(h.hours_per_day) + '</td><td>' + w.map(function (d) { return DOW[d]; }).join(' ') + '</td><td>' + esc(h.changed_by_name || '') + '</td></tr>';
       }), { min: 560 }) + '</details>' : '');
-    if ($('rxEditEmp')) $('rxEditEmp').onclick = function () { editEmployment(x, pr, function () { profile(node, x, u); }); };
+    if ($('rxEditEmp')) $('rxEditEmp').onclick = function () { editEmployment(x, pr, refresh); };
   }
   function editEmployment(x, pr, done, ctx) {
     users().then(function (list) {
@@ -695,6 +767,16 @@
     if (type === 'project_expense') return kv([['Project', s.project_name], ['Amount', money(s.amount, s.currency)], ['Category', s.category], ['Reference', s.reference], ['Payee', s.counterparty], ['Description', s.description]]);
     return '';
   }
+  // Approval Center → the module that owns the record (HRM leave / monthly schedule, Project Finance).
+  function relatedOpener(r, src) {
+    if (r.request_type === 'leave_request') return function () { HR_STATE.sub = 'leave'; LEAVE_STATE.view = r.requester_id === (ME && ME.id) ? 'mine' : 'team'; if (src && src.start_date) LEAVE_STATE.month = day(src.start_date).slice(0, 7); window.REXUSLegacy.switchView('organization'); };
+    if (r.request_type === 'capacity_declaration') return function () { CAP_STATE.tab = 'team'; if (src && src.month) CAP_STATE.month = src.month; HR_STATE.sub = 'capacity'; window.REXUSLegacy.switchView('organization'); };
+    if ((r.request_type === 'project_expense' || r.request_type === 'project_disbursement') && r.project_key && financeTabVisible()) {
+      var k = String(r.project_key).split('::');
+      return function () { openFinance({ owner: k[0], project: k.slice(1).join('::') }, r.request_type === 'project_expense' ? 'ledger' : 'disbursements'); };
+    }
+    return null;
+  }
   function requestDetail(id, list, refresh) {
     var d = dialog({ title: 'Approval request', width: 760, footer: '<button type="button" class="wm-btn" data-close>Close</button>', body: '<div id="apDetail"></div>' });
     var box = d.el.querySelector('#apDetail'); loading(box);
@@ -702,10 +784,11 @@
       var r = j.request; var payload = {}; try { payload = JSON.parse(r.payload || '{}'); } catch (e) {}
       d.el.querySelector('.wm-modal-head h3').textContent = r.title;
       box.innerHTML = '<div class="rx-kv">' + kv([['Request ID', '<code>' + esc(r.id) + '</code>', true], ['Category', r.category], ['Type', r.type_label], ['Requester', r.requester_name], ['Submitted', fmtTime(r.submitted_at || r.created_at)], ['Priority', statusChip(r.priority), true], ['Mode', { single: 'Single approver', sequential: 'Sequential stages', parallel: 'Parallel (all must approve)' }[r.mode]], ['Status', statusChip(r.status), true]]) + '</div>' +
-        (payload.description ? '<p class="rx-desc">' + esc(payload.description) + '</p>' : '') + (j.source ? '<h4 class="rx-section-h">Related record</h4><div class="rx-kv">' + sourceSummary(r.request_type, j.source) + '</div>' : '') +
+        (payload.description ? '<p class="rx-desc">' + esc(payload.description) + '</p>' : '') + (j.source ? '<div class="rx-section-head"><h4 class="rx-section-h">Related record</h4>' + (relatedOpener(r, j.source) ? '<button type="button" class="wm-btn rx-btn-sm" id="apOpenRelated">Open related record</button>' : '') + '</div><div class="rx-kv">' + sourceSummary(r.request_type, j.source) + '</div>' : '') +
         '<h4 class="rx-section-h">Approval steps</h4><ol class="rx-steps">' + j.steps.map(function (s) { return '<li class="rx-step is-' + s.decision.toLowerCase().replace(/\s+/g, '-') + '"><span class="rx-step-n">' + s.sequence_num + '</span><span><strong>' + esc(s.full_name || s.approver_id) + '</strong>' + statusChip(s.decision) + (s.acted_by && s.acted_by !== s.approver_id ? '<small>by ' + esc(s.acted_by_name) + ' (delegate)</small>' : '') + (s.reason ? '<small>“' + esc(s.reason) + '”</small>' : '') + (s.decided_at ? '<small>' + fmtTime(s.decided_at) + '</small>' : '') + '</span>' + (j.can_reassign && s.decision === 'Pending' ? '<button type="button" class="wm-btn rx-btn-sm" data-reassign="' + esc(s.id) + '">Reassign</button>' : '') + '</li>'; }).join('') + '</ol>' +
         '<details class="rx-details" open><summary>History (' + j.events.length + ')</summary><ul class="rx-timeline">' + j.events.map(function (e) { var det = {}; try { det = JSON.parse(e.details || '{}'); } catch (x) {} var nm = function (uid) { var u = list.find(function (q) { return q.id === uid; }); return u ? u.full_name : uid; };
           return '<li><time>' + fmtTime(e.created_at) + '</time><span><strong>' + esc(e.actor_name || '') + '</strong> ' + esc(e.action) + (det.previous_approver ? ' · ' + esc(nm(det.previous_approver)) + ' → ' + esc(nm(det.new_approver)) : '') + (det.on_behalf_of ? ' · on behalf of ' + esc(nm(det.on_behalf_of)) : '') + (e.reason ? ' — “' + esc(e.reason) + '”' : '') + (e.new_status && e.new_status !== e.previous_status ? ' ' + statusChip(e.new_status) : '') + '</span></li>'; }).join('') + '</ul></details>';
+      if ($('apOpenRelated')) $('apOpenRelated').onclick = function () { var go = relatedOpener(r, j.source); d.close(); go(); };
       var footer = d.el.querySelector('.wm-modal-footer');
       if (j.can_decide) footer.innerHTML = '<button type="button" class="wm-btn" data-close>Close</button><button type="button" class="wm-btn" id="apChanges">Request changes</button><button type="button" class="wm-btn danger" id="apReject">Reject</button><button type="button" class="wm-btn primary" id="apApprove">Approve</button>';
       footer.querySelectorAll('[data-close]').forEach(function (b) { b.onclick = d.close; });
@@ -823,6 +906,27 @@
         metric('Budget utilization', main.budget_utilization === null || main.budget_utilization === undefined ? '—' : fmt(main.budget_utilization, 1) + '%', main.budget_utilization > 100 ? 'danger' : 'neutral', 'Confirmed expenses ÷ approved budget') + '</div>' +
         (f.summary.length > 1 ? '<h4 class="rx-section-h">Other currencies (not converted)</h4>' + table(['Currency', 'Received', 'Expenses', 'Net cash', 'Disbursed'], f.summary.filter(function (s) { return s.currency !== main.currency; }).map(function (s) { return '<tr><td>' + esc(s.currency) + '</td><td>' + money(s.received) + '</td><td>' + money(s.expenses) + '</td><td>' + money(s.net_cash) + '</td><td>' + money(s.disbursed) + '</td></tr>'; }), { min: 520 }) : '') +
         '<p class="rx-muted rx-footnote">Only Completed (confirmed) entries move cash. Approved requests are authorisations, not payments; disbursements are fund releases, not expenses. Corrections are posted as reversal entries — history is never edited.</p>';
+    }).catch(function (e) { errorBox(node, e); });
+  }
+  /* Project Detail shows a summary; the ledger, disbursements and history are worked on in one place:
+     Finance → Project Financials. Viewers without the Finance tab keep the full inline view. */
+  function financeTabVisible() { var t = $('wmFinanceTab'); return !!t && t.style.display !== 'none'; }
+  function openFinance(ref, tab) {
+    FN.open = { owner: ref.owner, project: ref.project }; FN.tab = tab || 'overview';
+    window.REXUSLegacy.switchView('project-financials');
+  }
+  function financeSummary(node, ref) {
+    if (!financeTabVisible()) return financeDetail(node, ref, function () {}, true);
+    loading(node, 'Loading project finance…');
+    api('/api/project-financials?owner=' + encodeURIComponent(ref.owner) + '&project=' + encodeURIComponent(ref.project)).then(function (f) {
+      var main = f.summary.find(function (s) { return s.currency === f.budget_currency; }) || f.summary[0] || {};
+      var pending = f.transactions.filter(function (t) { return t.status === 'Pending Approval' || t.status === 'Draft'; }).length;
+      node.innerHTML = '<div class="rx-card-head"><h3>Project Financials</h3><button type="button" class="wm-btn rx-btn-sm" id="pdFinOpen">Open in Project Finance</button></div>' +
+        '<div class="rx-metrics">' + metric('Approved budget', money(f.approved_budget, f.approved_budget === null ? '' : f.budget_currency), 'info') + metric('Total funds received', money(main.received, main.currency), 'success') +
+        metric('Total expenses', money(main.expenses, main.currency), 'warning') + metric('Net cash balance', money(main.net_cash, main.currency), main.net_cash < 0 ? 'danger' : 'success') +
+        metric('Budget utilization', main.budget_utilization === null || main.budget_utilization === undefined ? '—' : fmt(main.budget_utilization, 1) + '%', main.budget_utilization > 100 ? 'danger' : 'neutral') + '</div>' +
+        '<p class="rx-muted rx-footnote">' + f.transactions.length + ' transaction' + (f.transactions.length === 1 ? '' : 's') + (pending ? ' · ' + pending + ' not yet confirmed' : '') + ' · ' + f.disbursements.length + ' disbursement' + (f.disbursements.length === 1 ? '' : 's') + '. Income, expenses and disbursements are recorded in Finance → Project Financials.</p>';
+      $('pdFinOpen').onclick = function () { openFinance(ref); };
     }).catch(function (e) { errorBox(node, e); });
   }
   function ledger(body, f, ref, list, reload) {
@@ -1103,9 +1207,8 @@
       paymentForm(x.f, x.ref, d.id, Number(d.approved_amount) - paid, routeDone, ctx); }); });
   })(window.REXUSPages);
 
-  window.REXUS221 = { openSchedule: openSchedule, dialog: dialog, field: field, esc: esc, hr: hr, resource: resource, approvals: approvals, financials: financials, financeDetail: financeDetail, wbs: wbs, bindAppearance: bindAppearance, applyTheme: applyTheme, syncThemeFromServer: syncThemeFromServer, FN: FN };
+  window.REXUS221 = { openSchedule: openSchedule, dialog: dialog, field: field, esc: esc, hr: hr, resource: resource, approvals: approvals, financials: financials, financeDetail: financeDetail, financeSummary: financeSummary, openFinance: openFinance, wbs: wbs, openEmployee: openEmployee, openHrSettings: openHrSettings, bindAppearance: bindAppearance, applyTheme: applyTheme, syncThemeFromServer: syncThemeFromServer, FN: FN };
   // Keep the v2.1.0 entry points working, now backed by the v2.2.1 screens.
-  window.REXUS210 = { organization: function (n) { hr(n, 'employees'); }, resource: function (n) { resource(n); }, approvals: approvals, financials: financials };
   // Theme follows the account: load once the session is known .
   var appEl = document.querySelector('.wm-app');
   if (appEl) { var obs = new MutationObserver(function () { if (appEl.style.display !== 'none') { obs.disconnect(); syncThemeFromServer(); } }); obs.observe(appEl, { attributes: true, attributeFilter: ['style'] }); if (appEl.style.display !== 'none') syncThemeFromServer(); }

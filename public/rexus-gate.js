@@ -185,6 +185,32 @@
 
   /* ======================================================================== gate */
   var root = null, current = null;
+  /* Profile Fields configuration (System Admin). Mounted in HRM → HR Settings. */
+  function mountFields(host) {
+    var main = host, notify = function (m, t) { return window.REXUSNotify ? window.REXUSNotify(m, t || 'success') : null; };
+    var confirmBox = function (msg, title) { return window.REXUSLegacy && window.REXUSLegacy.confirm ? window.REXUSLegacy.confirm(msg, title) : Promise.resolve(window.confirm(msg)); };
+    return api('/api/profile-fields').then(function (d) {
+      main.innerHTML = '<section class="sv-card"><div class="sv-card-head"><div><h3>Personal information fields</h3><p class="sv-muted">Choose which personal information REXUS collects at first sign-in and in My Account. Collect only what you need; a hidden field is never required.</p></div><button type="button" class="sv-btn sv-btn-primary" data-save>Save fields</button></div></section>' +
+        '<section class="sv-card"><div class="sv-table-wrap"><table class="sv-table sv-fields"><thead><tr><th>Label</th><th>Type</th><th>Shown</th><th>Required</th><th>Who edits</th><th>Order</th><th>Options (dropdown)</th></tr></thead><tbody>' +
+        d.fields.map(function (f) { return '<tr data-key="' + esc(f.key) + '"><td><label class="rx-sr-only" for="fl_' + f.key + '">Label</label><input id="fl_' + f.key + '" name="label" maxlength="80" value="' + esc(f.label) + '"></td><td>' + esc({ date: 'Date', dropdown: 'Dropdown', text: 'Text', year: 'Year' }[f.field_type]) + '</td>' +
+          '<td><input type="checkbox" name="visible" aria-label="Show ' + esc(f.label) + '"' + (f.visible ? ' checked' : '') + '></td><td><input type="checkbox" name="required" aria-label="Require ' + esc(f.label) + '"' + (f.required ? ' checked' : '') + (f.visible ? '' : ' disabled') + '></td>' +
+          '<td>' + (f.self_service ? 'Employee' : 'HR (admin)') + '</td><td><input type="number" name="sort_order" aria-label="Order of ' + esc(f.label) + '" value="' + f.sort_order + '" class="sv-input-xs"></td>' +
+          '<td>' + (f.field_type === 'dropdown' ? '<textarea name="options" rows="3" aria-label="Options of ' + esc(f.label) + ', one per line">' + esc(f.options.join('\n')) + '</textarea>' : '<span class="sv-muted">—</span>') + '</td></tr>'; }).join('') + '</tbody></table></div></section>' +
+        '<section class="sv-card"><div class="sv-card-head"><div><h3>Existing accounts</h3><p class="sv-muted">New accounts must complete the required fields at first sign-in. Accounts created before this release are not asked until you apply the rule to them.</p></div><button type="button" class="sv-btn" data-apply>Apply required fields to existing accounts…</button></div></section>';
+      main.querySelectorAll('input[name=visible]').forEach(function (c) { c.onchange = function () { var r = c.closest('tr').querySelector('input[name=required]'); r.disabled = !c.checked; if (!c.checked) r.checked = false; }; });
+      main.querySelector('[data-save]').onclick = function () {
+        var rows = [].slice.call(main.querySelectorAll('tr[data-key]')).map(function (tr) { var g = function (n) { return tr.querySelector('[name=' + n + ']'); }; var o = { key: tr.dataset.key, label: g('label').value, visible: g('visible').checked, required: g('required').checked, sort_order: g('sort_order').value }; if (g('options')) o.options = g('options').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); return o; });
+        api('/api/profile-fields', 'PUT', { fields: rows }).then(function (r) { notify('Fields saved' + (r.accounts_now_incomplete ? ' — ' + r.accounts_now_incomplete + ' account(s) must now complete their profile' : ''), r.accounts_now_incomplete ? 'warning' : 'success'); mountFields(host); }).catch(function (e) { notify(e.message, 'error'); });
+      };
+      main.querySelector('[data-apply]').onclick = function () {
+        confirmBox('Every active account that is missing a required field will have to complete it at its next request before using REXUS. Continue?', 'Apply to existing accounts').then(function (ok) {
+          if (ok) api('/api/profile-fields', 'POST', { action: 'apply_existing' }).then(function (r) { notify('Applied to ' + r.accounts + ' existing account(s)'); }).catch(function (e) { notify(e.message, 'error'); });
+        });
+      };
+    }).catch(function (e) { host.innerHTML = '<p class="sv-error" role="alert">' + esc(e.message) + '</p>'; });
+  }
+
+
   function signOut() { api('/api/auth/logout', 'POST', {}).catch(function () {}).then(function () { location.reload(); }); }
   function shell(html) {
     if (!root) {
@@ -284,6 +310,6 @@
     }).catch(function () { load(); });
   }
 
-  window.REXUSGate = { start: function () { load(); }, mountProfile: mountProfile, api: api };
+  window.REXUSGate = { start: function () { load(); }, mountProfile: mountProfile, mountFields: mountFields, api: api };
   window.REXUSSurveyForm = { mount: surveyForm, topBar: topBar, typeLabel: TYPE_LABEL, check: checkAnswer };
 })();

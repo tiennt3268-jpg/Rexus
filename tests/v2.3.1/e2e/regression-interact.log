@@ -1,0 +1,26 @@
+PASS sidebar tab has role=button + tabindex
+PASS Enter on focused tab switches view
+PASS active tab exposes aria-current=page
+PASS row action icons are distinct pictograms — ['Edit', 'Delete']
+PASS every visible button has an accessible name
+PASS delete opens confirm dialog
+PASS confirm dialog has role=alertdialog + aria-modal
+PASS initial focus on Cancel (safe default)
+PASS background scroll locked
+PASS Tab focus stays inside dialog
+PASS Escape closes confirm
+PASS Escape = cancel → no DELETE sent
+PASS scroll unlocked after close
+PASS focus restored to the trigger
+PASS confirm above parent modal (z + hit-test) — (1500, 1300)
+PASS modal above sticky header — (1300, 200)
+PASS Save asks for confirmation
+PASS Save button shows loading (aria-busy) while request runs — true
+PASS repeat click during confirmation → exactly one create request — 1
+PASS result notification sits in the centre (GEN-10) — [450, 900]
+PASS result notification is a polite live region
+PASS glass surfaces carry no fixed hue
+PASS REXUS Document mode renders
+PASS no JavaScript page errors
+
+24/24 checks passed

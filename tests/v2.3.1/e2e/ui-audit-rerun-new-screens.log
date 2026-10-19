@@ -1,0 +1,70 @@
+== dark mono 1440
+emp-overview         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-employment       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-personal         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-compensation     fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-account          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-accounts          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-settings          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+configuration        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark mono 768
+emp-overview         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-employment       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-personal         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-compensation     fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-account          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-accounts          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-settings          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+configuration        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark mono 375
+emp-overview         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-employment       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-personal         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-compensation     fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-account          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-accounts          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-settings          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+configuration        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark navy 1440
+emp-overview         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-employment       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-personal         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-compensation     fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-account          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-accounts          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-settings          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+configuration        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== light mono 1440
+emp-overview         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-employment       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-personal         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-compensation     fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-account          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-accounts          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-settings          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+configuration        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== light mono 375
+emp-overview         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-employment       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-personal         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-compensation     fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-account          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-accounts          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-settings          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+configuration        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== light navy 1440
+emp-overview         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-employment       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-personal         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-compensation     fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+emp-account          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-accounts          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+hr-settings          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+configuration        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []

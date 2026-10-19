@@ -1,0 +1,55 @@
+PASS GEN-05 signed-in reload never shows the old login screen
+PASS GEN-05 launcher heading in English
+PASS GEN-05 signed-out visitor gets the current (restyled) login screen
+PASS GEN-05 sign in with username through the form
+PASS GEN-05 refresh keeps the session without flashing the login screen
+PASS GEN-05 expired session returns to the login screen
+PASS GEN-05 sign out shows the login screen
+PASS GEN-06 no "Interactive Gantt (drag to reschedule)" section or drag chart
+PASS GEN-06 Gantt timeline still shows bars and dependency links
+PASS GEN-04 redundant page subtitle removed (Approval Center)
+PASS GEN-04 helpful guidance kept (Project Finance budget note)
+PASS GEN-07 drag a header edge widens the column; cells stay aligned
+PASS GEN-07 keyboard resize (Arrow Right)
+PASS GEN-07 width remembered after reload (per browser)
+PASS GEN-07 double-click resets the column
+PASS GEN-07 no page-level horizontal overflow
+PASS GEN-03 Appearance offers Light / Dark / System
+PASS GEN-03 switching to Dark applies immediately (no sign-out / reload)
+PASS GEN-03 theme kept after reload
+PASS GEN-03 mode follows the account to a new browser
+PASS GEN-03 System follows the OS (light here)
+PASS GEN-03 System follows the OS (dark here)
+PASS ACC-03 admin can edit own username / email / position / department
+PASS ACC-03 invalid username shows a clear inline error
+PASS ACC-03 saved values shown after reload
+PASS ACC-03 role stays read-only
+PASS ACC-01 username suggested from the full name
+PASS ACC-01 duplicate username refused with a clear message
+PASS ACC-01 new account listed with its username
+PASS ACC-02 no delete button on your own row
+PASS ACC-02 confirmation must match the username
+PASS ACC-02 deleted account disappears from the list
+PASS ACC-02 shown under "Show deleted accounts" with Restore
+PASS ACC-02 restore brings it back
+PASS HRM-04 admin sets the part-time minimum
+PASS HRM-02 full-time sees Monthly Schedule with regular (read-only) + OT per day
+PASS HRM-03 OT saved separately from regular hours
+PASS HRM-03 summary shows regular and OT apart
+PASS HRM-02 a note per day is saved
+PASS HRM-04 part-time below the minimum gets a warning
+PASS HRM-02 manager sees each person's regular capacity, OT and minimum
+PASS HRM-04 manager sees the part-time shortfall
+PASS HRM-05 request sent to everyone managed
+PASS HRM-05 status per person shows the request
+PASS HRM-05 sending again re-sends instead of duplicating
+PASS HRM-05 employee gets an in-app notification
+PASS HRM-05 notification opens the right month's form with the request banner
+PASS DOC-01 sidebar section hides on click (aria-expanded=false)
+PASS DOC-01 keyboard (Enter) shows it again
+PASS DOC-02 New page dialog is wide enough on desktop
+PASS DOC-03 no box around the writing area or title while typing
+PASS DOC-02 dialog stays inside the viewport on mobile
+PASS No JavaScript page errors in any v2.2.2 flow
+
+53/53 e2e checks passed

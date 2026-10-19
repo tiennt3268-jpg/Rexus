@@ -1839,3 +1839,20 @@ table.rx-resized td.rx-nowrap, table.rx-resized th{ overflow: hidden; text-overf
   .rx-pick-bar .rx-pick-q{ flex-basis: 100%; }
   .rx-pick-bar .rx-pick-count{ flex: 1; min-width: 0; }
 }
+
+/* v2.3.1 — HRM employee record, approval "Open related record", Configuration moved-note */
+.wm-app .rx-link{ background: none; border: 0; padding: 0; font: inherit; color: var(--rx-accent); text-decoration: underline; text-underline-offset: 2px; cursor: pointer; text-align: left; }
+.wm-app .rx-link:hover{ text-decoration-thickness: 2px; }
+.wm-app .rx-emp-head{ margin-bottom: var(--rx-space-3); }
+.wm-app .rx-emp-head .rx-profile-head{ margin-bottom: 0; }
+.wm-app .rx-emp-body{ margin-top: var(--rx-space-3); display: grid; gap: var(--rx-space-3); }
+.wm-app .rx-emp-body > .rx-card{ margin: 0; }
+.wm-app .rx-emp-projects{ margin: var(--rx-space-2) 0 0; }
+.wm-app .rx-status-list{ list-style: none; margin: 0 0 var(--rx-space-2); padding: 0; display: grid; gap: var(--rx-space-2); }
+.wm-app .rx-section-head{ display: flex; justify-content: space-between; align-items: center; gap: var(--rx-gap-sm); flex-wrap: wrap; }
+.wm-app .rx-accounts{ margin-top: var(--rx-space-4); }
+.wm-app .rx-accounts .wm-table{ min-width: 720px; }
+.wm-app .rx-accounts #cfgEmpTableWrap{ overflow-x: auto; }
+.wm-app .rx-emp-body{ grid-template-columns: minmax(0, 1fr); }
+.wm-app #rxCompFinance table, .wm-app #rxCompRates table{ display: block; overflow-x: auto; max-width: 100%; }
+@media (max-width: 640px){ .wm-app #rxCompRates .wm-form-grid{ grid-template-columns: minmax(0, 1fr); } }

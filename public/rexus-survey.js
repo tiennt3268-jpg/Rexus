@@ -1,7 +1,8 @@
 /* =============================================================================
    REXUS v2.3.0 — REXUS Survey v1.0.0 workspace (spec §02–§06, §10–§11, §14; UI/UX B + C).
    A separate workspace in the App Switcher, like REXUS Document; same account and session.
-   Routes: #survey/overview | list | builder/<id> | settings/<id> | analytics/<id> | answer/<id> | profiles[/<uid>] | fields
+   Routes: #survey/overview | list | builder/<id> | settings/<id> | analytics/<id> | answer/<id>
+   (old #survey/profiles[/<uid>] and #survey/fields links open the HRM employee record / HR Settings)
    Every action calls /api/surveys, /api/survey-respond, /api/onboarding or /api/profile-fields; the server
    decides permissions. Numbers on screen come from those APIs only (no illustrative metrics).
    ========================================================================== */
@@ -45,7 +46,6 @@
   function nav(active) {
     var d = S.data || {}, items = [['overview', 'Overview', '◉']];
     if (d.can_create || (d.surveys || []).length) items.push(['list', 'My Surveys', '▤'], ['builder', 'Survey Builder', '☷'], ['settings', 'Survey Settings', '⚙'], ['analytics', 'Analytics', '▥']);
-    if (d.is_admin) items.push(['profiles', 'Employee Profiles', '♙'], ['fields', 'Profile Fields', '≡']);
     side.innerHTML = '<div class="sv-side-brand"><span class="sv-logo" aria-hidden="true">RX</span><div><strong>REXUS</strong><small>Survey workspace</small></div></div><p class="sv-side-h">Workspace</p><ul>' +
       items.map(function (it) { return '<li><a href="#survey/' + it[0] + (S.id && /builder|settings|analytics/.test(it[0]) ? '/' + encodeURIComponent(S.id) : '') + '" class="' + (it[0] === active ? 'is-active' : '') + '"' + (it[0] === active ? ' aria-current="page"' : '') + '><span aria-hidden="true">' + it[2] + '</span>' + it[1] + '</a></li>'; }).join('') +
       '</ul><div class="sv-side-foot"><strong>REXUS Platform</strong><span>Work Management · Document · Survey</span></div>';
@@ -62,12 +62,13 @@
 
   function render(route) {
     S.route = route; var parts = route.split('/'), page = parts[0], id = parts[1] ? decodeURIComponent(parts[1]) : '';
+    if ((page === 'profiles' || page === 'fields') && window.REXUS221) { setMode(false); return page === 'fields' ? window.REXUS221.openHrSettings() : id ? window.REXUS221.openEmployee(id, 'personal') : window.REXUS221.openEmployee(null); }
     if (/^(builder|settings|analytics)$/.test(page)) { if (id) S.id = id; else if (S.id) { history.replaceState(null, '', '#survey/' + page + '/' + encodeURIComponent(S.id)); id = S.id; } }
     loading();
     refresh().then(function () {
       nav(page); main.scrollTop = 0; window.scrollTo(0, 0);
       if (/^(builder|settings|analytics)$/.test(page) && !id) return pickSurvey(page);
-      ({ overview: overview, list: list, builder: builder, settings: settings, analytics: analytics, answer: answer, profiles: profiles, fields: fields }[page] || overview)(id);
+      ({ overview: overview, list: list, builder: builder, settings: settings, analytics: analytics, answer: answer }[page] || overview)(id);
       try { main.focus({ preventScroll: true }); } catch (e) {}
     }).catch(fail);
   }
@@ -419,56 +420,7 @@
     }).catch(fail);
   }
 
-  /* ------------------------------------------------------------------ employee profiles + fields (admin) */
-  function profiles(uid) {
-    users().then(function (us) {
-      main.innerHTML = head('Employee Profiles', 'Employee Profiles', 'Account and personal information, onboarding status. Personal information is visible to the employee and System Admins only; every change is audit-logged.') +
-        '<div class="sv-profiles"><section class="sv-card sv-people"><label class="sv-search"><span class="rx-sr-only">Search employees</span><input type="search" id="svPeopleQ" placeholder="Search name, username or email…"></label><ul id="svPeople" class="sv-people-list"></ul></section><section id="svPerson" class="sv-person"></section></div>';
-      var listEl = main.querySelector('#svPeople');
-      function draw(q) { var f = fold(q || ''); var rows = us.filter(function (u) { return !f || fold([u.full_name, u.username, u.email, u.department].join(' ')).indexOf(f) !== -1; });
-        listEl.innerHTML = rows.length ? rows.map(function (u) { return '<li><a href="#survey/profiles/' + esc(u.id) + '" data-uid="' + esc(u.id) + '"' + (u.id === uid ? ' aria-current="true" class="is-active"' : '') + '><strong>' + esc(u.full_name || u.username) + '</strong><small>' + esc([u.position, u.department].filter(Boolean).join(' · ') || u.username) + '</small></a></li>'; }).join('') : '<li class="sv-empty">No results found</li>';
-        listEl.querySelectorAll('[data-uid]').forEach(function (a) { a.onclick = function (e) { e.preventDefault(); open('profiles/' + a.dataset.uid); }; }); }
-      var t; main.querySelector('#svPeopleQ').oninput = function () { var v = this.value; clearTimeout(t); t = setTimeout(function () { draw(v); }, 300); };
-      draw('');
-      var host = main.querySelector('#svPerson');
-      if (!uid) { host.innerHTML = '<section class="sv-card sv-pad"><p class="sv-empty">Choose an employee to see their profile.</p></section>'; return; }
-      host.innerHTML = '<div id="svPersonStatus"></div><div id="svPersonForm"></div>';
-      window.REXUSGate.mountProfile(host.querySelector('#svPersonForm'), { userId: uid, submitLabel: 'Save personal information' }).then(function (d) {
-        if (!d || !d.status) return;
-        var st = d.status;
-        host.querySelector('#svPersonStatus').innerHTML = '<section class="sv-card"><div class="sv-card-head"><div><h3>Onboarding status</h3><p class="sv-muted">' + esc(d.user.full_name) + ' · User ID ' + esc(d.user.id) + '</p></div><button type="button" class="sv-btn" data-reset>Reset password</button></div><ul class="sv-status-list">' +
-          '<li>' + (st.must_change_password ? '<span class="rx-chip rx-chip-warning">Pending</span>' : '<span class="rx-chip rx-chip-success">Done</span>') + ' Personal password</li>' +
-          '<li>' + (st.onboarding_completed_at ? '<span class="rx-chip rx-chip-success">Completed</span> Profile — ' + fmtDate(st.onboarding_completed_at, true) : st.profile_gate ? '<span class="rx-chip rx-chip-warning">Pending</span> Profile' : '<span class="rx-chip rx-chip-neutral">Not required</span> Profile (existing account)') + '</li></ul></section>';
-        host.querySelector('[data-reset]').onclick = function () {
-          confirmBox('Create a new temporary password for ' + d.user.full_name + '? They must replace it at the next sign-in.', 'Reset password').then(function (ok) {
-            if (!ok) return;
-            api('/api/admin/users/' + encodeURIComponent(uid), 'POST', { action: 'reset_password' }).then(function (r) { notify('Temporary password for ' + d.user.username + ': ' + r.temp_password + '\nShare it privately. It is shown only once.', 'success', { sticky: true, title: 'Password reset' }); profiles(uid); }).catch(function (e) { notify(e.message, 'error'); });
-          });
-        };
-      });
-    }).catch(fail);
-  }
-  function fields() {
-    api('/api/profile-fields').then(function (d) {
-      main.innerHTML = head('Profile Fields', 'Profile Fields', 'Choose which personal information REXUS collects. Collect only what you need; a hidden field is never required.', '<button type="button" class="sv-btn sv-btn-primary" data-save>Save fields</button>') +
-        '<section class="sv-card"><div class="sv-table-wrap"><table class="sv-table sv-fields"><thead><tr><th>Label</th><th>Type</th><th>Shown</th><th>Required</th><th>Who edits</th><th>Order</th><th>Options (dropdown)</th></tr></thead><tbody>' +
-        d.fields.map(function (f) { return '<tr data-key="' + esc(f.key) + '"><td><label class="rx-sr-only" for="fl_' + f.key + '">Label</label><input id="fl_' + f.key + '" name="label" maxlength="80" value="' + esc(f.label) + '"></td><td>' + esc({ date: 'Date', dropdown: 'Dropdown', text: 'Text', year: 'Year' }[f.field_type]) + '</td>' +
-          '<td><input type="checkbox" name="visible" aria-label="Show ' + esc(f.label) + '"' + (f.visible ? ' checked' : '') + '></td><td><input type="checkbox" name="required" aria-label="Require ' + esc(f.label) + '"' + (f.required ? ' checked' : '') + (f.visible ? '' : ' disabled') + '></td>' +
-          '<td>' + (f.self_service ? 'Employee' : 'HR (admin)') + '</td><td><input type="number" name="sort_order" aria-label="Order of ' + esc(f.label) + '" value="' + f.sort_order + '" class="sv-input-xs"></td>' +
-          '<td>' + (f.field_type === 'dropdown' ? '<textarea name="options" rows="3" aria-label="Options of ' + esc(f.label) + ', one per line">' + esc(f.options.join('\n')) + '</textarea>' : '<span class="sv-muted">—</span>') + '</td></tr>'; }).join('') + '</tbody></table></div></section>' +
-        '<section class="sv-card"><div class="sv-card-head"><div><h3>Existing accounts</h3><p class="sv-muted">New accounts must complete the required fields at first sign-in. Accounts created before this release are not asked until you apply the rule to them.</p></div><button type="button" class="sv-btn" data-apply>Apply required fields to existing accounts…</button></div></section>';
-      main.querySelectorAll('input[name=visible]').forEach(function (c) { c.onchange = function () { var r = c.closest('tr').querySelector('input[name=required]'); r.disabled = !c.checked; if (!c.checked) r.checked = false; }; });
-      main.querySelector('[data-save]').onclick = function () {
-        var rows = [].slice.call(main.querySelectorAll('tr[data-key]')).map(function (tr) { var g = function (n) { return tr.querySelector('[name=' + n + ']'); }; var o = { key: tr.dataset.key, label: g('label').value, visible: g('visible').checked, required: g('required').checked, sort_order: g('sort_order').value }; if (g('options')) o.options = g('options').value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); return o; });
-        api('/api/profile-fields', 'PUT', { fields: rows }).then(function (r) { notify('Fields saved' + (r.accounts_now_incomplete ? ' — ' + r.accounts_now_incomplete + ' account(s) must now complete their profile' : ''), r.accounts_now_incomplete ? 'warning' : 'success'); fields(); }).catch(function (e) { notify(e.message, 'error'); });
-      };
-      main.querySelector('[data-apply]').onclick = function () {
-        confirmBox('Every active account that is missing a required field will have to complete it at its next request before using REXUS. Continue?', 'Apply to existing accounts').then(function (ok) {
-          if (ok) api('/api/profile-fields', 'POST', { action: 'apply_existing' }).then(function (r) { notify('Applied to ' + r.accounts + ' existing account(s)'); }).catch(function (e) { notify(e.message, 'error'); });
-        });
-      };
-    }).catch(fail);
-  }
+  /* Employee Profiles and Profile Fields moved to HRM in v2.3.1 (employee record → Personal information / Account; HR Settings → Profile fields). */
 
   /* ------------------------------------------------------------------ wiring */
   if (switcher) switcher.addEventListener('click', function (e) { var b = e.target.closest('[data-rexus-app]'); if (!b) return; if (b.dataset.rexusApp === 'survey') open(fromHash() || 'overview'); else { leaveGuard(); setMode(false); if (/^#survey\//.test(location.hash) && b.dataset.rexusApp === 'rexus') history.replaceState(null, '', location.pathname + location.search + '#/overview'); } });
