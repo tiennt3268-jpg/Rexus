@@ -8,6 +8,7 @@ const { db, route, tokenFor } = await boot();
 // --- realistic seed for UI flows (all through SQL, mirrors what the app itself would create)
 const q = (s, p = []) => db.query(s, p);
 const ADMIN = 'ADMIN_TIENNT', PM = 'U_MINCT', MEM = 'U_TRUONGPN', PT = 'U_VYNHA';
+if (!process.env.REXUS_NO_SEED) {   // REXUS_NO_SEED=1: serve the database exactly as the migrations leave it (e.g. imported data)
 const proj = (await q('SELECT name FROM projects WHERE user_id=$1', [ADMIN])).rows[0].name;
 const today = new Date(); const iso = (d) => d.toISOString().slice(0, 10); const plus = (n) => { const d = new Date(today); d.setDate(d.getDate() + n); return iso(d); };
 await q(`UPDATE projects SET workflow_notifications_enabled=TRUE, gantt_enabled=FALSE WHERE user_id=$1`, [ADMIN]);
@@ -20,6 +21,7 @@ await q(`INSERT INTO rexus_resource_days_off(id,user_id,day,reason,kind) VALUES 
 await q(`INSERT INTO rexus_leave_requests(id,user_id,leave_type,start_date,end_date,unit,status,duration_hours,reason) VALUES ('LV1',$1,'Annual Leave',$2,$2,'full','Approved',8,'Family event')`, [MEM, plus(6)]);
 await q(`INSERT INTO tasks(id,user_id,task,project,status,predecessors) VALUES ('TIMPL',$1,'Prepare venue','Student Conference','Not Started','[]')`, [PM]);
 await q(`INSERT INTO project_members(owner_user_id,project,user_id,role) VALUES ($1,'Student Conference',$2,'Member') ON CONFLICT DO NOTHING`, [PM, ADMIN]).catch(() => {});
+}
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.json': 'application/json' };
 const server = http.createServer(async (req, res) => {
