@@ -43,9 +43,14 @@
   function open(route) { leaveGuard().then(function (ok) { if (!ok) return; route = route || 'overview'; setMode(true); if (location.hash !== '#survey/' + route) history.pushState(null, '', location.pathname + location.search + '#survey/' + route); render(route); }); }
   function fromHash() { var m = /^#survey\/(.+)$/.exec(location.hash); return m ? decodeURIComponent(m[1]) : null; }
 
+  /* SUR-01: line icons in the same style as the REXUS and Document sidebars (24px grid, 1.8 stroke). */
+  var PATHS = { home: 'M3 11l9-7 9 7M5 10v10h14V10', list: 'M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01', edit: 'M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4', gear: 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z', chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+    short: 'M4 9h16M4 15h10', long: 'M4 6h16M4 10h16M4 14h16M4 18h10', single: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z', multiple: 'M4 4h16v16H4zM8 12l3 3 5-6', dropdown: 'M4 6h16v12H4zM9 11l3 3 3-3',
+    rating: 'M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z', scale: 'M3 12h18M7 8l-4 4 4 4M17 8l4 4-4 4', date: 'M4 6h16v14H4zM4 10h16M8 3v4M16 3v4', number: 'M9 4L7 20M17 4l-2 16M4 9h16M3 15h16', section: 'M3 5h18M3 12h18M3 19h18' };
+  function svg(name) { return '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="' + PATHS[name] + '"/></svg>'; }
   function nav(active) {
-    var d = S.data || {}, items = [['overview', 'Overview', '◉']];
-    if (d.can_create || (d.surveys || []).length) items.push(['list', 'My Surveys', '▤'], ['builder', 'Survey Builder', '☷'], ['settings', 'Survey Settings', '⚙'], ['analytics', 'Analytics', '▥']);
+    var d = S.data || {}, items = [['overview', 'Overview', svg('home')]];
+    if (d.can_create || (d.surveys || []).length) items.push(['list', 'My Surveys', svg('list')], ['builder', 'Survey Builder', svg('edit')], ['settings', 'Survey Settings', svg('gear')], ['analytics', 'Analytics', svg('chart')]);
     side.innerHTML = '<div class="sv-side-brand"><span class="sv-logo" aria-hidden="true">RX</span><div><strong>REXUS</strong><small>Survey workspace</small></div></div><p class="sv-side-h">Workspace</p><ul>' +
       items.map(function (it) { return '<li><a href="#survey/' + it[0] + (S.id && /builder|settings|analytics/.test(it[0]) ? '/' + encodeURIComponent(S.id) : '') + '" class="' + (it[0] === active ? 'is-active' : '') + '"' + (it[0] === active ? ' aria-current="page"' : '') + '><span aria-hidden="true">' + it[2] + '</span>' + it[1] + '</a></li>'; }).join('') +
       '</ul><div class="sv-side-foot"><strong>REXUS Platform</strong><span>Work Management · Document · Survey</span></div>';
@@ -95,8 +100,8 @@
           : '<p class="sv-empty">Nothing needs attention.</p>') + '</section>' +
       '<section class="sv-card"><div class="sv-card-head"><div><h3>Quick actions</h3><p class="sv-muted">Your next action in one click</p></div></div><ul class="sv-quick">' +
         (d.can_create ? '<li><button type="button" data-new><strong>+ Create a survey</strong><small>Start blank or from a template</small></button></li>' : '') +
-        '<li><button type="button" data-go="list"><strong>◎ View responses</strong><small>Open a survey and review its answers</small></button></li>' +
-        '<li><button type="button" data-deadlines><strong>◷ Check deadlines</strong><small>Active surveys sorted by closing date</small></button></li></ul></section></div>' +
+        '<li><button type="button" data-go="list"><strong>' + svg('chart') + 'View responses</strong><small>Open a survey and review its answers</small></button></li>' +
+        '<li><button type="button" data-deadlines><strong>' + svg('date') + 'Check deadlines</strong><small>Active surveys sorted by closing date</small></button></li></ul></section></div>' +
       '<section class="sv-card"><div class="sv-card-head"><div><h3>Response activity</h3><p class="sv-muted">Valid responses received over the last 7 days</p></div></div><div class="sv-activity"><div class="sv-bars" role="img" aria-label="Responses per day: ' + days.map(function (x) { return x.day.slice(5) + ' ' + x.n; }).join(', ') + '">' +
         days.map(function (x) { return '<div class="sv-bar"><span class="sv-bar-n">' + x.n + '</span><span class="sv-bar-col" style="height:' + Math.round(x.n * 100 / max) + '%"></span><small>' + new Date(x.day + 'T12:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', timeZone: 'UTC' }) + '</small></div>'; }).join('') +
         '</div><div class="sv-activity-sum"><p class="sv-eyebrow">This week</p><strong>+' + week + '</strong><span class="sv-muted">New valid responses</span></div></div></section>' + forMe;
@@ -175,9 +180,10 @@
   /* ------------------------------------------------------------------ builder */
   var T = window.REXUSSurveyForm ? window.REXUSSurveyForm.typeLabel : {};
   var TYPES = ['short', 'long', 'single', 'multiple', 'dropdown', 'rating', 'scale', 'date', 'number'];
-  var ICON = { short: '▱', long: '▤', single: '◉', multiple: '☑', dropdown: '▾', rating: '☆', scale: '↔', date: '▣', number: '#' };
+  var ICON = {}; TYPES.forEach(function (k) { ICON[k] = svg(k); });
   function qid() { return 'q_' + Math.random().toString(36).slice(2, 12); }
   function newQ(type) {
+    if (type === 'section') return { id: 's_' + Math.random().toString(36).slice(2, 12), type: 'section', title: '', description: '' };   // SUR-04
     var q = { id: qid(), type: type, title: '', description: '', required: false };
     if (/single|multiple|dropdown/.test(type)) q.options = ['Option 1', 'Option 2'];
     if (type === 'short') q.max_length = 300; if (type === 'long') q.max_length = 5000;
@@ -196,29 +202,50 @@
             '<span class="sv-save-state" aria-live="polite">' + (saving ? 'Saving…' : S.dirty ? 'Unsaved changes' : savedAt ? 'Saved' : '') + '</span><button type="button" class="sv-btn" data-save>Save draft</button><button type="button" class="sv-btn" data-preview>Preview</button><button type="button" class="sv-btn sv-btn-primary" data-publish' + (s.status === 'Archived' ? ' disabled title="Archived surveys cannot be published"' : '') + '>' + (s.version ? 'Publish changes' : 'Publish survey') + '</button>') +
           (err ? '<div class="sv-banner" role="alert">' + esc(err) + '</div>' : '') +
           '<div class="sv-builder"><aside class="sv-card sv-types"><h3>Add questions</h3><p class="sv-muted">Choose a question type</p><p class="sv-side-h">Question types</p>' +
-            TYPES.map(function (t) { return '<button type="button" class="sv-type" data-add="' + t + '"><span aria-hidden="true">' + ICON[t] + '</span>' + esc(T[t]) + '</button>'; }).join('') + '</aside>' +
+            TYPES.map(function (t) { return '<button type="button" class="sv-type" data-add="' + t + '"><span aria-hidden="true">' + ICON[t] + '</span>' + esc(T[t]) + '</button>'; }).join('') +
+            '<p class="sv-side-h">Layout</p><button type="button" class="sv-type" data-add="section"><span aria-hidden="true">' + svg('section') + '</span>Section</button>' +
+            '<p class="sv-muted sv-types-note">Sections split the form into pages. Single-choice answers can send people to a later section or end the form.</p></aside>' +
           '<section class="sv-canvas"><p class="sv-eyebrow">' + status() + '</p>' +
             '<label class="rx-sr-only" for="svName">Survey name</label><input id="svName" class="sv-title-input" maxlength="200" value="' + esc(s.name) + '">' +
             '<label class="rx-sr-only" for="svDesc">Description</label><textarea id="svDesc" class="sv-desc-input" rows="2" maxlength="4000" placeholder="Add a short introduction for respondents">' + esc(s.description) + '</textarea>' +
             '<label class="sv-mode">Respondents <select id="svMode"' + (s.responses ? ' disabled title="Cannot change after responses were received"' : '') + '><option value="authenticated"' + (s.mode === 'authenticated' ? ' selected' : '') + '>REXUS accounts (linked to User ID)</option><option value="public"' + (s.mode === 'public' ? ' selected' : '') + '>Anyone with the link (not linked)</option></select></label>' +
-            (qs.length ? qs.map(function (x, i) { return card(x, i, i === sel); }).join('') : '<div class="sv-empty sv-drop">No questions yet — pick a type on the left to add the first one.</div>') + '</section>' +
-          '<aside class="sv-card sv-props">' + (q ? props(q) : '<h3>Question properties</h3><p class="sv-muted">Select a question to edit it.</p>') +
+            (problems().length ? '<div class="sv-banner sv-banner-warn" role="alert"><strong>Branching needs attention</strong><ul>' + problems().map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul></div>' : '') +
+            (qs.length ? qs.map(function (x, i) { return card(x, i, i === sel); }).join('') : '<div class="sv-empty sv-drop">No questions yet. Pick a type on the left to add the first one.</div>') + '</section>' +
+          '<aside class="sv-card sv-props">' + (q ? (q.type === 'section' ? sectionProps(q) : props(q)) : '<h3>Question properties</h3><p class="sv-muted">Select a question to edit it.</p>') +
             '<div class="sv-note-box"><strong>Before publishing</strong><p>Preview on desktop and mobile. Published versions are kept: answers stay linked to the questions they answered.</p></div></aside></div>';
         wire();
       }
+      function qnum(i) { var n = 0; for (var k = 0; k <= i; k++) if (qs[k].type !== 'section') n++; return n; }
+      function snum(i) { var n = 0; for (var k = 0; k <= i; k++) if (qs[k].type === 'section') n++; return n; }
+      function sectionName(id) { var i = qs.findIndex(function (x) { return x.id === id; }); return i === -1 ? '' : 'Section ' + snum(i) + (qs[i].title ? ': ' + qs[i].title : ''); }
+      function routeLabel(t) { return t === 'end' ? 'Submit form' : sectionName(t) ? 'Go to ' + sectionName(t) : 'Missing section'; }
+      /** SUR-05: branching that cannot work (target deleted, or not after the question). */
+      function problems() {
+        var out = [];
+        qs.forEach(function (x, i) {
+          if (x.type !== 'single' || !x.routes) return;
+          Object.keys(x.routes).forEach(function (o) { var t = x.routes[o], j = qs.findIndex(function (y) { return y.id === t; });
+            if (t !== 'end' && t !== 'next' && (j === -1 || j <= i)) out.push('Question ' + qnum(i) + ': the answer "' + o + '" goes to ' + (j === -1 ? 'a section that was deleted' : 'a section before the question') + '. Choose "Continue", a later section or "Submit form".'); });
+        });
+        return out;
+      }
       function card(x, i, on) {
+        if (x.type === 'section') return '<article class="sv-qcard sv-scard' + (on ? ' is-selected' : '') + '" data-sel="' + i + '" tabindex="0" aria-label="Section ' + snum(i) + ': ' + esc(x.title || 'untitled') + '"' + (on ? ' aria-current="true"' : '') + '><div class="sv-qcard-top"><span class="sv-eyebrow">Section ' + snum(i) + '</span><span class="sv-qcard-acts">' +
+          '<button type="button" data-up="' + i + '" aria-label="Move section ' + snum(i) + ' up"' + (i === 0 ? ' disabled' : '') + '>↑</button><button type="button" data-down="' + i + '" aria-label="Move section ' + snum(i) + ' down"' + (i === qs.length - 1 ? ' disabled' : '') + '>↓</button>' +
+          '<button type="button" data-dup="' + i + '">Duplicate</button><button type="button" data-del="' + i + '" class="is-danger">Delete</button></span></div>' +
+          '<h4>' + (x.title ? esc(x.title) : '<span class="sv-muted">Untitled section</span>') + '</h4>' + (x.description ? '<p class="sv-muted">' + esc(x.description) + '</p>' : '') + '</article>';
         var pv = '';
-        if (/single|multiple/.test(x.type)) pv = (x.options || []).map(function (o) { return '<div class="sv-pv-opt"><span class="sv-pv-' + (x.type === 'single' ? 'radio' : 'check') + '"></span>' + esc(o) + '</div>'; }).join('');
+        if (/single|multiple/.test(x.type)) pv = (x.options || []).map(function (o) { var r = x.type === 'single' && x.routes && x.routes[o]; return '<div class="sv-pv-opt"><span class="sv-pv-' + (x.type === 'single' ? 'radio' : 'check') + '"></span>' + esc(o) + (r && r !== 'next' ? '<span class="sv-pv-route">' + esc(routeLabel(r)) + '</span>' : '') + '</div>'; }).join('');
         else if (x.type === 'dropdown') pv = '<div class="sv-pv-input">' + esc((x.options || [])[0] || 'Select…') + ' ▾</div>';
         else if (x.type === 'rating' || x.type === 'scale') { var lo = x.type === 'rating' ? 1 : x.min, b = ''; for (var n = lo; n <= x.max; n++) b += '<span class="sv-pv-num">' + n + '</span>'; pv = '<div class="sv-pv-scale">' + b + '</div>'; }
         else pv = '<div class="sv-pv-input sv-pv-' + x.type + '">' + esc({ short: 'Short answer', long: 'Long answer', date: 'dd/mm/yyyy', number: 'Number' }[x.type]) + '</div>';
-        return '<article class="sv-qcard' + (on ? ' is-selected' : '') + '" data-sel="' + i + '" tabindex="0" aria-label="Question ' + (i + 1) + ': ' + esc(x.title || 'untitled') + '"' + (on ? ' aria-current="true"' : '') + '><div class="sv-qcard-top"><span class="sv-eyebrow">Question ' + String(i + 1).padStart(2, '0') + ' · ' + esc(T[x.type]) + '</span><span class="sv-qcard-acts">' +
-          '<button type="button" data-up="' + i + '" aria-label="Move question ' + (i + 1) + ' up"' + (i === 0 ? ' disabled' : '') + '>↑</button><button type="button" data-down="' + i + '" aria-label="Move question ' + (i + 1) + ' down"' + (i === qs.length - 1 ? ' disabled' : '') + '>↓</button>' +
+        return '<article class="sv-qcard' + (on ? ' is-selected' : '') + '" data-sel="' + i + '" tabindex="0" aria-label="Question ' + qnum(i) + ': ' + esc(x.title || 'untitled') + '"' + (on ? ' aria-current="true"' : '') + '><div class="sv-qcard-top"><span class="sv-eyebrow">Question ' + String(qnum(i)).padStart(2, '0') + ' · ' + esc(T[x.type]) + '</span><span class="sv-qcard-acts">' +
+          '<button type="button" data-up="' + i + '" aria-label="Move question ' + qnum(i) + ' up"' + (i === 0 ? ' disabled' : '') + '>↑</button><button type="button" data-down="' + i + '" aria-label="Move question ' + qnum(i) + ' down"' + (i === qs.length - 1 ? ' disabled' : '') + '>↓</button>' +
           '<button type="button" data-dup="' + i + '">Duplicate</button><button type="button" data-del="' + i + '" class="is-danger">Delete</button></span></div>' +
           '<h4>' + (x.title ? esc(x.title) : '<span class="sv-muted">Untitled question</span>') + (x.required ? ' <span class="sv-req">*</span>' : '') + '</h4>' + (x.description ? '<p class="sv-muted">' + esc(x.description) + '</p>' : '') + pv + '</article>';
       }
       function props(q) {
-        var f = window.REXUS221.field, h = '<h3>Question properties</h3><p class="sv-muted">Selected: Question ' + String(sel + 1).padStart(2, '0') + '</p>' +
+        var f = window.REXUS221.field, h = '<h3>Question properties</h3><p class="sv-muted">Selected: Question ' + String(qnum(sel)).padStart(2, '0') + '</p>' +
           f('Question type', '<select id="pType">' + TYPES.map(function (t) { return '<option value="' + t + '"' + (q.type === t ? ' selected' : '') + '>' + esc(T[t]) + '</option>'; }).join('') + '</select>', { for: 'pType' }) +
           f('Question', '<textarea id="pTitle" rows="2" maxlength="500">' + esc(q.title) + '</textarea>', { for: 'pTitle', req: true }) +
           f('Helper text', '<input id="pDesc" maxlength="1000" value="' + esc(q.description) + '" placeholder="Optional description">', { for: 'pDesc' }) +
@@ -229,7 +256,21 @@
         if (q.type === 'scale') h += '<div class="wm-form-grid">' + f('From', '<select id="pMin"><option' + (q.min === 0 ? ' selected' : '') + '>0</option><option' + (q.min === 1 ? ' selected' : '') + '>1</option></select>', { for: 'pMin' }) + f('To', '<input id="pMax" type="number" min="3" max="10" value="' + q.max + '">', { for: 'pMax' }) + '</div>' +
           '<div class="wm-form-grid">' + f('Low label', '<input id="pMinL" maxlength="60" value="' + esc(q.min_label || '') + '">', { for: 'pMinL' }) + f('High label', '<input id="pMaxL" maxlength="60" value="' + esc(q.max_label || '') + '">', { for: 'pMaxL' }) + '</div>';
         if (q.type === 'number') h += '<div class="wm-form-grid">' + f('Minimum', '<input id="pMin" type="number" value="' + (q.min == null ? '' : q.min) + '">', { for: 'pMin' }) + f('Maximum', '<input id="pMax" type="number" value="' + (q.max == null ? '' : q.max) + '">', { for: 'pMax' }) + '</div>';
+        if (q.type === 'single') {   // SUR-05: where each answer leads (forward only, so a path cannot loop)
+          var later = qs.map(function (x, i) { return { x: x, i: i }; }).filter(function (o) { return o.x.type === 'section' && o.i > sel; });
+          h += '<div class="sv-branch"><h4>After this answer</h4><p class="sv-muted">' + (later.length ? 'Send people to a later section or end the form. "Continue" goes to the next section.' : 'Add a section below this question to send people to it. "Submit form" ends the survey here.') + '</p>' +
+            (q.options || []).map(function (o, k) { var cur = (q.routes || {})[o] || 'next';
+              return f(o, '<select data-route="' + k + '" id="pRoute' + k + '" data-rx-nosearch><option value="next"' + (cur === 'next' ? ' selected' : '') + '>Continue to next section</option>' +
+                later.map(function (l) { return '<option value="' + esc(l.x.id) + '"' + (cur === l.x.id ? ' selected' : '') + '>Go to ' + esc(sectionName(l.x.id)) + '</option>'; }).join('') +
+                '<option value="end"' + (cur === 'end' ? ' selected' : '') + '>Submit form</option>' + (cur !== 'next' && cur !== 'end' && !later.some(function (l) { return l.x.id === cur; }) ? '<option value="' + esc(cur) + '" selected>Missing section, choose again</option>' : '') + '</select>', { for: 'pRoute' + k }); }).join('') + '</div>';
+        }
         return h;
+      }
+      function sectionProps(q) {
+        var f = window.REXUS221.field;
+        return '<h3>Section properties</h3><p class="sv-muted">Selected: Section ' + snum(sel) + '. Questions below it, up to the next section, are shown on this page.</p>' +
+          f('Section title', '<input id="sTitle" maxlength="300" value="' + esc(q.title) + '" placeholder="Untitled section">', { for: 'sTitle' }) +
+          f('Description', '<textarea id="sDesc" rows="4" maxlength="2000" placeholder="Optional instructions for this part">' + esc(q.description) + '</textarea>', { for: 'sDesc' });
       }
       function changed() { S.dirty = true; var st = main.querySelector('.sv-save-state'); if (st) st.textContent = 'Unsaved changes'; autosave(); }
       var autosave = debounce(function () { save(true); }, 1500);
@@ -248,14 +289,22 @@
         main.querySelectorAll('[data-add]').forEach(function (b) { b.onclick = function () { var q = newQ(b.dataset.add); qs.splice(sel + 1, 0, q); sel = sel + 1; draw(); changed(); var t = main.querySelector('#pTitle'); if (t) t.focus(); }; });
         main.querySelectorAll('[data-sel]').forEach(function (c) { c.onclick = function (e) { if (e.target.closest('button')) return; sel = +c.dataset.sel; draw(); }; c.onkeydown = function (e) { if (e.key === 'Enter' && e.target === c) { sel = +c.dataset.sel; draw(); var t = main.querySelector('#pTitle'); if (t) t.focus(); } }; });
         main.querySelectorAll('[data-up],[data-down]').forEach(function (b) { b.onclick = function () { var i = +(b.dataset.up || b.dataset.down), j = b.dataset.up !== undefined ? i - 1 : i + 1; var t = qs[i]; qs[i] = qs[j]; qs[j] = t; sel = j; draw(); changed(); var nb = main.querySelector('[data-' + (b.dataset.up !== undefined ? 'up' : 'down') + '="' + j + '"]'); if (nb && !nb.disabled) nb.focus(); }; });
-        main.querySelectorAll('[data-dup]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.dup, c = JSON.parse(JSON.stringify(qs[i])); c.id = qid(); qs.splice(i + 1, 0, c); sel = i + 1; draw(); changed(); }; });
-        main.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.del; confirmBox('Delete question ' + (i + 1) + '?', 'Delete question').then(function (ok) { if (!ok) return; qs.splice(i, 1); sel = Math.min(sel, qs.length - 1); draw(); changed(); }); }; });
+        main.querySelectorAll('[data-dup]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.dup, c = JSON.parse(JSON.stringify(qs[i])); c.id = c.type === 'section' ? newQ('section').id : qid(); qs.splice(i + 1, 0, c); sel = i + 1; draw(); changed(); }; });
+        main.querySelectorAll('[data-del]').forEach(function (b) { b.onclick = function () { var i = +b.dataset.del, isSec = qs[i].type === 'section';
+          confirmBox(isSec ? 'Delete section ' + snum(i) + '? Its questions stay and join the previous section. Answers that went to this section will continue to the next section instead.' : 'Delete question ' + qnum(i) + '?', isSec ? 'Delete section' : 'Delete question').then(function (ok) {
+            if (!ok) return; var gone = qs[i].id; qs.splice(i, 1);
+            if (isSec) qs.forEach(function (x) { if (x.routes) Object.keys(x.routes).forEach(function (o) { if (x.routes[o] === gone) delete x.routes[o]; }); });   // never leave a link to a deleted section
+            sel = Math.min(sel, qs.length - 1); draw(); changed(); }); }; });
         ['#svName', '#svDesc'].forEach(function (k) { main.querySelector(k).oninput = changed; });
         main.querySelector('#svMode').onchange = changed;
         var q = qs[sel];
-        if (q) {
+        if (q && q.type === 'section') {
+          main.querySelector('#sTitle').oninput = function () { q.title = this.value; var h = main.querySelector('.sv-qcard.is-selected h4'); if (h) h.innerHTML = q.title ? esc(q.title) : '<span class="sv-muted">Untitled section</span>'; changed(); };
+          main.querySelector('#sDesc').oninput = function () { q.description = this.value; changed(); };
+        } else if (q) {
           var g = function (k) { return main.querySelector(k); };
-          g('#pType').onchange = function () { var n = newQ(this.value); n.id = q.id; n.title = q.title; n.description = q.description; n.required = q.required; if (q.options && n.options) n.options = q.options; qs[sel] = n; draw(); changed(); };
+          main.querySelectorAll('[data-route]').forEach(function (r) { r.onchange = function () { var o = q.options[+r.dataset.route]; q.routes = q.routes || {}; if (r.value === 'next') delete q.routes[o]; else q.routes[o] = r.value; draw(); changed(); }; });
+          g('#pType').onchange = function () { var n = newQ(this.value); n.id = q.id; n.title = q.title; n.description = q.description; n.required = q.required; if (q.options && n.options) n.options = q.options; if (n.type === 'single' && q.routes) n.routes = q.routes; qs[sel] = n; draw(); changed(); };
           g('#pTitle').oninput = function () { q.title = this.value; var h = main.querySelector('.sv-qcard.is-selected h4'); if (h) h.innerHTML = (q.title ? esc(q.title) : '<span class="sv-muted">Untitled question</span>') + (q.required ? ' <span class="sv-req">*</span>' : ''); changed(); };
           g('#pDesc').oninput = function () { q.description = this.value; changed(); };
           g('#pReq').onchange = function () { q.required = this.checked; draw(); changed(); };
@@ -306,7 +355,7 @@
     Promise.all([api('/api/surveys?id=' + encodeURIComponent(id)), users()]).then(function (res) {
       var s = res[0].survey, admin = res[0].is_admin, us = res[1], t = s.target || {};
       var deps = Array.from(new Set(us.map(function (u) { return u.department; }).filter(Boolean))).sort(), poss = Array.from(new Set(us.map(function (u) { return u.position; }).filter(Boolean))).sort();
-      function opts(list, picked, label) { return list.map(function (v) { var val = label ? v.id : v; return '<option value="' + esc(val) + '"' + ((picked || []).indexOf(val) !== -1 ? ' selected' : '') + (label ? ' data-search="' + esc([v.username, v.email].join(' ')) + '"' : '') + '>' + esc(label ? (v.full_name || v.username) + ' · ' + (v.department || '—') : v) + '</option>'; }).join(''); }
+      function opts(list, picked, label) { return list.map(function (v) { var val = label ? v.id : v; if (label && window.REXUSui && REXUSui.personOption) return REXUSui.personOption(v, (picked || []).indexOf(val) !== -1); return '<option value="' + esc(val) + '"' + ((picked || []).indexOf(val) !== -1 ? ' selected' : '') + (label ? ' data-search="' + esc([v.username, v.email].join(' ')) + '"' : '') + '>' + esc(label ? (v.full_name || v.username) + ' · ' + (v.department || '—') : v) + '</option>'; }).join(''); }
       var locked = !admin && s.mandatory;
       main.innerHTML = head('Survey Settings', s.name, 'Who must answer, when the survey accepts responses, and when it stops.', '<a href="#survey/builder/' + esc(s.id) + '" data-go="builder/' + esc(s.id) + '" class="sv-btn">Edit questions</a><button type="button" class="sv-btn sv-btn-primary" data-save>Save settings</button>') +
         '<form class="sv-settings" novalidate><section class="sv-card"><div class="sv-card-head"><div><h3>Mandatory survey on login</h3><p class="sv-muted">' + (s.mode === 'public' ? 'Not available: this survey is answered through a public link and is not linked to REXUS accounts.' : 'People in the target groups must answer it before they can use REXUS. Only a System Admin can turn this on.') + '</p></div>' +

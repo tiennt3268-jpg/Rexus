@@ -1,6 +1,6 @@
 {
   "name": "rexus-work-management",
-  "version": "2.3.2",
+  "version": "2.3.4",
   "private": true,
   "dependencies": {
     "@netlify/blobs": "^11.1.1",

@@ -312,13 +312,19 @@
      looks at the visible text plus data-search (username / email). */
   var PICK_MIN = 8, PICK_DEBOUNCE = 300, PICK_MAX_ROWS = 300, pickSeq = 0;
   function fold(s){ return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[đĐ]/g, 'd').toLowerCase(); }
-  function optHay(o){ return fold(o.text + ' ' + (o.getAttribute('data-search') || '')); }
+  function optHay(o){ return fold(o.text + ' ' + (o.getAttribute('data-search') || '') + ' ' + (o.getAttribute('data-sub') || '')); }
+  /* v2.3.4 GEN-03: every people picker shows Name + Job title + Email (same as Assign Task). A select whose
+     options carry data-sub is always turned into the combobox so the second line can be shown. */
+  function personSub(u){ return [u.position || 'No job title', u.email].filter(Boolean).join(' · '); }
+  function personOption(u, selected, value){
+    return '<option value="' + escH(value === undefined ? u.id : value) + '" data-search="' + escH([u.username, u.email, u.position].filter(Boolean).join(' ')) + '" data-sub="' + escH(personSub(u)) + '"' + (selected ? ' selected' : '') + '>' + escH(u.full_name || u.username) + '</option>';
+  }
   function escH(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function debounce(fn, ms){ var t; return function(){ clearTimeout(t); t = setTimeout(fn, ms); }; }
   var openCombo = null;
   function enhanceSelects(){
     doc.querySelectorAll('select:not([data-rx-pick]):not([data-rx-nosearch])').forEach(function(sel){
-      if ((sel.options.length < PICK_MIN && !sel.hasAttribute('data-rx-search')) || sel.closest('.rd-editor, [contenteditable]')) return;   // data-rx-search: always searchable
+      if ((sel.options.length < PICK_MIN && !sel.hasAttribute('data-rx-search') && !sel.querySelector('option[data-sub]')) || sel.closest('.rd-editor, [contenteditable]')) return;   // data-rx-search: always searchable
       combo(sel);
     });
     doc.querySelectorAll('[data-rx-searchlist]:not([data-rx-pick])').forEach(searchList);
@@ -358,7 +364,7 @@
       [].forEach.call(sel.options, function(o, i){
         if (o.hidden || (f && optHay(o).indexOf(f) === -1)) return;
         shown.push(i); if (n++ >= PICK_MAX_ROWS) return;
-        html += '<div role="option" id="' + id + 'o' + i + '" data-i="' + i + '" class="rx-combo-opt' + (o.disabled ? ' is-disabled' : '') + '" aria-selected="' + o.selected + '"' + (o.disabled ? ' aria-disabled="true"' : '') + '>' + (multi ? '<span class="rx-combo-box" aria-hidden="true"></span>' : '') + '<span>' + escH(o.text || ' ') + '</span></div>';
+        html += '<div role="option" id="' + id + 'o' + i + '" data-i="' + i + '" class="rx-combo-opt' + (o.disabled ? ' is-disabled' : '') + '" aria-selected="' + o.selected + '"' + (o.disabled ? ' aria-disabled="true"' : '') + '>' + (multi ? '<span class="rx-combo-box" aria-hidden="true"></span>' : '') + (o.getAttribute('data-sub') ? '<span class="rx-combo-person"><span>' + escH(o.text) + '</span><small>' + escH(o.getAttribute('data-sub')) + '</small></span>' : '<span>' + escH(o.text || ' ') + '</span>') + '</div>';
       });
       if (shown.length > PICK_MAX_ROWS) html += '<div class="rx-combo-more">' + (shown.length - PICK_MAX_ROWS) + ' more — keep typing to narrow the list</div>';
       list.innerHTML = html; empty.hidden = shown.length > 0;
@@ -475,5 +481,5 @@
   function schedule(){ if (!scheduled) { scheduled = true; requestAnimationFrame(run); } }
   new MutationObserver(schedule).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
   run();
-  window.REXUSui = { refresh: run, fold: fold, version: '2.2.3' };
+  window.REXUSui = { refresh: run, fold: fold, personOption: personOption, personSub: personSub, version: '2.3.4' };
 })();

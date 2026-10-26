@@ -1,0 +1,71 @@
+PASS GEN-01 tagline is exactly "all in one with Rexus"
+PASS GEN-01 no illustration on the sign-in screen
+PASS GEN-01 two-column layout on desktop (brand left, form right)
+PASS GEN-01 Enter submits and the error stays visible
+PASS GEN-01 phone width: form stacked under the tagline, no horizontal overflow
+PASS GEN-01 Tab moves from username to password
+PASS GEN-03 Manager list shows name + job title + email
+PASS GEN-03 people without a job title show "No job title"
+PASS GEN-03 search by username still works
+PASS GEN-03 Assign Task picker: job title · email
+PASS GEN-02 Log Work: date, start, end and hours share one row
+PASS GEN-02 Log Work: number/date fields are not full width
+PASS GEN-02 Manual rating is narrower than Notes (no equal halves)
+PASS GEN-02 Hourly rate history table uses the card width
+PASS GEN-02 New hourly rate, date and Save on one row
+PASS WM-01 single thin lines: no cell spacing, one 1px solid line per cell edge
+PASS WM-01 worklog value still shown
+PASS WM-04 month items have no dark left bar
+PASS WM-04 month item opens the task
+PASS WM-05 clicking the title opens a month/year picker
+PASS WM-05 choosing March of next year shows that month
+PASS WM-05 Next still works after picking
+PASS WM-05 Today returns to the current month
+PASS WM-06 Week: 7 day columns starting Monday, today marked
+PASS WM-06 timed tasks placed by time (09:00 → 432px at 48px/h)
+PASS WM-06 overlapping tasks share the width side by side
+PASS WM-06 tasks without a time are in the all-day lane
+PASS WM-06 current-time line on today
+PASS WM-06 switching Week → Month keeps the date in view
+PASS WM-06 Day: one-day timeline with the same tasks
+PASS WM-05 Day/Week picker also lists the days of the month
+PASS WM-05 picking a day opens it without timezone shift
+PASS WM-02 unread = pastel blue card, read = white card
+PASS WM-02 no coloured stripe at the start of a notification
+PASS WM-03 Important tab lists only starred notifications
+PASS WM-03 starring does not mark it read
+PASS WM-03 Important is kept after reload
+PASS WM-03 un-starring removes it from Important at once
+PASS WM-03 markers are per account (another user sees none of them)
+PASS SUR-01 Survey primary button = REXUS primary (colour, radius, height)
+PASS SUR-01 Survey navigation uses line icons like REXUS
+PASS SUR-04 builder shows Section cards with their own titles
+PASS SUR-04 builder numbers questions only (Question 03 after two sections)
+PASS SUR-05 each answer: Continue / Go to section / Submit form
+PASS SUR-05 no backward targets offered (a question can only jump forward)
+PASS SUR-04 sections saved with stable ids; routes saved
+PASS SUR-05 server refuses a route to a section before the question
+PASS SUR-05 server refuses a route to a deleted section
+PASS SUR-05 deleting a target section leaves no broken link (no warning, route reset)
+PASS setup: branching survey published
+PASS SUR-02 respondent sees no "QUESTION 01 · TYPE" labels
+PASS SUR-03 no decorative dots in the respondent form
+PASS SUR-04 required question is checked before leaving the section
+PASS SUR-05 "Student" jumps to the Students section (Staff skipped)
+PASS SUR-04 Back returns to the first section with the answer kept
+PASS SUR-05 "Guest" turns Next into Submit (end of form)
+PASS SUR-05 "Staff" continues Staff → Students in order
+PASS SUR-05 stored answers follow the path (skipped Staff answer not stored)
+PASS SUR-04 analytics list questions only (no section rows)
+PASS SUR-04 form without sections: one question per page + navigator, as before
+PASS setup: survey made mandatory for one user
+PASS SUR-06 targeted user gets the full-screen intro with Start survey before the workspace
+PASS SUR-06 after a valid (branch-to-end) submission the user enters the app
+PASS SUR-06 reload does not ask again
+PASS SUR-06 users outside the target are not gated (admin opens the app)
+PASS DOC-01 every sidebar chevron is the same icon and size
+PASS DOC-01 keyboard toggles the section; collapsed chevron points right
+PASS DOC-01 add-space button stays separate from the toggle
+PASS No JavaScript page errors
+
+69/69 e2e234 checks passed

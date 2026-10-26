@@ -11,7 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="/rexus-document.css?v=2.2.2">
+<link rel="stylesheet" href="/rexus-document.css?v=2.3.4">
 <script>/* v2.2.2: apply the cached theme + Light/Dark/System mode before paint (the account preference is re-synced after sign-in) */
 try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=localStorage.getItem('rexus-mode')||'light';h.setAttribute('data-rx-theme',t==='navy'?'navy':'mono');h.setAttribute('data-rx-mode-pref',m);h.setAttribute('data-rx-mode',m==='dark'||(m==='system'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');var d=localStorage.getItem('rexus-density');if(d)h.setAttribute('data-rx-density',d);}catch(e){document.documentElement.setAttribute('data-rx-theme','mono');}</script>
 <style>html[data-rx-mode="dark"],html[data-rx-mode="dark"] body{background:#0f1319;color:#e8ecf2;color-scheme:dark}</style>
@@ -78,10 +78,15 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     .wm-auth-submit:disabled{ opacity: 0.6; cursor: default; }
     .wm-auth-field-hidden{ display: none; }
   </style>
+  <!-- v2.3.4 GEN-01: minimal two-column sign-in; brand + tagline on the left, form on the right, no illustration -->
+  <div class="wm-auth-brand" aria-hidden="false">
+    <p class="wm-auth-wordmark">REXUS</p>
+    <p class="wm-auth-tagline">all in one with Rexus</p>
+  </div>
   <div class="wm-auth-card">
     <div class="wm-auth-head">
-      <h1>REXUS</h1>
-      <p>Sign in to access your tasks and projects.</p>
+      <h1>Log in to REXUS</h1>
+      <p>Work Management · Document · Survey</p>
     </div>
     <div class="wm-auth-body">
       <p class="wm-auth-error" id="wmAuthError"></p>
@@ -1327,6 +1332,10 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
               <strong>Notifications</strong>
               <span id="wmNotifMarkAllRead" class="wm-notif-mark-read">Mark all read</span>
             </div>
+            <div class="wm-notif-tabs" role="tablist" aria-label="Notification filter">   <!-- v2.3.4 WM-03 -->
+              <button type="button" role="tab" data-notif-filter="all" aria-selected="true">All</button>
+              <button type="button" role="tab" data-notif-filter="important" aria-selected="false">Important</button>
+            </div>
             <div id="wmNotifList" class="wm-notif-list"><span class="wm-notif-empty">Loading…</span></div>
           </div>
         </div>
@@ -1597,7 +1606,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   <script src="/rexus-notify.js?v=2.2.3"></script>  <!-- GEN-10: shared result notification -->
   <script src="/rexus-pages.js?v=2.2.3"></script>
   <!-- GEN-09 (rexus-pages) goes before the app script, which registers its form routes -->
-  <script src="/rexus-gate.js?v=2.3.1"></script>  <!-- v2.3.0: First Login + mandatory survey steps, survey form -->
+  <script src="/rexus-gate.js?v=2.3.4"></script>  <!-- v2.3.0: First Login + mandatory survey steps, survey form -->
   <script>
 (function(){
 
@@ -3440,7 +3449,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   function openAddMemberPicker(projectName, existingIds){
     var candidates = STATE.allUsers.filter(function(u){ return existingIds.indexOf(u.id) === -1; });
     if(!candidates.length){ showAlert('Every registered user is already on this project.'); return; }
-    var options = candidates.map(function(u){ return '<option value="' + u.id + '">' + escapeHtml(u.full_name || u.username) + '</option>'; }).join('');
+    var options = candidates.map(function(u){ return personOptionHtml(u); }).join('');
     var container = byId('pdMembersList');
     var picker = document.createElement('span');
     picker.innerHTML = '<select id="pdAddMemberSelect" style="margin-left:4px;">' + '<option value="">Choose a user…</option>' + options + '</select>' +
@@ -4062,10 +4071,10 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       (r.task_count === 0 && !isFinalized ?
         '<div style="color:var(--ink-soft);font-size:13px;margin-bottom:10px;">No tasks were due to this person in this period yet, so on-time/completion/hours are blank — the score below (if any) comes only from the manual rating.</div>' : '') +
       metricsHtml +
-      '<div class="wm-form-grid">' +
-        '<div class="wm-form-row"><label>Manual rating (0-100, optional)</label>' +
+      '<div class="wm-form-grid rx-grid-short-long">' +   // GEN-02: a 0-100 score does not need half the row
+        '<div class="wm-form-row"><label for="finPerfManual">Manual rating (0-100, optional)</label>' +
           '<input type="number" min="0" max="100" id="finPerfManual" value="' + (r.manual_rating == null ? '' : r.manual_rating) + '"' + (isFinalized ? ' disabled' : '') + '></div>' +
-        '<div class="wm-form-row"><label>Notes</label>' +
+        '<div class="wm-form-row"><label for="finPerfNotes">Notes</label>' +
           '<input type="text" id="finPerfNotes" value="' + escapeHtml(r.notes || '') + '" placeholder="Optional context for this rating…"' + (isFinalized ? ' disabled' : '') + '></div>' +
       '</div>' +
       (isFinalized ?
@@ -4283,7 +4292,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
               '<div class="wm-form-row"><label>Status</label><select id="pfStatus">' + optionList(['Active','On Hold','Completed','Cancelled'], 'Active') + '</select></div>' +
               '<div class="wm-form-row"><label>Owner</label>' + ownerPickerHtml('pf', '', '') + '</div>' +
             '</div>' +
-            '<div class="wm-form-row"><label>Budget (optional)</label><input id="pfBudget" type="number" step="0.01" min="0" placeholder="e.g. 50000000"></div>' +
+            '<div class="wm-form-row rx-field-short"><label for="pfBudget">Budget (optional)</label><input id="pfBudget" type="number" step="0.01" min="0" placeholder="e.g. 50000000"></div>' +
             '<div class="wm-form-row"><label>Members</label>' +
               '<div id="pfMembersChips" class="wm-chips-row"></div>' +
               '<div style="display:flex;gap:6px;margin-top:6px;">' +
@@ -5379,13 +5388,13 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           '<div class="wm-modal-body">' +
             '<div class="wm-form-row"><label>Task</label><select id="lfTask"></select></div>' +
             '<div class="wm-form-row"><label>Subtask (optional)</label><select id="lfSubtask"><option value="">— Log directly on the task —</option></select></div>' +
-            '<div class="wm-form-row"><label>Date</label><input id="lfDate" type="date"></div>' +
-            '<div class="wm-form-grid">' +
-              '<div class="wm-form-row"><label>Start Time (optional)</label><input id="lfStartTime" type="time"></div>' +
-              '<div class="wm-form-row"><label>End Time (optional)</label><input id="lfEndTime" type="time"></div>' +
+            '<div class="wm-form-grid rx-grid-4">' +   // GEN-02: date, times and hours share one row
+              '<div class="wm-form-row"><label for="lfDate">Date</label><input id="lfDate" type="date"></div>' +
+              '<div class="wm-form-row"><label for="lfStartTime">Start time (optional)</label><input id="lfStartTime" type="time"></div>' +
+              '<div class="wm-form-row"><label for="lfEndTime">End time (optional)</label><input id="lfEndTime" type="time"></div>' +
+              '<div class="wm-form-row"><label for="lfHours">Time spent (hours)</label><input id="lfHours" type="number" step="0.25" min="0"></div>' +
             '</div>' +
-            '<div class="wm-form-row"><label>Description</label><textarea id="lfDesc" rows="3" placeholder="What did you work on?"></textarea></div>' +
-            '<div class="wm-form-row"><label>Time Spent (hours)</label><input id="lfHours" type="number" step="0.25" min="0"></div>' +
+            '<div class="wm-form-row"><label for="lfDesc">Description</label><textarea id="lfDesc" rows="3" placeholder="What did you work on?"></textarea></div>' +
           '</div>' +
           '<div class="wm-modal-footer">' +
             '<button class="wm-btn" id="wmLogModalCancel">Cancel</button>' +
@@ -5593,49 +5602,102 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   }
 
 
-  function renderCalendar(){
+  /* v2.3.4 WM-04/05/06 — Calendar.
+     One reference date (c.ref, local YYYY-MM-DD) drives Month / Week / Day, so switching views keeps the day in view.
+     Clicking the title opens a month/year picker (plus the days of that month in Week/Day). Week and Day use a
+     timeline: an all-day lane for tasks without times, and timed blocks placed by start/end time, side by side when
+     they overlap. Weeks start on Monday; times are the browser's local time; view only (no drag to reschedule). */
+  var CAL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var CAL_DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  var CAL_HOUR_PX = 48;
+  function localIso(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function isoToDate(iso){ return new Date(iso + 'T00:00:00'); }
+  function calRef(){
     var c = STATE.calendar;
-    var monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-
+    if(!c.ref) c.ref = c._ref || (c.year === today().getFullYear() && c.month === today().getMonth() ? TODAY_STR : c.year + '-' + pad(c.month + 1) + '-01');
+    var d = isoToDate(c.ref); c.year = d.getFullYear(); c.month = d.getMonth();
+    return d;
+  }
+  function calWeekStart(d){ var s = new Date(d); s.setDate(d.getDate() - (d.getDay() + 6) % 7); return s; }
+  function calTitle(){
+    var c = STATE.calendar, d = calRef();
+    if(c.mode === 'month') return CAL_MONTHS[d.getMonth()] + ' ' + d.getFullYear();
+    if(c.mode === 'day') return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    var s = calWeekStart(d), e = new Date(s); e.setDate(s.getDate() + 6);
+    return s.getMonth() === e.getMonth() ? s.getDate() + ' – ' + e.getDate() + ' ' + CAL_MONTHS[e.getMonth()] + ' ' + e.getFullYear()
+      : s.getDate() + ' ' + CAL_MONTHS[s.getMonth()].slice(0, 3) + ' – ' + e.getDate() + ' ' + CAL_MONTHS[e.getMonth()].slice(0, 3) + ' ' + e.getFullYear();
+  }
+  function renderCalendar(){
+    var c = STATE.calendar; calRef();
     var html = '<div class="wm-cal-head">' +
       '<div class="wm-cal-nav">' +
-        '<button id="calPrev">‹</button>' +
-        '<span class="wm-cal-title">' + monthNames[c.month] + ' ' + c.year + '</span>' +
-        '<button id="calNext">›</button>' +
+        '<button type="button" id="calPrev" aria-label="Previous ' + c.mode + '">‹</button>' +
+        '<button type="button" id="calNext" aria-label="Next ' + c.mode + '">›</button>' +
+        '<button type="button" id="calToday" class="wm-cal-today-btn">Today</button>' +
+        '<span class="wm-cal-title-wrap"><button type="button" class="wm-cal-title" id="calTitleBtn" aria-haspopup="dialog" aria-expanded="false" title="Choose a date">' + escapeHtml(calTitle()) + '<span class="wm-cal-caret" aria-hidden="true">▾</span></button></span>' +
       '</div>' +
-      '<div class="wm-period-toggle" style="margin:0;">' +
+      '<div class="wm-period-toggle" style="margin:0;" role="group" aria-label="Calendar view">' +
         ['month','week','day'].map(function(m){
-          return '<button class="wm-period-btn' + (c.mode===m?' active':'') + '" data-mode="' + m + '">' + m.charAt(0).toUpperCase()+m.slice(1) + '</button>';
+          return '<button type="button" class="wm-period-btn' + (c.mode===m?' active':'') + '" data-mode="' + m + '" aria-pressed="' + (c.mode===m) + '">' + m.charAt(0).toUpperCase()+m.slice(1) + '</button>';
         }).join('') +
       '</div>' +
     '</div><div id="calBody"></div>';
 
     byId('view-calendar').innerHTML = html;
-
     byId('calPrev').addEventListener('click', function(){ calStep(-1); });
     byId('calNext').addEventListener('click', function(){ calStep(1); });
+    byId('calToday').addEventListener('click', function(){ c.ref = TODAY_STR; renderCalendar(); });
+    byId('calTitleBtn').addEventListener('click', function(e){ e.stopPropagation(); toggleCalPicker(); });
     byId('view-calendar').querySelectorAll('[data-mode]').forEach(function(btn){
       btn.addEventListener('click', function(){ c.mode = btn.getAttribute('data-mode'); renderCalendar(); });
     });
-
     if(c.mode === 'month') renderCalMonth();
-    else renderCalListMode();
+    else renderCalTimeline();
   }
 
   function calStep(dir){
-    var c = STATE.calendar;
-    if(c.mode === 'month'){
-      c.month += dir;
-      if(c.month < 0){ c.month = 11; c.year--; }
-      if(c.month > 11){ c.month = 0; c.year++; }
-    } else {
-      // week/day list mode just shifts a reference date stored on STATE.calendar._ref
-      var ref = c._ref ? new Date(c._ref) : today();
-      ref.setDate(ref.getDate() + dir * (c.mode === 'week' ? 7 : 1));
-      c._ref = ref.toISOString().slice(0,10);
-    }
+    var c = STATE.calendar, d = calRef();
+    if(c.mode === 'month') d = new Date(d.getFullYear(), d.getMonth() + dir, 1);
+    else d.setDate(d.getDate() + dir * (c.mode === 'week' ? 7 : 1));
+    c.ref = localIso(d);
     renderCalendar();
   }
+
+  /* WM-05: month/year picker under the title (Esc or a click outside closes it). */
+  function toggleCalPicker(){
+    var old = byId('calPicker'); if(old){ closeCalPicker(); return; }
+    var c = STATE.calendar, d = calRef(), year = d.getFullYear();
+    var wrap = document.querySelector('.wm-cal-title-wrap'), pop = document.createElement('div');
+    pop.id = 'calPicker'; pop.className = 'wm-cal-picker'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', 'Choose month and year');
+    function draw(){
+      var sel = isoToDate(c.ref), html = '<div class="wm-cal-picker-head"><button type="button" data-py="-1" aria-label="Previous year">‹</button><strong>' + year + '</strong><button type="button" data-py="1" aria-label="Next year">›</button></div>' +
+        '<div class="wm-cal-picker-months">' + CAL_MONTHS.map(function(m, i){ var on = sel.getFullYear() === year && sel.getMonth() === i; return '<button type="button" data-pm="' + i + '" aria-pressed="' + on + '"' + (on ? ' class="is-on"' : '') + '>' + m.slice(0, 3) + '</button>'; }).join('') + '</div>';
+      if(c.mode !== 'month'){   // Week / Day: also pick the exact day of the chosen month
+        var m = sel.getFullYear() === year ? sel.getMonth() : 0, first = new Date(year, m, 1), off = (first.getDay() + 6) % 7, n = new Date(year, m + 1, 0).getDate();
+        html += '<div class="wm-cal-picker-days" aria-label="' + CAL_MONTHS[m] + ' ' + year + '">' + CAL_DOW.map(function(x){ return '<span>' + x.slice(0, 2) + '</span>'; }).join('');
+        for(var i = 0; i < off; i++) html += '<span></span>';
+        for(var k = 1; k <= n; k++){ var iso = year + '-' + pad(m + 1) + '-' + pad(k); html += '<button type="button" data-pd="' + iso + '"' + (iso === c.ref ? ' class="is-on" aria-pressed="true"' : '') + (iso === TODAY_STR ? ' data-today="1"' : '') + '>' + k + '</button>'; }
+        html += '</div>';
+      }
+      pop.innerHTML = html;
+      pop.querySelectorAll('[data-py]').forEach(function(b){ b.onclick = function(e){ e.stopPropagation(); year += +b.getAttribute('data-py'); draw(); }; });
+      pop.querySelectorAll('[data-pm]').forEach(function(b){ b.onclick = function(e){
+        e.stopPropagation(); var mm = +b.getAttribute('data-pm'), keep = Math.min(isoToDate(c.ref).getDate(), new Date(year, mm + 1, 0).getDate());
+        c.ref = year + '-' + pad(mm + 1) + '-' + pad(c.mode === 'month' ? 1 : keep);
+        if(c.mode === 'month'){ closeCalPicker(); renderCalendar(); } else draw(); }; });
+      pop.querySelectorAll('[data-pd]').forEach(function(b){ b.onclick = function(e){ e.stopPropagation(); c.ref = b.getAttribute('data-pd'); closeCalPicker(); renderCalendar(); }; });
+    }
+    draw(); wrap.appendChild(pop); byId('calTitleBtn').setAttribute('aria-expanded', 'true');
+    var first = pop.querySelector('.is-on') || pop.querySelector('button'); if(first) first.focus();
+    setTimeout(function(){ document.addEventListener('click', calPickerOutside); document.addEventListener('keydown', calPickerKey); }, 0);
+  }
+  function closeCalPicker(){
+    var p = byId('calPicker'); if(p) p.remove();
+    var t = byId('calTitleBtn'); if(t){ t.setAttribute('aria-expanded', 'false'); }
+    document.removeEventListener('click', calPickerOutside); document.removeEventListener('keydown', calPickerKey);
+  }
+  function calPickerOutside(e){ if(!e.target.closest('#calPicker')) closeCalPicker(); }
+  function calPickerKey(e){ if(e.key === 'Escape'){ e.stopPropagation(); closeCalPicker(); var t = byId('calTitleBtn'); if(t) t.focus(); } }
 
   function tasksByDueDate(){
     var map = {};
@@ -5654,8 +5716,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     var daysInMonth = new Date(c.year, c.month + 1, 0).getDate();
     var todayIso = STATE.today.date;
 
-    var dow = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-    var html = '<div class="wm-cal-grid">' + dow.map(function(d){ return '<div class="wm-cal-dow">' + d + '</div>'; }).join('');
+    var html = '<div class="wm-cal-grid">' + CAL_DOW.map(function(d){ return '<div class="wm-cal-dow">' + d + '</div>'; }).join('');
 
     var totalCells = Math.ceil((startOffset + daysInMonth) / 7) * 7;
     for(var i = 0; i < totalCells; i++){
@@ -5667,9 +5728,9 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       html += '<div class="wm-cal-cell' + (inMonth?'':' other-month') + (isToday?' today':'') + '">' +
         (inMonth ? '<div class="wm-cal-daynum">' + dayNum + '</div>' : '') +
         dayTasks.slice(0,3).map(function(t){
-          return '<div class="wm-cal-chip" data-id="' + t.id + '">' + escapeHtml(t.task) + '</div>';
+          return '<button type="button" class="wm-cal-chip" data-id="' + t.id + '" title="' + escapeHtml(t.task) + '">' + escapeHtml(t.task) + '</button>';
         }).join('') +
-        (dayTasks.length > 3 ? '<div style="font-size: 13px;color:#5A6270;">+' + (dayTasks.length-3) + ' more</div>' : '') +
+        (dayTasks.length > 3 ? '<button type="button" class="wm-cal-more" data-day="' + iso + '">+' + (dayTasks.length-3) + ' more</button>' : '') +
       '</div>';
     }
     html += '</div>';
@@ -5677,40 +5738,81 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     byId('calBody').querySelectorAll('[data-id]').forEach(function(chip){
       chip.addEventListener('click', function(){ openDetailModal(chip.getAttribute('data-id')); });
     });
+    byId('calBody').querySelectorAll('[data-day]').forEach(function(b){
+      b.addEventListener('click', function(){ c.ref = b.getAttribute('data-day'); c.mode = 'day'; renderCalendar(); });
+    });
   }
 
   function pad(n){ return n < 10 ? '0'+n : ''+n; }
 
-  function renderCalListMode(){
-    var c = STATE.calendar;
-    var ref = c._ref ? new Date(c._ref + 'T00:00:00') : today();
-    var map = tasksByDueDate();
-    var days = [];
-    if(c.mode === 'day'){
-      days = [ref];
-    } else {
-      var dow = (ref.getDay() + 6) % 7;
-      var start = new Date(ref); start.setDate(ref.getDate() - dow);
-      for(var i=0;i<7;i++){ var d = new Date(start); d.setDate(start.getDate()+i); days.push(d); }
-    }
-    var html = days.map(function(d){
-      var iso = d.toISOString().slice(0,10);
-      var dayTasks = map[iso] || [];
-      var label = d.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-      return '<div class="wm-section-title">' + label + '</div>' +
-        '<div class="wm-task-list">' + (dayTasks.length ? dayTasks.map(taskRowHtml).join('') : '<div class="wm-empty">No tasks.</div>') + '</div>';
-    }).join('');
+  /* WM-06: Week / Day timeline. */
+  function calMinutes(t){ var m = /^(\d{1,2}):(\d{2})/.exec(t || ''); return m ? (+m[1]) * 60 + (+m[2]) : null; }
+  function calLayout(evs){   // overlapping blocks share the width; each cluster gets as many columns as it needs
+    evs.sort(function(a, b){ return a.s - b.s || b.e - a.e; });
+    var clusters = [], cur = null, end = -1;
+    evs.forEach(function(ev){
+      if(!cur || ev.s >= end){ cur = []; clusters.push(cur); end = -1; }
+      var col = 0; while(cur.some(function(x){ return x.col === col && x.e > ev.s; })) col++;
+      ev.col = col; cur.push(ev); end = Math.max(end, ev.e);
+    });
+    clusters.forEach(function(cl){ var n = Math.max.apply(null, cl.map(function(x){ return x.col; })) + 1; cl.forEach(function(x){ x.cols = n; }); });
+    return evs;
+  }
+  function renderCalTimeline(){
+    var c = STATE.calendar, ref = calRef(), map = tasksByDueDate();
+    var days = c.mode === 'day' ? [ref] : (function(){ var s = calWeekStart(ref), out = []; for(var i = 0; i < 7; i++){ var d = new Date(s); d.setDate(s.getDate() + i); out.push(d); } return out; })();
+    var cols = days.map(function(d){
+      var iso = localIso(d), list = map[iso] || [], allDay = [], timed = [];
+      list.forEach(function(t){
+        var s = calMinutes(t.start_time), e = calMinutes(t.end_time);
+        if(s === null) allDay.push(t);
+        else timed.push({ t: t, s: s, e: Math.max(e !== null && e > s ? e : s + 60, s + 30) });
+      });
+      return { d: d, iso: iso, allDay: allDay, timed: calLayout(timed) };
+    });
+    var hours = []; for(var h = 0; h < 24; h++) hours.push(h);
+    var nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+    var html = '<div class="wm-tl' + (c.mode === 'day' ? ' is-day' : '') + '" style="--wm-tl-cols:' + days.length + '">' +
+      '<div class="wm-tl-head"><div class="wm-tl-gutter"></div>' + cols.map(function(col){
+        var isToday = col.iso === TODAY_STR;
+        return '<button type="button" class="wm-tl-dayhead' + (isToday ? ' is-today' : '') + '" data-goday="' + col.iso + '"' + (isToday ? ' aria-current="date"' : '') + '><span>' + CAL_DOW[(col.d.getDay() + 6) % 7] + '</span><strong>' + col.d.getDate() + '</strong></button>';
+      }).join('') + '</div>' +
+      '<div class="wm-tl-allday"><div class="wm-tl-gutter">All day</div>' + cols.map(function(col){
+        var show = c.mode === 'day' ? col.allDay : col.allDay.slice(0, 3);
+        return '<div class="wm-tl-allday-cell">' + show.map(function(t){ return '<button type="button" class="wm-tl-chip" data-id="' + t.id + '" title="' + escapeHtml(t.task) + '">' + escapeHtml(t.task) + '</button>'; }).join('') +
+          (col.allDay.length > show.length ? '<button type="button" class="wm-cal-more" data-goday="' + col.iso + '">+' + (col.allDay.length - show.length) + ' more</button>' : '') + '</div>';
+      }).join('') + '</div>' +
+      '<div class="wm-tl-scroll" id="calTlScroll"><div class="wm-tl-grid" style="height:' + (24 * CAL_HOUR_PX) + 'px">' +
+        '<div class="wm-tl-gutter wm-tl-hours">' + hours.map(function(hh){ return '<span style="top:' + (hh * CAL_HOUR_PX) + 'px">' + (hh ? pad(hh) + ':00' : '') + '</span>'; }).join('') + '</div>' +
+        cols.map(function(col){
+          return '<div class="wm-tl-col' + (col.iso === TODAY_STR ? ' is-today' : '') + '">' +
+            (col.iso === TODAY_STR ? '<div class="wm-tl-now" style="top:' + (nowMin * CAL_HOUR_PX / 60) + 'px" aria-hidden="true"></div>' : '') +
+            col.timed.map(function(ev){
+              var top = ev.s * CAL_HOUR_PX / 60, hgt = Math.max(22, (ev.e - ev.s) * CAL_HOUR_PX / 60 - 2);
+              return '<button type="button" class="wm-tl-event" data-id="' + ev.t.id + '" style="top:' + top + 'px;height:' + hgt + 'px;left:calc(' + (ev.col * 100 / ev.cols) + '% + 2px);width:calc(' + (100 / ev.cols) + '% - 4px)" title="' + escapeHtml(ev.t.task + ' · ' + ev.t.start_time + (ev.t.end_time ? '–' + ev.t.end_time : '')) + '">' +
+                '<strong>' + escapeHtml(ev.t.task) + '</strong><span>' + escapeHtml(ev.t.start_time + (ev.t.end_time ? ' – ' + ev.t.end_time : '')) + '</span></button>';
+            }).join('') + '</div>';
+        }).join('') +
+      '</div></div></div>';
     byId('calBody').innerHTML = html;
-    bindTaskRowEvents(byId('calBody'));
+    byId('calBody').querySelectorAll('[data-id]').forEach(function(el){ el.addEventListener('click', function(){ openDetailModal(el.getAttribute('data-id')); }); });
+    byId('calBody').querySelectorAll('[data-goday]').forEach(function(el){ el.addEventListener('click', function(){ c.ref = el.getAttribute('data-goday'); c.mode = 'day'; renderCalendar(); }); });
+    // start the view at the first timed task, or 07:00
+    var firstMin = Math.min.apply(null, cols.map(function(col){ return col.timed.length ? col.timed[0].s : 24 * 60; }));
+    byId('calTlScroll').scrollTop = Math.max(0, (Math.min(firstMin, 7 * 60) - 30) * CAL_HOUR_PX / 60);
   }
 
   /* =========================================================
      12. FORM MODAL (Create / Edit)
      ========================================================= */
+  // GEN-03: people options carry Job title · Email (shown by the shared combobox in rexus-ui.js).
+  function personOptionHtml(u, selected){
+    return window.REXUSui && REXUSui.personOption ? REXUSui.personOption(u, selected) : '<option value="' + escapeHtml(u.id) + '"' + (selected ? ' selected' : '') + '>' + escapeHtml(u.full_name || u.username) + '</option>';
+  }
   function userSelectOptions(selectedId){
     var opts = '<option value="">— Unassigned —</option>';
     STATE.allUsers.forEach(function(u){
-      opts += '<option value="' + u.id + '"' + (u.id === selectedId ? ' selected' : '') + '>' + escapeHtml(u.full_name || u.username) + '</option>';
+      opts += personOptionHtml(u, u.id === selectedId);
     });
     return opts;
   }
@@ -5758,7 +5860,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       html += list.map(function(u){
         return '<div class="wm-user-picker-item" data-uid="' + u.id + '">' +
           '<div class="wm-upi-name">' + escapeHtml(u.full_name || u.username) + '</div>' +
-          '<div class="wm-upi-meta">' + escapeHtml(u.email||'') + (u.department ? ' · ' + escapeHtml(u.department) : '') + '</div>' +
+          '<div class="wm-upi-meta">' + escapeHtml([u.position || 'No job title', u.email].filter(Boolean).join(' · ')) + '</div>' +   // GEN-03
         '</div>';
       }).join('');
     } else if(q || !(opts && opts.allowUnassigned)){
@@ -6383,7 +6485,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         var existingIds = members.map(function(m){ return m.id; });
         var candidates = STATE.allUsers.filter(function(u){ return existingIds.indexOf(u.id) === -1; });
         if(!candidates.length){ showAlert('Every registered user is already tagged here.'); return; }
-        var options = candidates.map(function(u){ return '<option value="' + u.id + '">' + escapeHtml(u.full_name || u.username) + '</option>'; }).join('');
+        var options = candidates.map(function(u){ return personOptionHtml(u); }).join('');
         var picker = document.createElement('span');
         picker.innerHTML = '<select style="margin-left:4px;">' + '<option value="">Choose a user…</option>' + options + '</select>' +
           '<button type="button" class="wm-btn primary" style="padding:4px 10px;font-size:12px;margin-left:4px;">Add</button>';
@@ -7423,12 +7525,10 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           '<select id="wmRateProject"></select>' +
         '</div>' +
         '<div id="wmRateHistory" style="margin:10px 0;"></div>' +
-        '<div class="wm-form-grid">' +
-          '<div class="wm-form-row"><label>New hourly rate</label><input id="wmRateNewAmount" type="number" step="0.01" min="0" placeholder="e.g. 120000"></div>' +
-          '<div class="wm-form-row"><label>Effective from</label><input id="wmRateNewEffective" type="date"></div>' +
-        '</div>' +
-        '<div style="display:flex;justify-content:flex-end;">' +
-          '<button type="button" class="wm-btn primary" id="wmRateSaveBtn">Save New Rate</button>' +
+        '<div class="rx-grid-inline">' +   // GEN-02: short fields sized to their content, action on the same row
+          '<div class="wm-form-row"><label for="wmRateNewAmount">New hourly rate</label><input id="wmRateNewAmount" type="number" step="0.01" min="0" placeholder="e.g. 120000"></div>' +
+          '<div class="wm-form-row"><label for="wmRateNewEffective">Effective from</label><input id="wmRateNewEffective" type="date"></div>' +
+          '<div class="wm-form-row rx-grid-action"><button type="button" class="wm-btn primary" id="wmRateSaveBtn">Save New Rate</button></div>' +
         '</div>';
   }
   function accountsSectionHtml(){
@@ -7889,9 +7989,17 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   var NOTIF_STAR_SVG_FILLED = '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"><path d="m12 3 2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17l-5.6 3.1 1.4-6.3L3 9.5l6.4-.6L12 3Z"></path></svg>';
   var NOTIF_DOT_SVG_UNREAD = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6" fill="currentColor"></circle></svg>';
   var NOTIF_DOT_SVG_READ = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="6"></circle></svg>';
+  // WM-03: Important is a per-account marker (notifications rows belong to one user), independent of read/unread.
+  var NOTIF_FILTER = 'all';
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('[data-notif-filter]'); if(!b) return;
+    e.stopPropagation(); NOTIF_FILTER = b.getAttribute('data-notif-filter');
+    document.querySelectorAll('[data-notif-filter]').forEach(function(x){ x.setAttribute('aria-selected', String(x === b)); });
+    refreshNotifications();
+  }, true);
   function refreshNotifications(){
     return NotificationsAPI.getNotifications().then(function(json){
-      var list = json.notifications || [];
+      var list = (json.notifications || []).filter(function(n){ return NOTIF_FILTER !== 'important' || n.important; });
       var unread = json.unread_count || 0;
       var badge = byId('wmNotifBadge');
       if(badge){
@@ -7913,7 +8021,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
             '<button type="button" class="wm-notif-action wm-notif-unread-btn' + (n.read ? '' : ' is-unread') + '" data-unread-toggle="1" title="' + (n.read ? 'Mark as unread' : 'Mark as read') + '">' + (n.read ? NOTIF_DOT_SVG_READ : NOTIF_DOT_SVG_UNREAD) + '</button>' +
           '</div>' +
         '</div>';
-      }).join('') : '<div class="wm-notif-empty">No notifications yet.</div>';
+      }).join('') : '<div class="wm-notif-empty">' + (NOTIF_FILTER === 'important' ? 'No important notifications. Star a notification to keep it here.' : 'No notifications yet.') + '</div>';
       listEl.querySelectorAll('[data-star-toggle]').forEach(function(btn){
         btn.addEventListener('click', function(ev){
           ev.stopPropagation();
@@ -8067,8 +8175,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
 
   </script>
   <script src="/rexus-docx-export.js?v=2.0.6"></script>
-  <script src="/rexus-document.js?v=2.2.3"></script>
-  <script src="/rexus-survey.js?v=2.3.1"></script>
+  <script src="/rexus-document.js?v=2.3.4"></script>
+  <script src="/rexus-survey.js?v=2.3.4"></script>
   <link rel="stylesheet" href="/rexus-liquid-glass.css?v=2.0.5">
   <link rel="stylesheet" href="/rexus-editor.css?v=2.0.6">
   <link rel="stylesheet" href="/rexus-v205.css?v=2.0.5">
@@ -8081,12 +8189,13 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   <link rel="stylesheet" href="/rexus-v211.css?v=2.1.2">
   <link rel="stylesheet" href="/rexus-v213.css?v=2.1.3">
   <!-- v2.2.0 Adaptive Liquid Glass design system: tokens + components. Must stay the LAST stylesheet. -->
-  <link rel="stylesheet" href="/rexus-ui.css?v=2.3.1">
+  <link rel="stylesheet" href="/rexus-ui.css?v=2.3.4">
   <link rel="stylesheet" href="/rexus-dark.css?v=2.2.3">
-  <link rel="stylesheet" href="/rexus-survey.css?v=2.3.0">
-  <script src="/rexus-v221.js?v=2.3.1"></script>
+  <link rel="stylesheet" href="/rexus-survey.css?v=2.3.4">
+  <link rel="stylesheet" href="/rexus-v234.css?v=2.3.4">  <!-- v2.3.4: GEN-01/02, WM-01..06, DOC-01 visual rules (loaded last) -->
+  <script src="/rexus-v221.js?v=2.3.4"></script>
 </section>
 
-  <script src="/rexus-ui.js?v=2.3.0" defer></script>
+  <script src="/rexus-ui.js?v=2.3.4" defer></script>
 </body>
 </html>

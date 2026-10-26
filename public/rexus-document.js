@@ -15,7 +15,9 @@
   var collapsedTreeFolders=new Set();
   // v2.2.2 DOC-01: sidebar sections can be shown/hidden; remembered per browser.
   var collapsedSections = (function(){ try { return new Set(JSON.parse(localStorage.getItem('rd-collapsed-sections') || '[]')); } catch (e) { return new Set(); } })();
-  function sectionHead(key, label){ var closed = collapsedSections.has(key); return '<button type="button" class="rd-section-title rd-section-toggle" data-rd="toggle-section" data-id="' + key + '" aria-expanded="' + (!closed) + '" aria-controls="rdSec-' + key + '"><span class="rd-section-chevron" aria-hidden="true">' + (closed ? '›' : '⌄') + '</span><span>' + label + '</span></button>'; }
+  // DOC-01: one chevron for every expand/collapse control in the sidebar (same size, position and motion); it points down when open.
+  var CHEV = '<svg class="rd-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg>';
+  function sectionHead(key, label){ var closed = collapsedSections.has(key); return '<button type="button" class="rd-section-title rd-section-toggle" data-rd="toggle-section" data-id="' + key + '" aria-expanded="' + (!closed) + '" aria-controls="rdSec-' + key + '"><span class="rd-section-chevron" aria-hidden="true">' + CHEV + '</span><span>' + label + '</span></button>'; }
   var state = { spaces: [], documents: [], files: [], spaceId: '', folderId: '', pageId: '', home: true, search: '', searchScope: 'all', edit: false, dirty: false, busy: false, details: false, folderComments: [], sort: 'name', filter: 'all', userId: '', selected: new Set(), threads: [], commentPanel: false, activeThread: '', error: '', loaded: false };
   function el(id) { return document.getElementById(id); }
   function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -361,7 +363,7 @@
       var v = Object.assign({}, visited); v[d.id] = true;
       var isFolder=d.kind==='folder',isCollapsed=collapsedTreeFolders.has(d.id);
       return '<div class="rd-tree-node"><div class="rd-tree-line" style="padding-left:'+Math.min(depth,8)*13+'px">'+
-        (isFolder?'<button class="rd-tree-toggle" type="button" data-rd="toggle-folder" data-id="'+esc(d.id)+'" aria-label="'+(isCollapsed?'Expand ':'Collapse ')+esc(d.title)+'" aria-expanded="'+(!isCollapsed)+'">'+(isCollapsed?'›':'⌄')+'</button>':'<span class="rd-tree-spacer" aria-hidden="true"></span>')+
+        (isFolder?'<button class="rd-tree-toggle" type="button" data-rd="toggle-folder" data-id="'+esc(d.id)+'" aria-label="'+(isCollapsed?'Expand ':'Collapse ')+esc(d.title)+'" aria-expanded="'+(!isCollapsed)+'">'+CHEV+'</button>':'<span class="rd-tree-spacer" aria-hidden="true"></span>')+
         '<button class="rd-nav-row ' + ((state.folderId === d.id || state.pageId === d.id) ? 'active' : '') + '" data-rd="doc" data-id="' + esc(d.id) + '" title="' + esc(d.title) + '"><span>' + icon(d) + '</span><span>' + esc(d.title) + '</span></button></div>'+
        (isFolder&&!isCollapsed ? '<div class="rd-tree-children">'+treeItems(spaceId, d.id, depth+1, v)+'</div>' : '')+'</div>';
     }).join('');
@@ -379,7 +381,7 @@
       '<div class="rd-switch-section">SPACES YOU CAN ACCESS</div><div class="rd-space-option-list" role="listbox">'+accessible.map(function(sp){return '<button type="button" role="option" data-rd="space" data-id="'+esc(sp.id)+'" aria-selected="'+(sp.id===state.spaceId?'true':'false')+'"><span class="rd-space-glyph">'+spaceGlyph()+'</span><span>'+esc(sp.name)+'</span><span class="rd-space-check">'+(sp.id===state.spaceId?'✓':'')+'</span></button>';}).join('')+'</div>'+
       '<button type="button" data-rd="new-space" class="rd-space-add"><span aria-hidden="true">＋</span> New space</button></div>' : '';
     var shared=state.documents.filter(function(d){return (d.space_id!==state.spaceId && !d.parent_id) || (d.space_id===state.spaceId && !!d.parent_id && !docById(d.parent_id)) || (!perm(current,'view') && !d.parent_id);}).slice(0,25);
-    return '<div class="rd-side-head"><button type="button" class="rd-space-switch" data-rd="toggle-space-menu" aria-haspopup="dialog" aria-expanded="'+(spaceMenuOpen?'true':'false')+'"><span class="rd-space-switch-label">Document spaces <span class="rd-chevron">⌄</span></span><small>'+esc(current?.name||'Choose a space')+'</small></button><button class="rd-icon-btn" data-rd="new-space" title="Create space" aria-label="Create space">+</button>'+dropdown+'</div>'+
+    return '<div class="rd-side-head"><button type="button" class="rd-space-switch" data-rd="toggle-space-menu" aria-haspopup="dialog" aria-expanded="'+(spaceMenuOpen?'true':'false')+'"><span class="rd-space-switch-label">Document spaces <span class="rd-chevron">'+CHEV+'</span></span><small>'+esc(current?.name||'Choose a space')+'</small></button><button class="rd-icon-btn" data-rd="new-space" title="Create space" aria-label="Create space">+</button>'+dropdown+'</div>'+
       '<div class="rd-sidebar-top"><button class="rd-nav-row '+(state.home&&!state.search?'active':'')+'" data-rd="overview"><span class="rd-plain-mark">⌂</span><span>Home</span></button><button class="rd-nav-row '+(allFilesMode?'active':'')+'" data-rd="all-files"><span class="rd-plain-mark">▤</span><span>All files</span></button></div>'+
       sectionHead('space', current?'IN '+esc(current.name.toUpperCase()):'DOCUMENTS')+'<div class="rd-spaces-tree" id="rdSec-space"'+(collapsedSections.has('space')?' hidden':'')+'>'+
       (current?'<button class="rd-nav-row rd-space-title" data-rd="space" data-id="'+esc(current.id)+'"><span class="rd-nav-glyph">'+spaceGlyph()+'</span><span>'+esc(current.name)+'</span></button>'+currentItems:'<div class="rd-empty rd-sidebar-empty">No spaces shared with you yet.</div>')+'</div>'+
@@ -578,12 +580,14 @@
       }
     }
   }
+  // GEN-03: member pickers show Name + Job title · Email (shared helper in rexus-ui.js)
+  function personOpt(u){ return window.REXUSui && REXUSui.personOption ? REXUSui.personOption(u) : '<option value="' + esc(u.id) + '">' + esc(u.full_name || u.username) + '</option>'; }
   function dialog(title, fields, onSave) {
     closeDialog();
     var wrap = document.createElement('div'); wrap.className = 'rd-dialog-wrap'; wrap.id = 'rdDialogWrap';
     var html = '<div class="rd-dialog" role="dialog" aria-modal="true"><h3>' + esc(title) + '</h3><form id="rdDialogForm">';
     fields.forEach(function (f) {
-      html += '<label>' + esc(f.label) + (f.type === 'select' ? '<select name="' + esc(f.name) + '">' + (f.options || []).map(function (o) { return '<option value="' + esc(o.value) + '"' + (o.value === f.value ? ' selected' : '') + '>' + esc(o.label) + '</option>'; }).join('') + '</select>' : f.type === 'textarea' ? '<textarea name="' + esc(f.name) + '" rows="3">' + esc(f.value || '') + '</textarea>' : '<input name="' + esc(f.name) + '" maxlength="200" value="' + esc(f.value || '') + '" ' + (f.required ? 'required' : '') + '>') + '</label>';
+      html += '<label>' + esc(f.label) + (f.type === 'select' ? '<select name="' + esc(f.name) + '">' + (f.options || []).map(function (o) { return o.html || ('<option value="' + esc(o.value) + '"' + (o.value === f.value ? ' selected' : '') + '>' + esc(o.label) + '</option>'); }).join('') + '</select>' : f.type === 'textarea' ? '<textarea name="' + esc(f.name) + '" rows="3">' + esc(f.value || '') + '</textarea>' : '<input name="' + esc(f.name) + '" maxlength="200" value="' + esc(f.value || '') + '" ' + (f.required ? 'required' : '') + '>') + '</label>';
     });
     html += '<div id="rdDialogError" class="rd-error" style="display:none"></div><div class="rd-actions" style="justify-content:flex-end"><button class="rd-button" type="button" id="rdDialogCancel">Cancel</button><button class="rd-button primary" type="submit">Save</button></div></form></div>';
     wrap.innerHTML = html; document.body.appendChild(wrap);
@@ -989,7 +993,7 @@
       wrap.innerHTML='<div class="rd-dialog rd-share-dialog" role="dialog" aria-modal="true"><h3>Share '+esc(type)+'</h3><p class="rd-note">Permissions are enforced on the server. Existing organization-wide access stays unchanged until you choose Restricted. Parent Space/Folder access may be inherited.</p><p><strong>Your permission: '+esc(info.permission)+'</strong></p>'+
         (info.can_manage?'<label>Visibility<select id="rdShareMode">'+modeOpts.map(function(m){return '<option value="'+m+'" '+(m===info.access_mode?'selected':'')+'>'+m+'</option>';}).join('')+'</select></label><button class="rd-button" id="rdSaveShareMode">Apply visibility</button>':'')+
         '<div class="rd-side-section"><strong>People with access</strong><div id="rdSharePeople">'+(info.shares||[]).map(function(sh){return '<div class="rd-person"><span>'+esc(sh.full_name||sh.username)+'</span><strong>'+esc(sh.permission)+'</strong>'+(info.can_manage?'<button class="rd-button" data-revoke="'+esc(sh.user_id)+'">Remove</button>':'')+'</div>';}).join('')+'</div></div>'+
-        (info.can_manage?'<div class="rd-side-section"><label>Organization member<select id="rdShareUser"><option value="">Choose member</option>'+userData.users.filter(function(u){return u.id!==state.userId&&u.status!=='Inactive';}).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.full_name||u.username)+'</option>';}).join('')+'</select></label><label>Permission<select id="rdSharePermission"><option value="view">View</option><option value="comment">Comment</option><option value="edit">Edit</option></select></label><button class="rd-button primary" id="rdGrantShare">Share & notify</button></div>':'')+
+        (info.can_manage?'<div class="rd-side-section"><label>Organization member<select id="rdShareUser"><option value="">Choose member</option>'+userData.users.filter(function(u){return u.id!==state.userId&&u.status!=='Inactive';}).map(function(u){return personOpt(u);}).join('')+'</select></label><label>Permission<select id="rdSharePermission"><option value="view">View</option><option value="comment">Comment</option><option value="edit">Edit</option></select></label><button class="rd-button primary" id="rdGrantShare">Share & notify</button></div>':'')+
         '<div class="rd-actions" style="justify-content:flex-end">'+btn('Done','close-dialog')+'</div></div>';
       document.body.appendChild(wrap);
       function again(){shareDialog(type,id);}
@@ -1020,7 +1024,7 @@
       var types=entries.filter(function(e){return !!e.doc;});if(!types.length)return toast('Share folders and documents individually; direct file access is inherited',true);
       try{
         var data=await request('/api/users');
-        dialog('Share '+types.length+' items',[{name:'user_id',label:'Organization member',type:'select',options:[{label:'Select member',value:''}].concat(data.users.filter(function(u){return u.id!==state.userId;}).map(function(u){return {label:u.full_name||u.username,value:u.id};}))},{name:'permission',label:'Permission',type:'select',options:['view','comment','edit'].map(function(p){return {label:p,value:p};})}],async function(form){
+        dialog('Share '+types.length+' items',[{name:'user_id',label:'Organization member',type:'select',options:[{label:'Select member',value:''}].concat(data.users.filter(function(u){return u.id!==state.userId;}).map(function(u){return {label:u.full_name||u.username,value:u.id,html:personOpt(u)};}))},{name:'permission',label:'Permission',type:'select',options:['view','comment','edit'].map(function(p){return {label:p,value:p};})}],async function(form){
           if(!form.user_id)throw Error('Choose a member');
           var ok=0,failed=[];
           for(const e of types){try{await request(shareUrl,'POST',{type:e.doc.kind==='folder'?'folder':'page',id:e.id,user_id:form.user_id,permission:form.permission});ok++;}catch(err){failed.push(e.doc.title+': '+err.message);}}

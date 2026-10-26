@@ -1,0 +1,32 @@
+== dark mono 1440
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-picker      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-week        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-day         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notif-important      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark mono 768
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-picker      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-week        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-day         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notif-important      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark mono 375
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-picker      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-week        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-day         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notif-important      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark navy 1440
+calendar             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-picker      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-week        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+calendar-day         fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notif-important      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []

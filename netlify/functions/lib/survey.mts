@@ -56,13 +56,52 @@ export const targetIsEmpty = (t: any) => !t.all && !t.departments.length && !t.p
 const str = (v: any, max: number) => String(v == null ? "" : v).trim().slice(0, max);
 const int = (v: any, d: number) => (Number.isFinite(Number(v)) && v !== "" && v !== null ? Math.round(Number(v)) : d);
 
+/* v2.3.4 SUR-04/05 — sections and single-choice branching.
+   A form is a list of items: questions plus optional {type:"section"} separators. Questions before the first
+   section form an implicit first page. A single-choice question may route each answer to "end" or to the id of a
+   LATER section (forward only, so a path can never loop); anything else continues to the next section.
+   The path is computed from the answers on both client and server: only questions on the path are validated
+   and stored. A form without sections behaves exactly as before. */
+export const isSection = (q: any) => q?.type === "section";
+export const realQuestions = (items: any[]) => items.filter((q) => !isSection(q));
+
+/** Pages of a form: [{section, questions[]}], first page may have no section. */
+export function pages(items: any[]) {
+  const out: { section: any; questions: any[] }[] = [{ section: null, questions: [] }];
+  for (const q of items) { if (isSection(q)) out.push({ section: q, questions: [] }); else out[out.length - 1].questions.push(q); }
+  return out[0].questions.length || out.length === 1 ? out : out.slice(1);
+}
+
+/** Ids of the questions a respondent passes through, given their answers (raw values). */
+export function answerPath(items: any[], answers: Record<string, any>): string[] {
+  const ps = pages(items), idx = new Map(ps.map((p, i) => [p.section?.id, i])), path: string[] = [];
+  for (let i = 0; i < ps.length && i >= 0;) {
+    let next: number = i + 1;
+    for (const q of ps[i].questions) {
+      path.push(q.id);
+      const r = q.type === "single" && q.routes ? q.routes[String(answers?.[q.id] ?? "")] : undefined;
+      if (r === "end") next = ps.length; else if (r && idx.has(r) && (idx.get(r) as number) > i) next = idx.get(r) as number;
+    }
+    i = next;
+  }
+  return path;
+}
+
 /** Normalises builder input; throws a readable error on invalid questions. */
 export function validateQuestions(input: any): any[] {
   if (!Array.isArray(input)) throw new Error("Questions must be a list.");
   if (input.length > MAX_QUESTIONS) throw new Error(`A survey can have at most ${MAX_QUESTIONS} questions.`);
   const ids = new Set<string>();
-  return input.map((q: any, i: number) => {
-    const n = i + 1;
+  let qn = 0, sn = 0;
+  const items = input.map((q: any) => {
+    if (isSection(q)) {   // section separator: stable id, optional title/description
+      sn++;
+      let id = str(q.id, 40);
+      if (!/^s_[a-z0-9]{4,32}$/i.test(id) || ids.has(id)) id = "s_" + newId("").slice(0, 16).toLowerCase();
+      ids.add(id);
+      return { id, type: "section", title: str(q.title, 300), description: str(q.description, 2000) };
+    }
+    const n = ++qn;
     const type = String(q?.type || "");
     if (!(QUESTION_TYPES as readonly string[]).includes(type)) throw new Error(`Question ${n}: unknown type.`);
     let id = str(q.id, 40);
@@ -92,15 +131,35 @@ export function validateQuestions(input: any): any[] {
       if ((mn !== null && !Number.isFinite(mn)) || (mx !== null && !Number.isFinite(mx)) || (mn !== null && mx !== null && mn > mx)) throw new Error(`Question ${n}: invalid number range.`);
       out.min = mn; out.max = mx;
     }
+    if (type === "single" && q.routes && typeof q.routes === "object") out.routes = q.routes;   // checked below, once all section ids are known
     return out;
   });
+  // Branching targets: "end" or a section that comes after the question (no loops, no deleted sections).
+  const sectionAt = new Map<string, number>(); items.forEach((q, i) => { if (isSection(q)) sectionAt.set(q.id, i); });
+  let n = 0;
+  items.forEach((q: any, i: number) => {
+    if (isSection(q)) return; n++;
+    if (!q.routes) return;
+    const routes: Record<string, string> = {};
+    for (const [opt, target] of Object.entries(q.routes)) {
+      const t = String(target);
+      if (!q.options.includes(opt) || t === "next" || t === "") continue;
+      if (t !== "end" && !(sectionAt.has(t) && (sectionAt.get(t) as number) > i))
+        throw new Error(`Question ${n}: the answer "${opt}" goes to a section that was deleted or comes before this question. Choose another section, "Continue" or "Submit form".`);
+      routes[opt] = t;
+    }
+    if (Object.keys(routes).length) q.routes = routes; else delete q.routes;
+  });
+  return items;
 }
 
 /** Validates answers against a published question set; returns the cleaned answers or throws. */
 export function validateAnswers(questions: any[], input: any): Record<string, any> {
   const a = input && typeof input === "object" && !Array.isArray(input) ? input : {};
   const out: Record<string, any> = {};
-  for (const [i, q] of questions.entries()) {
+  const onPath = new Set(answerPath(questions, a));   // questions skipped by branching are neither required nor stored
+  for (const [i, q] of realQuestions(questions).entries()) {
+    if (!onPath.has(q.id)) continue;
     const n = i + 1, v = a[q.id];
     const blank = v === undefined || v === null || v === "" || (Array.isArray(v) && !v.length);
     if (blank) { if (q.required) throw Object.assign(new Error(`Question ${n} is required.`), { question: q.id }); continue; }

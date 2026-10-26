@@ -1,0 +1,11 @@
+PASS routes kept, next dropped
+PASS pages: 3
+PASS path student skips staff
+PASS path staff + end
+PASS path staff + no
+PASS student: class required (Question 4)
+PASS student answer valid, off-path dropped
+PASS backward route rejected
+PASS missing section rejected
+PASS no sections: one page, all on path
+PASS section numbering: questions only

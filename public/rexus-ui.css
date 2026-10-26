@@ -1854,5 +1854,6 @@ table.rx-resized td.rx-nowrap, table.rx-resized th{ overflow: hidden; text-overf
 .wm-app .rx-accounts .wm-table{ min-width: 720px; }
 .wm-app .rx-accounts #cfgEmpTableWrap{ overflow-x: auto; }
 .wm-app .rx-emp-body{ grid-template-columns: minmax(0, 1fr); }
-.wm-app #rxCompFinance table, .wm-app #rxCompRates table{ display: block; overflow-x: auto; max-width: 100%; }
+.wm-app #rxCompFinance .rx-card, .wm-app #rxCompRates{ overflow-x: auto; }
+.wm-app #rxCompFinance table, .wm-app #rxCompRates table{ width: 100%; min-width: 520px; }
 @media (max-width: 640px){ .wm-app #rxCompRates .wm-form-grid{ grid-template-columns: minmax(0, 1fr); } }

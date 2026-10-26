@@ -41,7 +41,8 @@
     opts = opts || {};
     return (opts.empty ? '<option value="">' + esc(opts.empty) + '</option>' : '') + list.filter(function (u) { return !opts.exclude || opts.exclude.indexOf(u.id) === -1; })
       .filter(function (u) { return !opts.roles || opts.roles.indexOf(u.role) !== -1; })
-      .map(function (u) { return '<option value="' + esc(u.id) + '" data-search="' + esc([u.username, u.email].filter(Boolean).join(' ')) + '"' + (u.id === selected ? ' selected' : '') + '>' + esc(u.full_name || u.username) + (u.department ? ' · ' + esc(u.department) : '') + '</option>'; }).join('');
+      .map(function (u) {   // GEN-03: Name + Job title · Email via the shared helper
+        return window.REXUSui && REXUSui.personOption ? REXUSui.personOption(u, u.id === selected) : '<option value="' + esc(u.id) + '"' + (u.id === selected ? ' selected' : '') + '>' + esc(u.full_name || u.username) + '</option>'; }).join('');
   }
 
   /* ------------------------------------------------------------- ui kit */
@@ -331,7 +332,7 @@
         field('Capacity method', '<select name="capacity_method"><option value="schedule"' + (pr.capacity_method === 'schedule' ? ' selected' : '') + '>Working schedule (working days × hours − leave)</option><option value="declaration"' + (pr.capacity_method === 'declaration' ? ' selected' : '') + '>Monthly declaration (approved availability)</option></select>') + '</div>' +
         '<div class="wm-form-grid">' + field('Daily working hours', '<input name="hours_per_day" type="number" min="0" max="24" step="0.5" value="' + esc(pr.hours_per_day) + '">') + field('Effective from', '<input name="effective_from" type="date" value="' + todayStr() + '">', { help: 'Earlier periods keep their previous schedule.' }) + '</div>' +
         field('Working days', '<div class="rx-weekdays">' + [1, 2, 3, 4, 5, 6, 0].map(function (d) { return '<label class="rx-check"><input type="checkbox" name="wd' + d + '"' + ((pr.workdays || []).indexOf(d) !== -1 ? ' checked' : '') + '> ' + DOW[d] + '</label>'; }).join('') + '</div>') +
-        field('Personal minimum regular hours / month', '<input name="min_monthly_hours" type="number" min="0" max="744" step="1" value="' + (pr.min_monthly_hours === null || pr.min_monthly_hours === undefined ? '' : esc(pr.min_monthly_hours)) + '" placeholder="Company default">', { help: 'Declaration-based staff only. Leave empty to use the company default.' }) +
+        field('Personal minimum regular hours / month', '<input name="min_monthly_hours" type="number" min="0" max="744" step="1" value="' + (pr.min_monthly_hours === null || pr.min_monthly_hours === undefined ? '' : esc(pr.min_monthly_hours)) + '" placeholder="Company default">', { cls: 'rx-field-short', help: 'Declaration-based staff only. Leave empty to use the company default.' }) +
         '<div class="wm-form-grid">' + field('Manager', '<select name="manager_id">' + userOptions(list, pr.manager_id, { empty: '— None —', exclude: [x.id] }) + '</select>') + field('Capacity approver', '<select name="capacity_approver_id">' + userOptions(list, pr.capacity_approver_id, { empty: '— Manager —', exclude: [x.id] }) + '</select>') + '</div>',
         onOpen: function (d) { var t = d.form.elements.employment_type, m = d.form.elements.capacity_method; t.onchange = function () { m.value = ['Part-time', 'Freelancer', 'Contractor', 'Collaborator'].indexOf(t.value) !== -1 ? 'declaration' : 'schedule'; }; },
         onSubmit: function (d) {

@@ -373,3 +373,52 @@ textarea.sv-input{ min-height: 130px; resize: vertical; }
 .rx-chip-danger{ background: var(--rx-badge-danger-bg) !important; color: var(--rx-badge-danger-fg) !important; }
 .rx-chip-neutral{ background: var(--rx-badge-neutral-bg) !important; color: var(--rx-badge-neutral-fg) !important; }
 #rexusSurveyShell .sv-main:focus, #rexusSurveyShell .sv-main:focus-visible{ outline: none !important; box-shadow: none !important; }   /* focused by script after navigation */
+
+/* =============================================================================
+   v2.3.4 SUR-01 — Survey buttons, icons and accent follow the REXUS / Document design system.
+   Same geometry (control height, radius, weight), same variants (default glass, primary smoke,
+   danger), same accent token; stroke icons in a neutral tile like the REXUS sidebar.
+   ========================================================================== */
+:root{ --sv-primary: var(--rx-accent, #1a5fd0); --sv-primary-hover: var(--rx-accent-strong, #134aa6); }
+:root[data-rx-mode="dark"]{ --sv-primary: var(--rx-accent, #78adff); --sv-primary-hover: #5f9bf5; }
+.sv-btn{ min-height: var(--rx-control-h, 38px); padding: 8px 16px; border-radius: var(--rx-radius-md, 10px); font-size: var(--rx-text-md, 14px); line-height: 20px;
+  background: var(--rx-glass-2-bg, var(--sv-card)); border: 1px solid var(--rx-hairline-strong, var(--sv-line-strong)); color: var(--rx-ink-1, var(--sv-navy));
+  box-shadow: var(--rx-shadow-1, none); transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease; }
+.sv-btn:hover{ color: var(--rx-ink-1, var(--sv-navy)); background: var(--rx-glass-hover-bg, var(--sv-soft)); border-color: rgba(20,23,28,.22); }
+.sv-btn-primary, .sv-btn-primary:hover{ color: #fff; border-color: var(--rx-smoke-edge, transparent); }
+.sv-btn-primary{ background: var(--rx-smoke-bg, #1d232c); }
+.sv-btn-primary:hover{ background: var(--rx-smoke-hover-bg, #11151b); }
+.sv-btn-danger{ color: var(--rx-danger, var(--sv-error)); border-color: var(--rx-danger-line, var(--sv-error)); }
+.sv-btn-danger:hover{ color: #fff; background: var(--rx-danger, var(--sv-error)); border-color: var(--rx-danger, var(--sv-error)); }
+.sv-btn-sm{ min-height: var(--rx-control-h-sm, 32px); padding: 5px 12px; font-size: 13px; }
+.sv-btn-lg{ min-height: var(--rx-control-h-lg, 44px); padding: 10px 24px; font-size: 15px; }
+:root[data-rx-mode="dark"] .sv-btn:hover{ border-color: rgba(255,255,255,.24); }
+.sv-side a > span{ width: 30px; height: 30px; flex: 0 0 30px; display: inline-grid; place-items: center; border: 1px solid var(--rx-hairline, var(--sv-line)); border-radius: var(--rx-radius-sm, 8px); background: rgba(var(--rx-wash, 255,255,255), .66); }
+.sv-side a > span svg, .sv-type > span svg{ width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sv-side a.is-active > span{ background: var(--rx-surface, var(--sv-card)); border-color: rgba(26,95,208,.22); }
+.sv-type > span{ display: inline-grid; place-items: center; width: 28px; height: 28px; border: 1px solid var(--rx-hairline, var(--sv-line)); border-radius: var(--rx-radius-sm, 8px); color: var(--rx-ink-2, var(--sv-muted)); }
+
+/* v2.3.4 SUR-02..05 — respondent pages: section heading, several questions per section page */
+.sv-section-head{ padding-bottom: 14px; margin-bottom: 4px; border-bottom: 1px solid var(--sv-line); }
+.sv-section-head h2{ margin: 0 0 4px; font-size: clamp(20px, 2.2vw, 26px); line-height: 1.25; color: var(--sv-navy); outline: none; }
+.is-sectioned .sv-q-block{ padding: 18px 0 20px; border-bottom: 1px solid var(--sv-line); }
+.is-sectioned .sv-q-block:last-of-type{ border-bottom: 0; }
+.is-sectioned .sv-q-block .sv-q-title{ font-size: 18px; margin-top: 0; }
+.sv-action-btns{ display: inline-flex; gap: 12px; margin-left: auto; }
+.sv-who-name small{ display: block; font-size: 12px; color: var(--sv-muted); }
+
+/* v2.3.4 SUR-04/05 — builder: section cards, branching labels and settings */
+.sv-scard{ border-left: 0; background: var(--sv-soft); }
+.sv-scard h4{ font-size: 18px; }
+.sv-pv-route{ margin-left: auto; font-size: 12px; font-weight: 600; color: var(--sv-primary); }
+.sv-pv-opt{ display: flex; align-items: center; gap: 8px; }
+.sv-branch{ margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--sv-line); }
+.sv-branch h4{ margin: 0 0 4px; font-size: 14px; color: var(--sv-navy); }
+.sv-banner-warn{ background: rgba(180,116,25,.08); color: var(--sv-navy); border-color: rgba(180,116,25,.35); }
+.sv-banner-warn ul{ margin: 6px 0 0; padding-left: 18px; }
+.sv-types-note{ font-size: 12px; margin: 8px 4px 0; }
+:root[data-rx-mode="dark"] .sv-banner-warn{ background: rgba(242,189,107,.10); border-color: rgba(242,189,107,.35); }
+/* phones: the builder canvas must not be widened by the respondents select (overflow found by the v2.3.4 UI audit) */
+.sv-builder > *{ min-width: 0; }
+.sv-mode{ flex-wrap: wrap; max-width: 100%; }
+.sv-mode select{ max-width: 100%; min-width: 0; }

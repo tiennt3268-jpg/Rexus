@@ -14,7 +14,7 @@ import { getFullUser, isSystemAdmin, PROJECT_MANAGER } from "./lib/rbac.mts";
 import { logAudit } from "./lib/rexus-audit.mts";
 import { tx } from "./lib/approvals.mts";
 import { createNotification } from "./lib/notify.mts";
-import { validateQuestions, effectiveStatus, cleanTarget, targetIsEmpty, newId, OPEN_SQL, TARGET_SQL } from "./lib/survey.mts";
+import { validateQuestions, realQuestions, effectiveStatus, cleanTarget, targetIsEmpty, newId, OPEN_SQL, TARGET_SQL } from "./lib/survey.mts";
 
 const bad = (error: string, status = 400, extra: any = {}) => Response.json({ error, ...extra }, { status });
 const parseJson = (v: any) => (typeof v === "string" ? JSON.parse(v) : v);
@@ -67,7 +67,7 @@ export default async (req: Request, _ctx: Context) => {
     id: s.id, name: s.name, description: s.description, owner_id: s.owner_id, owner_name: owners[s.owner_id] || "", status: s.status,
     effective_status: effectiveStatus(s, n), mode: s.mode, mandatory: s.mandatory, priority: s.priority, responses: n, max_responses: s.max_responses,
     opens_at: iso(s.opens_at), closes_at: iso(s.closes_at), version: s.current_version, published_at: iso(s.published_at), updated_at: iso(s.updated_at),
-    question_count: parseJson(s.draft_questions).length, target: parseJson(s.target)
+    question_count: realQuestions(parseJson(s.draft_questions)).length, target: parseJson(s.target)
   });
   const targetCount = async (target: any) => (await db.pool.query(`SELECT COUNT(*)::int AS n FROM users u, (SELECT $1::jsonb AS target) s WHERE u.deleted_at IS NULL AND COALESCE(u.status, 'Active') = 'Active' AND ${TARGET_SQL}`, [JSON.stringify(target)])).rows[0].n;
 
@@ -110,7 +110,7 @@ export default async (req: Request, _ctx: Context) => {
           FROM rexus_survey_responses r LEFT JOIN users u ON u.id = r.user_id WHERE r.survey_id = ${s.id} ORDER BY r.submitted_at DESC`;
         rows = rows.filter((r: any) => (!from || iso(r.submitted_at)! >= parseWhen(from + "T00:00")!) && (!to || iso(r.submitted_at)! < new Date(Date.parse(parseWhen(to + "T00:00")!) + 864e5).toISOString())
           && (!dep || r.department === dep) && (!pos || r.position === pos));
-        const questions = version ? parseJson(version.questions) : validateQuestions(parseJson(s.draft_questions));
+        const questions = realQuestions(version ? parseJson(version.questions) : validateQuestions(parseJson(s.draft_questions)));   // section separators carry no answers
         const showWho = s.mode === "authenticated";   // public surveys never store who answered
         const valid = rows.filter((r: any) => r.status === "valid");
         if (P.get("export")) {
@@ -209,7 +209,7 @@ export default async (req: Request, _ctx: Context) => {
     if (action === "publish") {
       if (s.status === "Archived") return bad("Archived surveys cannot be published.");
       let questions; try { questions = validateQuestions(parseJson(s.draft_questions)); } catch (e: any) { return bad(e.message); }
-      if (!questions.length) return bad("Add at least one question before publishing.");
+      if (!realQuestions(questions).length) return bad("Add at least one question before publishing.");
       if (s.mandatory && targetIsEmpty(cleanTarget(parseJson(s.target)))) return bad("A mandatory survey needs at least one target group.");
       const out = await tx(db, async (c: any) => {
         const cur = (await c.query("SELECT * FROM rexus_surveys WHERE id = $1 FOR UPDATE", [s.id])).rows[0];

@@ -1,0 +1,12 @@
+== dark mono 375
+survey-overview      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+survey-list          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+survey-builder       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+survey-builder-section fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== light mono 375
+survey-overview      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+survey-list          fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+survey-builder       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+survey-builder-section fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []

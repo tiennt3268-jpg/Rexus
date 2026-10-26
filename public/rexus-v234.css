@@ -1,0 +1,201 @@
+/* =============================================================================
+   REXUS v2.3.4 — visual rules for REXUS_Requirements_v2.3.4 (loaded last).
+   GEN-01 login · GEN-02 field widths · WM-01 worklog grid · WM-02/03 notifications
+   WM-04/05/06 calendar · DOC-01 Document sidebar chevrons.
+   Uses the shared --rx-* tokens so light/dark and both themes follow automatically.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- GEN-01 sign-in */
+.wm-auth-screen{
+  background: #fff !important;
+  justify-content: center; align-items: center; gap: 0;
+  padding: 32px 24px; box-sizing: border-box; overflow-y: auto;
+  font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif;
+}
+.wm-auth-screen .wm-auth-brand{
+  flex: 0 1 520px; min-height: 420px; box-sizing: border-box;
+  display: flex; flex-direction: column; justify-content: center;
+  padding-right: 64px; border-right: 1px solid #e4e7ec;
+}
+.wm-auth-screen .wm-auth-wordmark{ margin: 0 0 18px; font-size: 22px; font-weight: 800; letter-spacing: .14em; color: var(--rx-accent, #1a5fd0); }
+.wm-auth-screen .wm-auth-tagline{ margin: 0; font-size: clamp(40px, 4.6vw, 62px); line-height: 1.04; font-weight: 800; letter-spacing: -.02em; color: #141a22; }
+.wm-auth-screen .wm-auth-card{
+  flex: 0 1 400px; margin: 0 0 0 64px !important;
+  background: transparent !important; border: 0 !important; box-shadow: none !important;
+  border-radius: 0 !important; overflow: visible; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+.wm-auth-screen .wm-auth-head{ background: none !important; padding: 0 0 18px !important; color: #141a22; }
+.wm-auth-screen .wm-auth-head h1{ font-family: inherit !important; font-size: 20px !important; font-weight: 600; color: #141a22 !important; margin: 0 0 4px; }
+.wm-auth-screen .wm-auth-head p{ color: #5a6270 !important; font-size: 13.5px; }
+.wm-auth-screen .wm-auth-body{ padding: 0 !important; }
+.wm-auth-screen .wm-auth-row label{ color: #3b4350; font-weight: 600; }
+.wm-auth-screen .wm-auth-row input{
+  min-height: 48px; border-radius: 12px !important; border: 1px solid #cfd6df !important;
+  background: #fff !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; font-size: 15px;
+}
+.wm-auth-screen .wm-auth-row input:focus{ border-color: var(--rx-accent, #1a5fd0) !important; box-shadow: 0 0 0 3px rgba(26, 95, 208, .18) !important; outline: none; }
+.wm-auth-screen .wm-auth-submit{ border-radius: 12px !important; background: var(--rx-accent, #1a5fd0) !important; }
+.wm-auth-screen .wm-auth-submit:hover{ background: var(--rx-accent-strong, #134aa6) !important; }
+@media (max-width: 860px){
+  .wm-auth-screen{ flex-direction: column; justify-content: flex-start; padding-top: 48px; }
+  .wm-auth-screen .wm-auth-brand{ flex: none; min-height: 0; width: 100%; max-width: 400px; padding: 0 0 28px; border-right: 0; }
+  .wm-auth-screen .wm-auth-wordmark{ margin-bottom: 10px; }
+  .wm-auth-screen .wm-auth-tagline{ font-size: 34px; }
+  .wm-auth-screen .wm-auth-card{ flex: none; width: 100%; max-width: 400px; margin: 0 !important; }
+}
+:root .wm-auth-screen, :root[data-rx-theme] .wm-auth-screen{ background: #fff !important; }   /* plain white in both themes (GEN-01) */
+:root[data-rx-mode="dark"] .wm-auth-screen, :root[data-rx-mode="dark"][data-rx-theme] .wm-auth-screen{ background: #0f1319 !important; }
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-brand{ border-color: #2a323d; }
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-card{ background: transparent !important; border: 0 !important; }
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-tagline,
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-head h1{ color: #eef2f7 !important; }
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-wordmark{ color: #8fb8ff; }
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-head p,
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-row label{ color: #a9b3c1 !important; }
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-row input{ background: #161c24 !important; border-color: #344050 !important; color: #eef2f7; }
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-submit{ background: #2f6fd6 !important; color: #fff !important; }
+:root[data-rx-mode="dark"] .wm-auth-screen .wm-auth-submit:hover{ background: #3d7be0 !important; }
+
+/* ---------------------------------------------------------------- GEN-02 field widths
+   Rows mixing a short value (number, date, score) with free text get proportional columns instead
+   of two equal halves; compact rows keep short fields and their action together. */
+.wm-app .wm-form-grid.rx-grid-short-long{ grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) !important; }
+.wm-app .rx-grid-inline{ display: grid; grid-template-columns: minmax(180px, 240px) minmax(170px, 220px) auto; justify-content: start; align-items: end; gap: var(--rx-space-3) var(--rx-space-4); }
+.wm-app .rx-grid-inline > .wm-form-row{ margin-bottom: 0; min-width: 0; }
+.wm-app .rx-grid-action{ display: flex; align-items: flex-end; }
+@media (max-width: 640px){
+  .wm-app .wm-form-grid.rx-grid-short-long, .wm-app .rx-grid-inline{ grid-template-columns: minmax(0, 1fr) !important; }
+}
+.wm-app .wm-form-grid.rx-grid-4{ grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+.wm-app .wm-form-row.rx-field-short{ max-width: 360px; }
+@media (max-width: 760px){ .wm-app .wm-form-grid.rx-grid-4{ grid-template-columns: repeat(2, minmax(0, 1fr)) !important; } }
+@media (max-width: 420px){ .wm-app .wm-form-grid.rx-grid-4{ grid-template-columns: minmax(0, 1fr) !important; } }
+
+/* ---------------------------------------------------------------- GEN-03 people pickers: Name / Job title · Email */
+.rx-combo-person{ display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.rx-combo-person > span{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rx-combo-person small{ font-size: 12px; font-weight: 400; color: var(--rx-ink-3, #5a6270); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rx-combo-opt[aria-selected="true"] .rx-combo-person small{ color: var(--rx-ink-3, #5a6270); }
+
+/* ---------------------------------------------------------------- GEN-03 people pickers: Name / Job title · Email */
+.rx-combo-person{ display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.rx-combo-person > span{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rx-combo-person small{ font-size: 12px; font-weight: 400; color: var(--rx-ink-3, #5a6270); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------------------------------------------------------------- WM-01 worklog grid: one thin neutral line per cell
+   (was separate borders with 2px spacing = double lines). Right/bottom lines only, so sticky columns keep theirs. */
+.wm-app table.wm-worklog-grid{ border-collapse: separate !important; border-spacing: 0 !important; }
+.wm-app table.wm-worklog-grid th, .wm-app table.wm-worklog-grid td{ border: 0 !important; border-right: 1px solid var(--rx-hairline, #e4e7ec) !important; border-bottom: 1px solid var(--rx-hairline, #e4e7ec) !important; }
+.wm-app table.wm-worklog-grid tr > :last-child{ border-right: 0 !important; }
+.wm-app table.wm-worklog-grid tr.wm-grid-footer-row td{ border-bottom: 0 !important; border-right-color: rgba(255,255,255,.12) !important; }
+.wm-app table.wm-worklog-grid td.wm-grid-cell.has-value{ box-shadow: none !important; }
+
+/* ---------------------------------------------------------------- WM-02 notification colours, WM-03 Important tab
+   Unread = soft blue card, read = white card; no coloured stripe on the left. Important is shown by the filled star. */
+.wm-app .wm-notif-item, .wm-app .wm-notif-item.important{ background: #fff !important; border: 1px solid var(--rx-hairline, #e4e7ec) !important; box-shadow: none !important; }
+.wm-app .wm-notif-item.unread, .wm-app .wm-notif-item.unread.important{ background: #eaf2ff !important; border-color: #d3e3fb !important; box-shadow: none !important; }
+.wm-app .wm-notif-item:hover{ background: #f6f8fb !important; }
+.wm-app .wm-notif-item.unread:hover{ background: #e0ecff !important; }
+.wm-app .wm-notif-star-btn.active{ color: #b7791f !important; }
+.wm-app .wm-notif-tabs{ display: flex; gap: 4px; padding: 0 2px 8px; }
+.wm-app .wm-notif-tabs button{ border: 1px solid transparent; background: transparent; border-radius: 999px; padding: 4px 12px; font: inherit; font-size: 13px; font-weight: 600; color: var(--rx-ink-2, #3b4350); cursor: pointer; }
+.wm-app .wm-notif-tabs button[aria-selected="true"]{ background: var(--rx-ink-1, #141a22); color: #fff; }
+.wm-app .wm-notif-tabs button:focus-visible{ outline: 2px solid var(--rx-accent, #1a5fd0); outline-offset: 2px; }
+:root[data-rx-mode="dark"] .wm-app .wm-notif-item, :root[data-rx-mode="dark"] .wm-app .wm-notif-item.important{ background: #171c24 !important; border-color: rgba(255,255,255,.08) !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-notif-item.unread, :root[data-rx-mode="dark"] .wm-app .wm-notif-item.unread.important{ background: rgba(120,173,255,.14) !important; border-color: rgba(120,173,255,.28) !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-notif-item:hover{ background: #1d2430 !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-notif-tabs button{ color: #c4ccd8; }
+:root[data-rx-mode="dark"] .wm-app .wm-notif-tabs button[aria-selected="true"]{ background: #2b63c4; color: #fff; }   /* no bright surface in dark mode */
+:root[data-rx-mode="dark"] .wm-app .wm-notif-star-btn.active{ color: #f2bd6b !important; }
+.wm-app .wm-notif-star-btn.active svg{ fill: currentColor !important; }
+
+/* ---------------------------------------------------------------- WM-04 month items: light, no dark left bar */
+.wm-app .wm-cal-chip{ display: block; width: 100%; text-align: left; border: 0 !important; border-left: 0 !important; box-shadow: none !important;
+  background: var(--rx-accent-soft, rgba(26,95,208,.10)) !important; color: var(--rx-ink-1, #141a22) !important; border-radius: 6px !important;
+  font: inherit; font-size: 12px !important; font-weight: 500 !important; margin: 0 0 3px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wm-app .wm-cal-chip:hover{ background: rgba(26,95,208,.18) !important; }
+.wm-app .wm-cal-chip:focus-visible, .wm-app .wm-tl-chip:focus-visible, .wm-app .wm-tl-event:focus-visible{ outline: 2px solid var(--rx-accent, #1a5fd0); outline-offset: 1px; }
+.wm-app .wm-cal-more{ border: 0; background: none; padding: 0 2px; font: inherit; font-size: 12px; font-weight: 600; color: var(--rx-ink-3, #5a6270); cursor: pointer; }
+.wm-app .wm-cal-more:hover{ color: var(--rx-accent, #1a5fd0); text-decoration: underline; }
+:root[data-rx-mode="dark"] .wm-app .wm-cal-chip{ background: rgba(120,173,255,.16) !important; color: #e8ecf2 !important; }
+
+/* ---------------------------------------------------------------- WM-05 title picker */
+.wm-app .wm-cal-nav{ align-items: center !important; gap: 8px !important; }
+.wm-app .wm-cal-title-wrap{ position: relative !important; }
+.wm-app button.wm-cal-title{ display: inline-flex !important; align-items: center !important; gap: 6px !important; border: 1px solid transparent !important; background: none !important; border-radius: var(--rx-radius-md, 10px) !important;
+  padding: 4px 10px !important; font-family: var(--rx-font, Inter, sans-serif) !important; font-size: 20px !important; font-weight: 700 !important; color: var(--rx-ink-1, #141a22) !important; cursor: pointer !important; min-width: 0 !important; text-align: left !important; }
+.wm-app button.wm-cal-title:hover, .wm-app button.wm-cal-title[aria-expanded="true"]{ background: var(--rx-glass-hover-bg, #f2f4f7) !important; border-color: var(--rx-hairline, #e4e7ec) !important; }
+.wm-app .wm-cal-caret{ font-size: 12px !important; color: var(--rx-ink-3, #5a6270) !important; }
+.wm-app .wm-cal-nav .wm-cal-picker{ position: absolute !important; top: calc(100% + 6px) !important; left: 0 !important; z-index: 60 !important; width: 280px !important; padding: 12px !important; background: var(--rx-surface, #fff) !important;
+  border: 1px solid var(--rx-hairline, #e4e7ec) !important; border-radius: 14px !important; box-shadow: 0 16px 40px rgba(16,19,24,.16) !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-head{ display: flex !important; align-items: center !important; justify-content: space-between !important; margin-bottom: 8px !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-head button, .wm-app .wm-cal-nav .wm-cal-picker-months button, .wm-app .wm-cal-nav .wm-cal-picker-days button{ border: 1px solid transparent !important; background: none !important; border-radius: 8px !important; font: inherit !important; color: var(--rx-ink-1, #141a22) !important; cursor: pointer !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-head button{ width: 32px !important; height: 32px !important; font-size: 18px !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-months{ display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 4px !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-months button{ height: 36px !important; font-size: 13px !important; font-weight: 600 !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-days{ display: grid !important; grid-template-columns: repeat(7, 1fr) !important; gap: 2px !important; margin-top: 10px !important; padding-top: 10px !important; border-top: 1px solid var(--rx-hairline, #e4e7ec) !important; text-align: center !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-days span{ font-size: 11px !important; color: var(--rx-ink-3, #5a6270) !important; line-height: 24px !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-days button{ height: 32px !important; font-size: 13px !important; }
+.wm-app .wm-cal-nav .wm-cal-picker-days button[data-today]{ font-weight: 700 !important; color: var(--rx-accent, #1a5fd0) !important; }
+.wm-app .wm-cal-nav .wm-cal-picker button:hover{ background: var(--rx-glass-hover-bg, #f2f4f7) !important; }
+.wm-app .wm-cal-nav .wm-cal-picker button.is-on{ background: var(--rx-ink-1, #141a22) !important; color: #fff !important; }
+.wm-app .wm-cal-nav .wm-cal-picker button:focus-visible{ outline: 2px solid var(--rx-accent, #1a5fd0) !important; outline-offset: 1px !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-cal-nav .wm-cal-picker{ background: #171c24 !important; border-color: rgba(255,255,255,.1) !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-cal-nav .wm-cal-picker button{ color: #e8ecf2 !important; }
+:root[data-rx-mode="dark"] .wm-app .wm-cal-nav .wm-cal-picker button.is-on{ background: #2b63c4 !important; color: #fff !important; }
+:root[data-rx-mode="dark"] .wm-app button.wm-cal-title{ color: #eef2f7 !important; }
+
+/* ---------------------------------------------------------------- WM-06 Week / Day timeline */
+.wm-app .wm-tl{ --wm-tl-gut: 56px; border: 1px solid var(--rx-hairline, #e4e7ec); border-radius: 14px; background: var(--rx-surface, #fff); overflow: hidden; }
+.wm-app .wm-tl-head, .wm-app .wm-tl-allday{ display: grid; grid-template-columns: var(--wm-tl-gut) repeat(var(--wm-tl-cols), minmax(0, 1fr)); border-bottom: 1px solid var(--rx-hairline, #e4e7ec); }
+.wm-app .wm-tl-gutter{ font-size: 11px; color: var(--rx-ink-3, #5a6270); text-align: right; padding: 6px 8px 0 0; }
+.wm-app .wm-tl-dayhead{ display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0; border: 0; border-left: 1px solid var(--rx-hairline, #e4e7ec); background: none; font: inherit; cursor: pointer; color: var(--rx-ink-2, #3b4350); }
+.wm-app .wm-tl-dayhead span{ font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.wm-app .wm-tl-dayhead strong{ font-size: 20px; line-height: 32px; width: 32px; border-radius: 50%; color: var(--rx-ink-1, #141a22); }
+.wm-app .wm-tl-dayhead.is-today strong{ background: var(--rx-ink-1, #141a22); color: #fff; }
+.wm-app .wm-tl-dayhead:hover strong{ background: var(--rx-glass-hover-bg, #f2f4f7); }
+.wm-app .wm-tl-dayhead.is-today:hover strong{ background: var(--rx-ink-1, #141a22); }
+.wm-app .wm-tl-allday-cell{ border-left: 1px solid var(--rx-hairline, #e4e7ec); padding: 4px; min-height: 30px; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.wm-app .wm-tl-chip{ display: block; width: 100%; text-align: left; border: 0; border-radius: 6px; padding: 3px 6px; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer;
+  background: var(--rx-accent-soft, rgba(26,95,208,.10)); color: var(--rx-ink-1, #141a22); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wm-app .wm-tl-scroll{ height: min(62vh, 620px); overflow-y: auto; position: relative; }
+.wm-app .wm-tl-grid{ display: grid; grid-template-columns: var(--wm-tl-gut) repeat(var(--wm-tl-cols), minmax(0, 1fr)); position: relative;
+  background-image: linear-gradient(to bottom, var(--rx-hairline, #e4e7ec) 1px, transparent 1px); background-size: 100% 48px; }
+.wm-app .wm-tl-hours{ position: relative; padding: 0; background: var(--rx-surface, #fff); }
+.wm-app .wm-tl-hours span{ position: absolute; right: 8px; transform: translateY(-50%); font-size: 11px; color: var(--rx-ink-3, #5a6270); }
+.wm-app .wm-tl-col{ position: relative; border-left: 1px solid var(--rx-hairline, #e4e7ec); min-width: 0; }
+.wm-app .wm-tl-col.is-today{ background: rgba(26,95,208,.03); }
+.wm-app .wm-tl-now{ position: absolute; left: 0; right: 0; height: 2px; background: #d6425b; z-index: 3; }
+.wm-app .wm-tl-now::before{ content: ''; position: absolute; left: -5px; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: #d6425b; }
+.wm-app .wm-tl-event{ position: absolute; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; overflow: hidden; text-align: left;
+  padding: 3px 6px; border: 1px solid rgba(26,95,208,.25); border-radius: 6px; background: #e3edff; color: #102a54; font: inherit; font-size: 12px; cursor: pointer; }
+.wm-app .wm-tl-event strong{ font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wm-app .wm-tl-event span{ font-size: 11px; color: #3a4f75; white-space: nowrap; }
+.wm-app .wm-tl-event:hover{ background: #d5e4ff; z-index: 4; }
+:root[data-rx-mode="dark"] .wm-app .wm-tl{ background: #121821; border-color: rgba(255,255,255,.08); }
+:root[data-rx-mode="dark"] .wm-app .wm-tl-hours{ background: #121821; }
+:root[data-rx-mode="dark"] .wm-app .wm-tl-dayhead strong{ color: #e8ecf2; }
+:root[data-rx-mode="dark"] .wm-app .wm-tl-dayhead.is-today strong{ background: #2b63c4; color: #fff; }
+:root[data-rx-mode="dark"] .wm-app .wm-tl-chip{ background: rgba(120,173,255,.16); color: #e8ecf2; }
+:root[data-rx-mode="dark"] .wm-app .wm-tl-event{ background: #1f3354; border-color: rgba(120,173,255,.35); color: #e8ecf2; }
+:root[data-rx-mode="dark"] .wm-app .wm-tl-event span{ color: #b9c8e3; }
+@media (max-width: 760px){
+  .wm-app .wm-cal-head{ flex-wrap: wrap; gap: 8px; }
+  .wm-app .wm-cal-nav{ flex-wrap: wrap !important; }
+  .wm-app .wm-cal-title-wrap{ flex: 1 0 100%; }
+  .wm-app button.wm-cal-title{ font-size: 16px !important; }
+  .wm-app .wm-tl{ --wm-tl-gut: 40px; }
+  .wm-app .wm-tl-dayhead strong{ font-size: 15px; width: 26px; line-height: 26px; }
+  .wm-app .wm-tl-event span{ display: none; }
+}
+
+/* ---------------------------------------------------------------- DOC-01 Document sidebar chevrons */
+#rexusDocsShell .rd-chev{ width: 14px; height: 14px; display: block; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s ease; }
+#rexusDocsShell .rd-section-chevron, #rexusDocsShell .rd-chevron, #rexusDocsShell .rd-tree-toggle{ display: inline-grid !important; place-items: center; width: 20px; height: 20px; flex: 0 0 20px; color: var(--rx-ink-3, #5a6270) !important; font-size: 0 !important; }
+#rexusDocsShell .rd-tree-toggle{ border: 0 !important; background: none !important; border-radius: 6px !important; padding: 0 !important; cursor: pointer; }
+#rexusDocsShell .rd-tree-toggle:hover, #rexusDocsShell .rd-section-toggle:hover .rd-section-chevron{ background: var(--rx-glass-hover-bg, #eef1f5) !important; border-radius: 6px; color: var(--rx-ink-1, #141a22) !important; }
+#rexusDocsShell [aria-expanded="false"] > .rd-section-chevron .rd-chev, #rexusDocsShell .rd-tree-toggle[aria-expanded="false"] .rd-chev{ transform: rotate(-90deg); }
+#rexusDocsShell .rd-space-switch[aria-expanded="true"] .rd-chev{ transform: rotate(180deg); }
+#rexusDocsShell .rd-section-toggle{ display: flex !important; align-items: center; gap: 4px; }
+#rexusDocsShell .rd-space-switch-label{ display: flex !important; align-items: center; justify-content: space-between; gap: 6px; }
+#rexusDocsShell .rd-section-toggle:focus-visible, #rexusDocsShell .rd-tree-toggle:focus-visible, #rexusDocsShell .rd-space-switch:focus-visible{ outline: 2px solid var(--rx-accent, #1a5fd0); outline-offset: 2px; }

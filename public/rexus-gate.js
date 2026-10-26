@@ -4,7 +4,8 @@
        Change temporary password → Complete personal profile → Mandatory survey(s) → workspace.
      No Skip / Close / Dashboard. The server enforces the same order on every API call; this screen only
      shows it. After the last step the page reloads into the normal workspace.
-   - REXUSSurveyForm.mount(host, data, opts): one-question-at-a-time form, shared by the mandatory flow,
+   - REXUSSurveyForm.mount(host, data, opts): page-by-page form (one question per page, or one section per page
+     with branching — v2.3.4), shared by the mandatory flow,
      the Survey workspace ("Surveys for me", preview) and the public survey page.
    - REXUSGate.mountProfile(host, opts): personal information form (onboarding, My Account, admin view).
    ========================================================================== */
@@ -29,10 +30,11 @@
     if (q.type === 'number') { var x = Number(v); if (!isFinite(x)) return 'Enter a number.'; if ((q.min !== null && q.min !== undefined && x < q.min) || (q.max !== null && q.max !== undefined && x > q.max)) return 'Enter a number' + (q.min != null ? ' from ' + q.min : '') + (q.max != null ? ' to ' + q.max : '') + '.'; }
     return null;
   }
-  function questionHtml(q, i, total, v, err) {
-    var name = 'svq_' + q.id, req = q.required ? ' <span class="sv-req" aria-hidden="true">*</span>' : '';
-    var head = '<div class="sv-q-meta"><span>Question ' + String(i + 1).padStart(2, '0') + ' · ' + esc(TYPE_LABEL[q.type] || q.type) + '</span>' + (q.required ? '<span class="rx-chip rx-chip-warning">Required</span>' : '<span class="rx-chip rx-chip-neutral">Optional</span>') + '</div>' +
-      '<h2 class="sv-q-title" id="svqt_' + q.id + '">' + esc(q.title) + req + '</h2>' + (q.description ? '<p class="sv-q-help">' + esc(q.description) + '</p>' : '');
+  /* SUR-02/03: respondents see the question, its help text, the answers and the required mark only —
+     no technical numbering, type label or decorative dots (those stay in the builder). */
+  function questionHtml(q, v, err) {
+    var name = 'svq_' + q.id, req = q.required ? ' <span class="sv-req" aria-hidden="true">*</span><span class="rx-sr-only"> (required)</span>' : '';
+    var head = '<h2 class="sv-q-title" id="svqt_' + q.id + '">' + esc(q.title) + req + '</h2>' + (q.description ? '<p class="sv-q-help">' + esc(q.description) + '</p>' : '');
     var body = '', lab = ' aria-labelledby="svqt_' + q.id + '"', invalid = err ? ' aria-invalid="true" aria-describedby="sverr_' + q.id + '"' : '';
     if (q.type === 'short') body = '<input class="sv-input" name="' + name + '" maxlength="' + q.max_length + '" value="' + esc(v || '') + '"' + lab + invalid + '>';
     else if (q.type === 'long') body = '<textarea class="sv-input" rows="5" name="' + name + '" maxlength="' + q.max_length + '"' + lab + invalid + '>' + esc(v || '') + '</textarea><div class="sv-count">' + String(v || '').length + ' / ' + q.max_length + '</div>';
@@ -43,7 +45,7 @@
     else if (q.type === 'dropdown') body = '<select class="sv-input" name="' + name + '"' + lab + invalid + '><option value="">Select an answer…</option>' + q.options.map(function (o) { return '<option' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('') + '</select>';
     else if (q.type === 'rating' || q.type === 'scale') {
       var lo = q.type === 'rating' ? 1 : q.min, nums = []; for (var n = lo; n <= q.max; n++) nums.push(n);
-      body = '<div class="sv-scale" role="radiogroup"' + lab + invalid + '>' + nums.map(function (n) { return '<button type="button" class="sv-scale-btn" role="radio" aria-checked="' + (Number(v) === n) + '" data-val="' + n + '">' + (q.type === 'rating' ? '<span aria-hidden="true">★</span> ' : '') + n + '</button>'; }).join('') + '</div>' +
+      body = '<div class="sv-scale" role="radiogroup" data-q="' + q.id + '"' + lab + invalid + '>' + nums.map(function (n) { return '<button type="button" class="sv-scale-btn" role="radio" aria-checked="' + (Number(v) === n) + '" data-val="' + n + '">' + (q.type === 'rating' ? '<span aria-hidden="true">★</span> ' : '') + n + '</button>'; }).join('') + '</div>' +
         (q.type === 'scale' && (q.min_label || q.max_label) ? '<div class="sv-scale-labels"><span>' + esc(q.min_label) + '</span><span>' + esc(q.max_label) + '</span></div>' : '');
     }
     else if (q.type === 'date') body = '<input class="sv-input sv-input-sm" type="date" name="' + name + '" value="' + esc(v || '') + '"' + lab + invalid + '>';
@@ -51,70 +53,112 @@
     return head + '<div class="sv-q-input">' + body + '</div>' + (err ? '<p class="sv-error" id="sverr_' + q.id + '" role="alert">' + esc(err) + '</p>' : '');
   }
 
+  /* SUR-04/05: a form is shown page by page. Without sections every question is its own page (as before, with the
+     question navigator). With sections each section is a page; after a page, the chosen answer of a single-choice
+     question may jump forward to a section or end the form. The same rule runs on the server (lib/survey.mts
+     answerPath); only questions on the path are checked and submitted. */
+  function formPages(items) {
+    var sectioned = items.some(function (q) { return q.type === 'section'; });
+    if (!sectioned) return items.map(function (q) { return { section: null, questions: [q] }; });
+    var out = [{ section: null, questions: [] }];
+    items.forEach(function (q) { if (q.type === 'section') out.push({ section: q, questions: [] }); else out[out.length - 1].questions.push(q); });
+    return out[0].questions.length ? out : out.slice(1);
+  }
+
   /** data = {survey, questions, respondent}; opts = {fullscreen, mandatory, queue:'1 of 2', preview, onDone(result), onSignOut} */
   function surveyForm(host, data, opts) {
     opts = opts || {};
-    var s = data.survey, qs = data.questions, who = data.respondent;
+    var s = data.survey, items = data.questions, who = data.respondent;
+    var qs = items.filter(function (q) { return q.type !== 'section'; }), P = formPages(items), sectioned = qs.length !== items.length;
+    var secAt = {}; P.forEach(function (pg, i) { if (pg.section) secAt[pg.section.id] = i; });
     var draftKey = 'sv-draft-' + s.id + '-' + s.version_id, tokKey = 'sv-token-' + s.id;
-    var answers = (!opts.preview && store('localStorage', draftKey)) || {}, idx = 0, errs = {}, busy = false, banner = '';
+    var answers = (!opts.preview && store('localStorage', draftKey)) || {}, hist = [0], errs = {}, busy = false, banner = '';
+    function cur() { return hist[hist.length - 1]; }
+    function nextPage(p) {
+      var next = p + 1;
+      P[p].questions.forEach(function (q) { var r = q.type === 'single' && q.routes ? q.routes[String(answers[q.id] == null ? '' : answers[q.id])] : undefined; if (r === 'end') next = P.length; else if (r && secAt[r] > p) next = secAt[r]; });
+      return next;
+    }
+    function pathQuestions() { var out = [], p = 0; while (p < P.length) { out = out.concat(P[p].questions); p = nextPage(p); } return out; }
     function answeredCount() { return qs.filter(function (q) { return !blank(answers[q.id]); }).length; }
-    function render(focusQ) {
-      var q = qs[idx], last = idx === qs.length - 1, pct = Math.round((idx + 1) * 100 / qs.length);
-      host.innerHTML = '<div class="sv-form' + (opts.fullscreen ? ' sv-fullscreen' : '') + '">' +
-        (opts.fullscreen ? topBar(s.name, opts.mandatory ? 'Required' + (opts.queue ? ' · ' + opts.queue : '') : '', who, opts.onSignOut) : '') +
-        '<section class="sv-form-head"><div><p class="sv-eyebrow"><span class="sv-dot" aria-hidden="true"></span>' + esc(s.name) + '</p><h1>' + esc(opts.preview ? 'Preview' : (s.mandatory ? 'Required survey' : 'Survey')) + '</h1>' +
-          '<p class="sv-muted">' + (opts.preview ? 'This is how respondents will see the survey. Answers are not saved.' : 'Answer all required questions to complete the survey.') + '</p></div>' +
-          '<div class="sv-counter"><strong>' + String(idx + 1).padStart(2, '0') + '</strong> / ' + qs.length + '<small>Questions completed: ' + answeredCount() + '</small></div></section>' +
-        '<div class="sv-progress" role="progressbar" aria-label="Survey progress" aria-valuemin="1" aria-valuemax="' + qs.length + '" aria-valuenow="' + (idx + 1) + '"><span style="width:' + pct + '%"></span></div>' +
-        '<div class="sv-body"><main class="sv-q" aria-live="polite">' + (banner ? '<div class="sv-banner" role="alert">' + banner + '</div>' : '') + questionHtml(q, idx, qs.length, answers[q.id], errs[q.id]) +
+    function actionsHtml() {
+      var last = nextPage(cur()) >= P.length;
+      return '<button type="button" class="sv-btn" data-prev' + (hist.length === 1 ? ' disabled' : '') + '>Back</button>' +
+        (last ? '<button type="button" class="sv-btn sv-btn-primary" data-submit' + (busy ? ' disabled aria-busy="true"' : '') + '>' + (busy ? 'Submitting…' : opts.preview ? 'Finish preview' : 'Submit survey') + '</button>'
+              : '<button type="button" class="sv-btn sv-btn-primary" data-next>' + (sectioned ? 'Next' : 'Next question') + '</button>');
+    }
+    function render(focus) {
+      var p = cur(), page = P[p], pct = Math.round((p + 1) * 100 / P.length);
+      var counter = sectioned ? '<div class="sv-counter"><strong>' + (p + 1) + '</strong> / ' + P.length + '<small>Sections</small></div>'
+        : '<div class="sv-counter"><strong>' + String(p + 1).padStart(2, '0') + '</strong> / ' + qs.length + '<small>Questions completed: ' + answeredCount() + '</small></div>';
+      host.innerHTML = '<div class="sv-form' + (opts.fullscreen ? ' sv-fullscreen' : '') + (sectioned ? ' is-sectioned' : '') + '">' +
+        (opts.fullscreen ? topBar(s.name, opts.mandatory ? 'Required survey' + (opts.queue ? ' (' + opts.queue + ')' : '') : '', who, opts.onSignOut) : '') +
+        '<section class="sv-form-head"><div><p class="sv-eyebrow">' + esc(s.name) + '</p><h1>' + esc(opts.preview ? 'Preview' : (s.mandatory ? 'Required survey' : 'Survey')) + '</h1>' +
+          '<p class="sv-muted">' + (opts.preview ? 'This is how respondents will see the survey. Answers are not saved.' : 'Questions marked <span class="sv-req" aria-hidden="true">*</span> are required.') + '</p></div>' + counter + '</section>' +
+        '<div class="sv-progress" role="progressbar" aria-label="Survey progress" aria-valuemin="1" aria-valuemax="' + P.length + '" aria-valuenow="' + (p + 1) + '"><span style="width:' + pct + '%"></span></div>' +
+        '<div class="sv-body"><main class="sv-q" aria-live="polite">' + (banner ? '<div class="sv-banner" role="alert">' + banner + '</div>' : '') +
+          (page.section ? '<header class="sv-section-head"><h2>' + esc(page.section.title || 'Untitled section') + '</h2>' + (page.section.description ? '<p class="sv-q-help">' + esc(page.section.description) + '</p>' : '') + '</header>' : '') +
+          page.questions.map(function (q) { return '<div class="sv-q-block" data-q="' + q.id + '">' + questionHtml(q, answers[q.id], errs[q.id]) + '</div>'; }).join('') +
           '<p class="sv-note">You can go back and change an answer before submitting.</p></main>' +
-          '<aside class="sv-nav" aria-label="Question navigator"><p class="sv-eyebrow">Survey progress</p><h3>Question navigator</h3><p class="sv-muted">You are on question ' + (idx + 1) + ' of ' + qs.length + '.</p>' +
-          '<div class="sv-nav-grid">' + qs.map(function (x, i) { return '<button type="button" data-go="' + i + '" class="' + (i === idx ? 'is-current' : '') + (blank(answers[x.id]) ? '' : ' is-done') + (errs[x.id] ? ' is-error' : '') + '" aria-label="Question ' + (i + 1) + (blank(answers[x.id]) ? '' : ', answered') + (errs[x.id] ? ', needs attention' : '') + '"' + (i === idx ? ' aria-current="step"' : '') + '>' + (i + 1) + '</button>'; }).join('') + '</div>' +
-          '<h4>Completion rule</h4><p class="sv-muted">All required answers are checked when you submit.</p>' +
+          '<aside class="sv-nav" aria-label="' + (sectioned ? 'About this survey' : 'Question navigator') + '">' +
+          (sectioned ? '' : '<p class="sv-eyebrow">Survey progress</p><h3>Question navigator</h3><p class="sv-muted">You are on question ' + (p + 1) + ' of ' + qs.length + '.</p>' +
+            '<div class="sv-nav-grid">' + qs.map(function (x, i) { return '<button type="button" data-go="' + i + '" class="' + (i === p ? 'is-current' : '') + (blank(answers[x.id]) ? '' : ' is-done') + (errs[x.id] ? ' is-error' : '') + '" aria-label="Question ' + (i + 1) + (blank(answers[x.id]) ? '' : ', answered') + (errs[x.id] ? ', needs attention' : '') + '"' + (i === p ? ' aria-current="step"' : '') + '>' + (i + 1) + '</button>'; }).join('') + '</div>') +
+          '<h4>Completion rule</h4><p class="sv-muted">' + (sectioned ? 'Each section is checked when you continue. Some answers lead to a different next section.' : 'All required answers are checked when you submit.') + '</p>' +
           (s.mode === 'authenticated' ? '<h4>Your identity</h4><p class="sv-muted">Responses are linked to your signed-in REXUS account' + (who ? ' (' + esc(who.name) + ')' : '') + '. It cannot be changed here.</p>' : '<h4>No account needed</h4><p class="sv-muted">This survey does not record who answers.</p>') +
           '</aside></div>' +
-        '<footer class="sv-actions"><span class="sv-status">' + (opts.mandatory ? '<span class="sv-dot" aria-hidden="true"></span><strong>Required survey in progress</strong> <span class="sv-muted">Other REXUS modules stay unavailable until it is submitted.</span>' : '') + '</span>' +
-          '<button type="button" class="sv-btn" data-prev' + (idx === 0 ? ' disabled' : '') + '>← Previous</button>' +
-          (last ? '<button type="button" class="sv-btn sv-btn-primary" data-submit' + (busy ? ' disabled aria-busy="true"' : '') + '>' + (busy ? 'Submitting…' : opts.preview ? 'Finish preview' : 'Submit survey') + '</button>'
-                : '<button type="button" class="sv-btn sv-btn-primary" data-next>Next question →</button>') + '</footer></div>';
+        '<footer class="sv-actions"><span class="sv-status">' + (opts.mandatory ? '<strong>Required survey in progress.</strong> <span class="sv-muted">Other REXUS modules stay unavailable until it is submitted.</span>' : '') + '</span>' +
+          '<span class="sv-action-btns">' + actionsHtml() + '</span></footer></div>';
       wire();
-      if (focusQ) {   // move focus to the new question (or to its input when it has an error)
-        var f = host.querySelector('.sv-q input, .sv-q textarea, .sv-q select, .sv-q .sv-scale-btn'), t = host.querySelector('.sv-q-title'), target = errs[q.id] && f ? f : t;
+      if (focus) {   // move focus to the first question of the page, or to the first field with an error
+        var bad = page.questions.filter(function (q) { return errs[q.id]; })[0];
+        var f = bad && host.querySelector('[data-q="' + bad.id + '"] input, [data-q="' + bad.id + '"] textarea, [data-q="' + bad.id + '"] select, [data-q="' + bad.id + '"] .sv-scale-btn');
+        var t = page.section ? host.querySelector('.sv-section-head h2') : host.querySelector('.sv-q-title');
+        var target = f || t;
         if (target) { if (target === t) t.setAttribute('tabindex', '-1'); target.focus(); }
       }
     }
     function save() { if (!opts.preview) store('localStorage', draftKey, answers); }
-    function readCurrent() {
-      var q = qs[idx], name = 'svq_' + q.id, f = host.querySelector('.sv-q');
+    function readQ(q) {
+      var name = 'svq_' + q.id, f = host.querySelector('[data-q="' + q.id + '"]'); if (!f) return;
       if (q.type === 'single') { var c = f.querySelector('input[name="' + name + '"]:checked'); answers[q.id] = c ? c.value : ''; }
       else if (q.type === 'multiple') answers[q.id] = [].slice.call(f.querySelectorAll('input[name="' + name + '"]:checked')).map(function (x) { return x.value; });
       else if (q.type === 'rating' || q.type === 'scale') { /* set on click */ }
       else { var e = f.querySelector('[name="' + name + '"]'); if (e) answers[q.id] = q.type === 'number' ? (e.value === '' ? '' : Number(e.value)) : e.value; }
-      save();
     }
-    function go(i) { readCurrent(); idx = Math.max(0, Math.min(qs.length - 1, i)); render(true); }
-    function wire() {
-      var q = qs[idx];
-      host.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { go(+b.dataset.go); }; });
-      host.querySelector('[data-prev]').onclick = function () { go(idx - 1); };
-      var nx = host.querySelector('[data-next]'); if (nx) nx.onclick = function () { readCurrent(); var e = checkAnswer(q, answers[q.id]); if (e) { errs[q.id] = e; render(true); return; } delete errs[q.id]; go(idx + 1); };
+    function readPage() { P[cur()].questions.forEach(readQ); save(); }
+    function checkPage() { var ok = true; P[cur()].questions.forEach(function (q) { var e = checkAnswer(q, answers[q.id]); if (e) { errs[q.id] = e; ok = false; } else delete errs[q.id]; }); return ok; }
+    function refreshActions() { host.querySelector('.sv-action-btns').innerHTML = actionsHtml(); wireActions(); }
+    function wireActions() {
+      host.querySelector('[data-prev]').onclick = function () { readPage(); if (hist.length > 1) hist.pop(); banner = ''; render(true); };
+      var nx = host.querySelector('[data-next]'); if (nx) nx.onclick = function () { readPage(); if (!checkPage()) { render(true); return; } banner = ''; hist.push(nextPage(cur())); render(true); };
       var sb = host.querySelector('[data-submit]'); if (sb) sb.onclick = submit;
-      host.querySelectorAll('.sv-scale-btn').forEach(function (b) { b.onclick = function () { answers[q.id] = Number(b.dataset.val); delete errs[q.id]; save(); host.querySelectorAll('.sv-scale-btn').forEach(function (x) { x.setAttribute('aria-checked', String(x === b)); }); updateNav(); }; });
-      host.querySelectorAll('.sv-scale').forEach(function (g) { g.onkeydown = function (e) { if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return; var bs = [].slice.call(g.querySelectorAll('button')), i = bs.indexOf(document.activeElement); if (i < 0) return; e.preventDefault(); var n = bs[Math.max(0, Math.min(bs.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)))]; n.focus(); n.click(); }; });
-      host.querySelectorAll('.sv-option input').forEach(function (inp) { inp.onchange = function () { host.querySelectorAll('.sv-option').forEach(function (l) { l.classList.toggle('is-on', l.querySelector('input').checked); }); readCurrent(); delete errs[q.id]; updateNav(); }; });
-      var ta = host.querySelector('.sv-q textarea'); if (ta) ta.oninput = function () { host.querySelector('.sv-count').textContent = ta.value.length + ' / ' + q.max_length; readCurrent(); };
-      host.querySelectorAll('.sv-q input:not([type=radio]):not([type=checkbox]), .sv-q select').forEach(function (inp) { inp.oninput = inp.onchange = function () { readCurrent(); updateNav(); }; inp.onkeydown = function (e) { if (e.key === 'Enter' && inp.tagName === 'INPUT') { e.preventDefault(); (host.querySelector('[data-next]') || host.querySelector('[data-submit]')).click(); } }; });
     }
-    function updateNav() { var b = host.querySelector('[data-go="' + idx + '"]'); if (b) b.classList.toggle('is-done', !blank(answers[qs[idx].id])); var c = host.querySelector('.sv-counter small'); if (c) c.textContent = 'Questions completed: ' + answeredCount(); }
+    function wire() {
+      wireActions();
+      host.querySelectorAll('[data-go]').forEach(function (b) { b.onclick = function () { readPage(); var i = +b.dataset.go; hist = []; for (var k = 0; k <= i; k++) hist.push(k); render(true); }; });
+      host.querySelectorAll('.sv-scale-btn').forEach(function (b) { b.onclick = function () { var g = b.closest('.sv-scale'), id = g.dataset.q; answers[id] = Number(b.dataset.val); delete errs[id]; save(); g.querySelectorAll('.sv-scale-btn').forEach(function (x) { x.setAttribute('aria-checked', String(x === b)); }); updateNav(); }; });
+      host.querySelectorAll('.sv-scale').forEach(function (g) { g.onkeydown = function (e) { if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return; var bs = [].slice.call(g.querySelectorAll('button')), i = bs.indexOf(document.activeElement); if (i < 0) return; e.preventDefault(); var n = bs[Math.max(0, Math.min(bs.length - 1, i + (e.key === 'ArrowRight' ? 1 : -1)))]; n.focus(); n.click(); }; });
+      host.querySelectorAll('.sv-option input').forEach(function (inp) { inp.onchange = function () { var blk = inp.closest('.sv-q-block'); blk.querySelectorAll('.sv-option').forEach(function (l) { l.classList.toggle('is-on', l.querySelector('input').checked); }); readPage(); delete errs[blk.dataset.q]; updateNav(); refreshActions(); }; });
+      host.querySelectorAll('.sv-q textarea').forEach(function (ta) { ta.oninput = function () { var blk = ta.closest('.sv-q-block'), q = qs.filter(function (x) { return x.id === blk.dataset.q; })[0]; blk.querySelector('.sv-count').textContent = ta.value.length + ' / ' + q.max_length; readPage(); }; });
+      host.querySelectorAll('.sv-q input:not([type=radio]):not([type=checkbox]), .sv-q select').forEach(function (inp) { inp.oninput = inp.onchange = function () { readPage(); updateNav(); }; inp.onkeydown = function (e) { if (e.key === 'Enter' && inp.tagName === 'INPUT') { e.preventDefault(); (host.querySelector('[data-next]') || host.querySelector('[data-submit]')).click(); } }; });
+    }
+    function updateNav() {
+      P[cur()].questions.forEach(function (q) { var b = host.querySelector('[data-go="' + qs.indexOf(q) + '"]'); if (b) b.classList.toggle('is-done', !blank(answers[q.id])); });
+      var c = host.querySelector('.sv-counter small'); if (c && !sectioned) c.textContent = 'Questions completed: ' + answeredCount();
+    }
+    function backTo(qid) {   // show the page holding a question that needs attention
+      var at = -1; P.forEach(function (pg, i) { if (pg.questions.some(function (q) { return q.id === qid; })) at = i; });
+      if (at === -1) return; var k = hist.indexOf(at); if (k !== -1) hist = hist.slice(0, k + 1); else hist.push(at);
+    }
     function submit() {
-      readCurrent();
-      errs = {}; qs.forEach(function (q) { var e = checkAnswer(q, answers[q.id]); if (e) errs[q.id] = e; });
-      var first = qs.findIndex(function (q) { return errs[q.id]; });
-      if (first !== -1) { idx = first; banner = 'Some answers need attention before you can submit.'; render(true); return; }
+      readPage();
+      if (!checkPage()) { render(true); return; }
+      var path = pathQuestions(), bad = path.filter(function (q) { var e = checkAnswer(q, answers[q.id]); if (e) errs[q.id] = e; return !!e; })[0];
+      if (bad) { backTo(bad.id); banner = 'Some answers need attention before you can submit.'; render(true); return; }
       if (opts.preview) { banner = ''; if (opts.onDone) opts.onDone({ preview: true }); return; }
       var tk = store('sessionStorage', tokKey) || token(); store('sessionStorage', tokKey, tk);   // same token on retry → counted once
       busy = true; banner = ''; render();
-      var payload = {}; qs.forEach(function (q) { if (!blank(answers[q.id])) payload[q.id] = answers[q.id]; });
+      var payload = {}; path.forEach(function (q) { if (!blank(answers[q.id])) payload[q.id] = answers[q.id]; });   // skipped sections are not sent
       api('/api/survey-respond', 'POST', { id: s.id, version_id: s.version_id, client_token: tk, answers: payload }).then(function (r) {
         store('localStorage', draftKey, null); store('sessionStorage', tokKey, null);
         if (opts.onDone) opts.onDone(r);
@@ -123,8 +167,8 @@
         var d = e.data || {};
         if (d.already || d.closed) { store('localStorage', draftKey, null); store('sessionStorage', tokKey, null); if (opts.onDone) return opts.onDone({ already: d.already, closed: d.closed, message: e.message }); }
         if (d.reload && opts.onReload) return opts.onReload();
-        if (d.question) { var i = qs.findIndex(function (q) { return q.id === d.question; }); if (i !== -1) { idx = i; errs[d.question] = e.message.replace(/^Question \d+: ?/, ''); } }
-        banner = e.status ? esc(e.message) : 'Could not reach the server — your answers are kept on this device. <button type="button" class="sv-link" data-retry>Retry</button>';
+        if (d.question) { backTo(d.question); errs[d.question] = e.message.replace(/^Question \d+:? ?/, '').replace(/^is required\.$/, 'This question is required.'); }
+        banner = d.question ? 'Some answers need attention before you can submit.' : e.status ? esc(e.message) : 'Could not reach the server. Your answers are kept on this device. <button type="button" class="sv-link" data-retry>Retry</button>';
         render(true);
         var rt = host.querySelector('[data-retry]'); if (rt) rt.onclick = submit;
       });
@@ -136,7 +180,7 @@
   function topBar(title, badge, who, onSignOut) {
     return '<header class="sv-top"><div class="sv-brand"><span class="sv-logo" aria-hidden="true">RX</span><strong>REXUS SURVEY</strong>' + (title ? '<span class="sv-top-title">' + esc(title) + '</span>' : '') + '</div>' +
       '<div class="sv-top-right">' + (badge ? '<span class="rx-chip rx-chip-warning sv-badge-req">' + esc(badge) + '</span>' : '') +
-      (who ? '<span class="sv-who"><span class="sv-avatar" aria-hidden="true">' + esc(initials(who.name)) + '</span><span class="sv-who-name">' + esc(who.name) + (who.department ? ' · ' + esc(who.department) : '') + '</span></span>' : '') +
+      (who ? '<span class="sv-who"><span class="sv-avatar" aria-hidden="true">' + esc(initials(who.name)) + '</span><span class="sv-who-name">' + esc(who.name) + (who.department ? '<small>' + esc(who.department) + '</small>' : '') + '</span></span>' : '') +
       (onSignOut ? '<button type="button" class="sv-link" data-signout>Sign out</button>' : '') + '</div></header>';
   }
 
@@ -281,8 +325,8 @@
   function introStep(d, i) {
     var s = d.surveys[i]; if (!s) return finish();
     var queue = d.surveys.length > 1 ? (i + 1) + ' of ' + d.surveys.length : '';
-    var r = shell('<div class="sv-intro">' + topBar(s.name, 'Required survey' + (queue ? ' · ' + queue : ''), who(d), signOut) +
-      '<div class="sv-intro-body"><section class="sv-intro-main"><p class="sv-eyebrow"><span class="sv-dot" aria-hidden="true"></span>Mandatory survey · Internal employee</p>' +
+    var r = shell('<div class="sv-intro">' + topBar(s.name, 'Required survey' + (queue ? ' (' + queue + ')' : ''), who(d), signOut) +
+      '<div class="sv-intro-body"><section class="sv-intro-main"><p class="sv-eyebrow">Mandatory survey for REXUS employees</p>' +
         '<h1>' + esc(s.name) + '</h1>' + (s.description ? '<p class="sv-intro-desc">' + esc(s.description) + '</p>' : '') +
         '<p class="sv-muted">This survey is required before you continue to your REXUS workspace.</p>' +
         '<dl class="sv-stats"><div><dt>Questions</dt><dd>' + s.question_count + '</dd></div><div><dt>Estimated time</dt><dd>~' + s.estimated_minutes + ' min</dd></div><div><dt>Closing date</dt><dd>' + (s.closes_at ? fmtDate(s.closes_at) : 'Open') + '</dd></div></dl>' +

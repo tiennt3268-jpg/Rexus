@@ -10,7 +10,7 @@ import { getDatabase } from "@netlify/database";
 import { getUserFromRequest } from "./lib/auth.mts";
 import { logAudit } from "./lib/rexus-audit.mts";
 import { tx } from "./lib/approvals.mts";
-import { validateAnswers, closedReason, cleanTarget, targetIsEmpty, gateState, newId } from "./lib/survey.mts";
+import { validateAnswers, realQuestions, closedReason, cleanTarget, targetIsEmpty, gateState, newId } from "./lib/survey.mts";
 
 const bad = (error: string, status = 400, extra: any = {}) => Response.json({ error, ...extra }, { status });
 const parseJson = (v: any) => (typeof v === "string" ? JSON.parse(v) : v);
@@ -44,7 +44,7 @@ export default async (req: Request, _ctx: Context) => {
       const who = uid ? (await db.sql`SELECT full_name, username, department, position FROM users WHERE id = ${uid}`)[0] : null;
       return Response.json({
         survey: { id: s.id, name: s.name, description: s.description, mode: s.mode, mandatory: s.mandatory, closes_at: iso(s.closes_at), version_id: version.id,
-          question_count: questions.length, estimated_minutes: Math.max(1, Math.ceil(questions.length * 0.5)) },
+          question_count: realQuestions(questions).length, estimated_minutes: Math.max(1, Math.ceil(realQuestions(questions).length * 0.5)) },
         questions, closed_reason: closedReason(s, await validCount()), answered_at: answered ? iso(answered.submitted_at) : null,
         respondent: who ? { name: who.full_name || who.username, department: who.department || "", position: who.position || "" } : null
       });

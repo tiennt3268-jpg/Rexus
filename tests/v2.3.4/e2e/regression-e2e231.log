@@ -1,0 +1,46 @@
+PASS no hidden duplicate tabs (Resource Planning / Project Financials)
+PASS legacy v2.1.0 screens and auto bulk-copy script are not loaded
+PASS old #/resource-planning link opens HRM → Resource Planning
+PASS old #/project-financials link opens Finance → Project Financials
+PASS Configuration keeps Company info, Task types, Performance-pay rules
+PASS Configuration no longer holds accounts or hourly rates (points to HRM)
+PASS "Open employees in HRM" lands on HRM → Employee Search
+PASS HRM → Employee Search shows the account list for System Admin
+PASS create account form still suggests the username
+PASS account created from HRM shows the temporary password once
+PASS new account listed in HRM
+PASS row click opens the HRM employee record (not a modal)
+PASS System Admin sees Overview, Employment & leave, Personal information, Compensation, Account
+PASS Account tab: onboarding status of a new account is pending
+PASS Edit role/department/status opens the account editor on its Account pane
+PASS account edit saved
+PASS Reset password from the Account tab shows the temporary password
+PASS REXUS221.openEmployee opens the record from any module
+PASS Overview shows account info and linked work (open tasks, projects, hours)
+PASS project link in the record opens Project Detail
+PASS Project Detail shows a finance summary with "Open in Project Finance" (no second ledger)
+PASS "Open in Project Finance" opens that project in Finance → Project Financials
+PASS Personal information tab (System Admin) shows the profile form
+PASS personal information saved from HRM
+PASS Compensation tab: salary history, hourly-rate history and Edit Salary
+PASS Compensation tab (System Admin): hourly-rate editor fixed to this employee
+PASS new hourly rate saved and listed
+PASS HR admin tab renamed to "HR Settings"
+PASS HR Settings shows Profile fields with Apply to existing accounts
+PASS profile fields saved from HR Settings
+PASS Survey navigation no longer has Employee Profiles / Profile Fields
+PASS old #survey/profiles/<id> link opens the HRM record (Personal information)
+PASS old #survey/fields link opens HR Settings
+PASS Finance By Personnel row opens the HRM record on Compensation
+PASS setup: member submits leave
+PASS approval request detail opens
+PASS detail offers "Open related record"
+PASS "Open related record" for leave opens HRM → Leave Management (team calendar)
+PASS Project Manager: no Personal information or Account tab on someone else
+PASS Project Manager Compensation: no hourly-rate editor (rates stay System Admin only)
+PASS Project Manager: no account list in HRM
+PASS Member viewing a colleague: Overview only (no pay, personal or account data)
+PASS Member viewing themself: Personal information tab available
+PASS No JavaScript page errors
+
+44/44 e2e231 checks passed
