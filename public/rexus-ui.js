@@ -481,5 +481,5 @@
   function schedule(){ if (!scheduled) { scheduled = true; requestAnimationFrame(run); } }
   new MutationObserver(schedule).observe(doc.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'hidden'] });
   run();
-  window.REXUSui = { refresh: run, fold: fold, personOption: personOption, personSub: personSub, version: '2.3.4' };
+  window.REXUSui = { refresh: run, fold: fold, personOption: personOption, personSub: personSub, version: '2.3.5' };
 })();

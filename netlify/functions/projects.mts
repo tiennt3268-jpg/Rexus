@@ -1,7 +1,7 @@
 import type { Context, Config } from "@netlify/functions";
 import { getDatabase } from "@netlify/database";
 import { getUserFromRequest, unauthorized } from "./lib/auth.mts";
-import { logActivity } from "./lib/activity-log.mts";
+import { logActivity, changedFields } from "./lib/activity-log.mts";
 import { getFullUser, isManagerOrAdmin, getEffectiveProjectRole, roleCanManage } from "./lib/rbac.mts";
 import { findProjectOwnerAccessibleToUser } from "./lib/collab.mts";
 import { createNotification } from "./lib/notify.mts";
@@ -110,7 +110,7 @@ export default async (req: Request, context: Context) => {
           gantt_enabled = EXCLUDED.gantt_enabled, gantt_auto_schedule = EXCLUDED.gantt_auto_schedule,
           budget = EXCLUDED.budget, workflow_notifications_enabled = EXCLUDED.workflow_notifications_enabled
       `;
-      await logActivity(db, { userId: user.uid, project: p.name, action: "create_project", description: `${user.username} created project "${p.name}"` });
+      await logActivity(db, { userId: user.uid, ownerId: user.uid, project: p.name, action: "create_project", description: `${user.username} created project "${p.name}"` });
       const rows = await db.sql`SELECT * FROM projects WHERE user_id = ${user.uid} AND name = ${p.name}`;
       return Response.json(serializeProject(rows[0], "Owner"));
     }
@@ -171,8 +171,11 @@ export default async (req: Request, context: Context) => {
       if (newName !== name) {
         await db.sql`UPDATE tasks SET project = ${newName} WHERE user_id = ${ownerId} AND project = ${name}`;
         await db.sql`UPDATE project_members SET project = ${newName} WHERE owner_user_id = ${ownerId} AND project = ${name}`;
+        // v2.3.5 LOG-01: the project's timeline follows the rename
+        await db.sql`UPDATE activity_log SET project = ${newName}, entity_id = CASE WHEN entity_type = 'project' THEN ${ownerId + "::" + newName} ELSE entity_id END WHERE owner_id = ${ownerId} AND project = ${name}`;
       }
-      await logActivity(db, { userId: user.uid, project: newName, action: "update_project", description: `${user.username} updated project "${newName}"` });
+      const pchanges = changedFields(current, merged, ["name","deadline","start_date","description","status","owner","budget"].filter(f => f in patch));
+      await logActivity(db, { userId: user.uid, ownerId, project: newName, meta: pchanges.length ? { changes: pchanges } : null, action: "update_project", description: `${user.username} updated project "${newName}"` });
       await notifyProjectMembers(db, ownerId, newName, user.uid, user.username,
         `Project "${newName}" was updated`, `${user.username} updated this project's details.`);
       const finalRows = await db.sql`SELECT * FROM projects WHERE user_id = ${ownerId} AND name = ${newName}`;
@@ -184,7 +187,7 @@ export default async (req: Request, context: Context) => {
       const memberRows = await db.sql`SELECT user_id FROM project_members WHERE owner_user_id = ${user.uid} AND project = ${name}`;
       await db.sql`DELETE FROM projects WHERE user_id = ${user.uid} AND name = ${name}`;
       await db.sql`DELETE FROM project_members WHERE owner_user_id = ${user.uid} AND project = ${name}`;
-      await logActivity(db, { userId: user.uid, project: name, action: "delete_project", description: `${user.username} deleted project "${name}"` });
+      await logActivity(db, { userId: user.uid, ownerId: user.uid, project: name, action: "delete_project", description: `${user.username} deleted project "${name}"` });
       for (const r of memberRows) {
         if (r.user_id === user.uid) continue;
         await createNotification(db, {

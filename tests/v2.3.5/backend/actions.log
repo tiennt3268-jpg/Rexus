@@ -1,0 +1,81 @@
+roles: PM=Manager MEM=Member OUT=undefined
+PASS Migration 037 :: column activity_log.owner_id
+PASS Migration 037 :: column activity_log.subtask_id
+PASS Migration 037 :: column activity_log.meta
+PASS Migration 037 :: column tasks.archived_at
+PASS Migration 037 :: column subtasks.archived_at
+PASS Migration 037 :: alias table
+PASS DTL-01 partial edit :: create task
+PASS DTL-01 partial edit :: assignee saves one field
+PASS DTL-01 partial edit :: reporter kept after partial patch
+PASS DTL-01 partial edit :: dependency kept after partial patch
+PASS DTL-01 partial edit :: labels kept
+PASS DTL-01 partial edit :: stale form refused with 409 + latest copy
+PASS DTL-01 partial edit :: fresh form saves
+PASS DTL-01 partial edit :: project cannot change through edit (Move instead)
+PASS DTL-01 partial edit :: edit without expected_updated_at still works (older clients)
+PASS LOG-01 timeline :: create subtask
+PASS LOG-01 timeline :: task timeline readable by member
+PASS LOG-01 timeline :: task timeline has create_task
+PASS LOG-01 timeline :: task timeline has update_task
+PASS LOG-01 timeline :: task timeline has change_status
+PASS LOG-01 timeline :: task timeline has create_subtask
+PASS LOG-01 timeline :: task timeline has log_work
+PASS LOG-01 timeline :: task timeline has comment
+PASS LOG-01 timeline :: newest first
+PASS LOG-01 timeline :: changed fields recorded (from → to)
+PASS LOG-01 timeline :: actor name included
+PASS LOG-01 timeline :: progress change recorded 0 → 40
+PASS LOG-01 timeline :: subtask timeline: create, log_work, comment
+PASS LOG-01 timeline :: subtask comment stored under the subtask and its task
+PASS LOG-01 timeline :: outsider cannot read task timeline
+PASS LOG-01 timeline :: paging: 2 rows + cursor
+PASS LOG-01 timeline :: next page continues older
+PASS LOG-01 timeline :: project timeline includes task events
+PASS LOG-01 timeline :: client-written events are ignored
+PASS ACT-01 clone :: member cannot clone (cannot create tasks)
+PASS ACT-01 clone :: manager clones with subtasks
+PASS ACT-01 clone :: clone: name, assignee, labels, dates copied; status reset; no deps
+PASS ACT-01 clone :: clone: worklogs and comments not copied
+PASS ACT-01 clone :: assignee clones a subtask
+PASS ACT-01 archive / restore :: outsider cannot archive
+PASS ACT-01 archive / restore :: archive task
+PASS ACT-01 archive / restore :: archived task hidden from list
+PASS ACT-01 archive / restore :: its subtasks hidden too
+PASS ACT-01 archive / restore :: Archived view lists it with archived_at
+PASS ACT-01 archive / restore :: archived task cannot be edited
+PASS ACT-01 archive / restore :: restore
+PASS ACT-01 archive / restore :: archive + restore logged
+PASS ACT-03 move :: second project
+PASS ACT-03 move :: member of destination (not manager) cannot move in
+PASS ACT-03 move :: move task to another project
+PASS ACT-03 move :: same id, new project
+PASS ACT-03 move :: cross-project dependency links removed and reported
+PASS ACT-03 move :: both subtasks (original + clone) and the worklog follow the task
+PASS ACT-03 move :: move logged with from/to and removed links
+PASS ACT-03 move :: subtask assignee without access to the moved task's new project is refused
+PASS ACT-03 move :: admin moves subtask to another task
+PASS ACT-03 move :: its worklog follows
+PASS ACT-03 move :: closed project cost blocks a cross-project move
+PASS ACT-02 convert :: subtask → task
+PASS ACT-02 convert :: worklog moved to the new task
+PASS ACT-02 convert :: old subtask archived + alias
+PASS ACT-02 convert :: old link resolves to the new task
+PASS ACT-02 convert :: outsider cannot resolve
+PASS ACT-02 convert :: new task timeline includes the old subtask history
+PASS ACT-02 convert :: task → subtask
+PASS ACT-02 convert :: worklog follows into the subtask
+PASS ACT-02 convert :: alias chain updated (first id → newest)
+PASS ACT-02 convert :: task with subtasks cannot become a subtask
+PASS ACT-02 convert :: task → project
+PASS ACT-02 convert :: subtask became a task in the new project
+PASS ACT-02 convert :: project members carried over
+PASS ACT-02 convert :: duplicate project name refused
+PASS ACT-02 convert :: member cannot convert
+PASS ACT-02 convert :: a converted task cannot be restored (would duplicate it)
+PASS ACT-02 convert :: Done % is kept within 0–100
+PASS ACT-02 convert :: new project timeline has its creation
+PASS Transactions :: failure inside convert returns 500
+PASS Transactions :: nothing half-done: no new task, subtask not archived
+
+78 / 78 passed

@@ -3,7 +3,7 @@ import { getDatabase } from "@netlify/database";
 import { randomUUID } from "node:crypto";
 import { getUserFromRequest, unauthorized } from "./lib/auth.mts";
 import { canAccessProject } from "./lib/collab.mts";
-import { logActivity } from "./lib/activity-log.mts";
+import { logActivity, changedFields } from "./lib/activity-log.mts";
 import { getFullUser, getEffectiveProjectRole, roleCanManage } from "./lib/rbac.mts";
 import { createNotification } from "./lib/notify.mts";
 
@@ -62,9 +62,11 @@ function serializeSubtask(row: any) {
     attachments: parseJsonArray(row.attachments),
     view_only: !!row.view_only,
     created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
-    updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at
+    updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+    archived_at: row.archived_at instanceof Date ? row.archived_at.toISOString() : (row.archived_at || null)
   };
 }
+const SUBTASK_FIELDS = ["name","status","progress","estimated_hours","reporter","assignee_name","priority","due_date","description","labels"];
 
 async function parentTaskInfo(db: any, taskId: string) {
   const rows = await db.sql`SELECT id, task, user_id, project, assignee_id FROM tasks WHERE id = ${taskId}`;
@@ -82,8 +84,9 @@ export default async (req: Request, context: Context) => {
 
   try {
     if (req.method === "GET") {
+      const withArchived = url.searchParams.get("include_archived") === "1";
       const ownedOrMemberRows = await db.sql`
-        SELECT s.*, false as view_only FROM subtasks s
+        SELECT s.*, t.archived_at AS parent_archived_at, false as view_only FROM subtasks s
         JOIN tasks t ON t.id = s.task_id
         WHERE t.user_id = ${user.uid}
            OR EXISTS (
@@ -93,13 +96,13 @@ export default async (req: Request, context: Context) => {
         ORDER BY s.created_at ASC
       `;
       const taskSharedRows = await db.sql`
-        SELECT s.*, true as view_only FROM subtasks s
+        SELECT s.*, t.archived_at AS parent_archived_at, true as view_only FROM subtasks s
         JOIN tasks t ON t.id = s.task_id
         JOIN shares sh ON sh.entity_type = 'task' AND sh.entity_id = t.id
         WHERE sh.shared_with_user_id = ${user.uid}
       `;
       const projectSharedRows = await db.sql`
-        SELECT s.*, true as view_only FROM subtasks s
+        SELECT s.*, t.archived_at AS parent_archived_at, true as view_only FROM subtasks s
         JOIN tasks t ON t.id = s.task_id
         JOIN shares sh ON sh.entity_type = 'project' AND sh.entity_id = (t.user_id || '::' || t.project)
         WHERE sh.shared_with_user_id = ${user.uid}
@@ -108,7 +111,9 @@ export default async (req: Request, context: Context) => {
       for (const r of [...ownedOrMemberRows, ...taskSharedRows, ...projectSharedRows]) {
         if (!merged[r.id] || !r.view_only) merged[r.id] = r;
       }
-      return Response.json({ subtasks: Object.values(merged).map(serializeSubtask) });
+      // v2.3.5 ACT-01: an archived subtask, or one under an archived task, is hidden outside the Archived view
+      const list = Object.values(merged).filter((r: any) => withArchived || (!r.archived_at && !r.parent_archived_at));
+      return Response.json({ subtasks: list.map((r: any) => { const { parent_archived_at, ...rest } = r; return serializeSubtask(rest); }) });
     }
 
     if (req.method === "POST") {
@@ -149,7 +154,7 @@ export default async (req: Request, context: Context) => {
         RETURNING *
       `;
       await logActivity(db, {
-        userId: user.uid, project: parent.project, taskId: s.task_id, action: "create_subtask",
+        userId: user.uid, project: parent.project, taskId: s.task_id, subtaskId: newId, ownerId: parent.user_id, action: "create_subtask",
         description: `${user.username} created subtask "${s.name}" on task "${parent.task}"`
       });
       if (s.assignee_id && s.assignee_id !== user.uid) {
@@ -183,7 +188,15 @@ export default async (req: Request, context: Context) => {
       }
 
       const patch = await req.json();
-      const merged: any = { ...current, ...patch };
+      if (current.archived_at) return Response.json({ error: "This subtask is archived. Restore it before editing." }, { status: 409 });
+      if (patch.expected_updated_at && new Date(patch.expected_updated_at).getTime() !== new Date(current.updated_at).getTime()) {
+        return Response.json({ error: "This subtask was changed by someone else after you opened it. Reload to see the latest version.", code: "conflict", subtask: serializeSubtask(current) }, { status: 409 });
+      }
+      delete patch.expected_updated_at;
+      if (patch.task_id !== undefined && patch.task_id !== current.task_id) {
+        return Response.json({ error: "Use More > Move to move a subtask to another task." }, { status: 400 });
+      }
+      const merged: any = { ...current, reporter: parseJsonArray(current.reporter), ...patch };
       merged.updated_at = new Date().toISOString();
 
       const reporterList = normalizeReporters(merged.reporter && merged.reporter.length ? merged.reporter : [{ type: "user", id: user.uid, name: user.username }]);
@@ -210,9 +223,12 @@ export default async (req: Request, context: Context) => {
         RETURNING *
       `;
 
+      const changes = changedFields(serializeSubtask(current), serializeSubtask(rows[0]), SUBTASK_FIELDS.filter(f => f in patch));
+      const meta = changes.length ? { changes } : null;
+      const ev = { userId: user.uid, project: parent.project, taskId: current.task_id, subtaskId: id, ownerId: parent.user_id, meta };
       if (patch.status && patch.status !== current.status) {
         await logActivity(db, {
-          userId: user.uid, project: parent.project, taskId: current.task_id, action: "change_status",
+          ...ev, action: "change_status",
           description: `${user.username} changed subtask "${current.name}" status from ${current.status} to ${patch.status}`
         });
         if (current.assignee_id && current.assignee_id !== user.uid) {
@@ -224,7 +240,7 @@ export default async (req: Request, context: Context) => {
         }
       } else if (patch.assignee_id !== undefined && patch.assignee_id !== current.assignee_id) {
         await logActivity(db, {
-          userId: user.uid, project: parent.project, taskId: current.task_id, action: "assign_task",
+          ...ev, action: "assign_task",
           description: `${user.username} assigned subtask "${current.name}" to ${merged.assignee_name || "someone"}`
         });
         if (merged.assignee_id && merged.assignee_id !== user.uid) {
@@ -235,7 +251,7 @@ export default async (req: Request, context: Context) => {
         }
       } else {
         await logActivity(db, {
-          userId: user.uid, project: parent.project, taskId: current.task_id, action: "update_subtask",
+          ...ev, action: "update_subtask",
           description: `${user.username} updated subtask "${current.name}"`
         });
         if (current.assignee_id && current.assignee_id !== user.uid) {
@@ -270,7 +286,7 @@ export default async (req: Request, context: Context) => {
       }
       await db.sql`DELETE FROM subtasks WHERE id = ${id}`;
       await logActivity(db, {
-        userId: user.uid, project: parent.project, taskId: current.task_id, action: "delete_subtask",
+        userId: user.uid, project: parent.project, taskId: current.task_id, subtaskId: id, ownerId: parent.user_id, action: "delete_subtask",
         description: `${user.username} deleted subtask "${current.name}"`
       });
       if (current.assignee_id && current.assignee_id !== user.uid) {

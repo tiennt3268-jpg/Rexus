@@ -1,0 +1,86 @@
+PASS UI-01 buttons, cards, tabs and inputs have square corners
+PASS UI-01 avatars stay round (exception)
+PASS UI-01 keyboard focus stays visible
+PASS UI-02 input padding 6–8 px vertical, 10–12 px horizontal
+PASS UI-02 label-to-input gap 4–6 px
+PASS UI-02 body line-height 1.35–1.45
+PASS PRJ-01 project list shows completion 60% (done scope, not hours)
+PASS PRJ-01 worked example: performance 120 labelled Ahead in green
+PASS PRJ-01 tooltip (keyboard focus) lists estimated, logged, planned earned, earned, SPI and EI
+PASS PRJ-01 project without tasks shows N/A text, no NaN
+PASS PRJ-01 completion never above 100 %
+PASS PRJ-02 Active is green
+PASS PRJ-02 Cancelled is blue
+PASS PRJ-02 unknown status falls back to neutral
+PASS PRJ-01/02 project header: status badge + performance chip + completion
+PASS PRJ-02 task badges use the same map (In Progress = teal)
+PASS DSH-01 five tabs with the exact labels
+PASS DSH-01 every tab count equals its rows, selected tab marked, no page navigation
+PASS DSH-01 Today lists the task due today
+PASS DSH-01 Completed lists closed tasks
+PASS DSH-01 arrow keys move between tabs
+PASS DSH-01 a row opens the task detail
+PASS DSH-01 selected tab kept after returning
+PASS DSH-03 no Progress section or Overall Progress card
+PASS DSH-02 Gantt draws a bar for every dated in-progress task
+PASS DSH-02 tasks without dates are listed, not drawn
+PASS DSH-02 time axis and today marker
+PASS DSH-02 horizontal scrolling container
+PASS DSH-02 dragging a bar does not change dates (read-only)
+PASS DSH-02 "Assigned to me" filter
+PASS DSH-02 clicking a bar opens the task
+PASS DTL-01 default read mode: no form controls in field rows
+PASS DTL-01 empty values read as text ("Not set" / "No labels")
+PASS DTL-03 no Participants panel
+PASS DTL-03 Created by / Created / Last updated shown in Activity at the end
+PASS DTL-02 header actions: Edit, Assign, Comment, More
+PASS DTL-02 old footer buttons are gone from view
+PASS DTL-01 edit icon appears on hover
+PASS DTL-01 edit icon appears on keyboard focus
+PASS DTL-01 single-field edit opens only that field
+PASS DTL-01 Save sends only the changed field (+ version)
+PASS DTL-01 saved value shown in read mode
+PASS LOG-01 change appears in the task timeline with from → to and actor
+PASS DTL-01 leaving with unsaved changes asks first
+PASS DTL-01 cancel / discard keeps the last saved value
+PASS DTL-01 global Edit unlocks all editable fields
+PASS DTL-01 Cancel restores saved values and read mode
+PASS DTL-01 global Save sends just the changed fields
+PASS DTL-01 invalid value (empty name) is refused with a message
+PASS DTL-01 concurrent change → conflict message, nothing overwritten
+PASS DTL-01 conflict kept the other person's edit
+PASS DTL-02 Assign opens the existing user picker
+PASS DTL-02 Comment focuses the composer
+PASS DTL-02 More: Clone, Archive, Move, Convert, Share, Delete
+PASS DTL-02 Escape closes the menu
+PASS ACT-01 clone dialog offers the optional subtask copy
+PASS ACT-01 clone opens the new task with a new ID
+PASS ACT-01 subtasks copied, work logs not
+PASS ACT-01 archived task leaves active lists (All Tasks, every date)
+PASS ACT-01 Archived view lists it
+PASS ACT-01 restore brings it back
+PASS LOG-01 clone, archive and restore are in the timeline
+PASS ACT-03 destination list excludes the current project
+PASS ACT-03 no destination → explained, nothing sent
+PASS ACT-03 task moved, same ID
+PASS ACT-03 breadcrumb shows the new project
+PASS LOG-01 move shows actor, source and destination
+PASS DTL-01 subtask detail also opens in read mode with the action bar
+PASS ACT-02 convert dialog previews the consequences
+PASS ACT-02 subtask → task opens the new task
+PASS ACT-02 old subtask link opens the converted task
+PASS ACT-02 a task with subtasks cannot become a subtask (option disabled)
+PASS ACT-02 preview follows the typed name
+PASS ACT-02 task → project opens the new project with its tasks
+PASS ACT-02 old task link opens the new project
+PASS ACT-02 invalid conversion (name taken) is refused with an explanation
+PASS ACT-01 server refuses archive by someone who cannot edit the task
+PASS LOG-01 people without access cannot read a timeline
+PASS LOG-01 long history pages 50 at a time with Load older
+PASS LOG-01 newest first, consistent order
+PASS DTL-02 More menu stays inside a 375 px screen
+PASS 375 px: no horizontal page overflow on task detail
+PASS 375 px: dashboard tabs and timeline without page overflow
+PASS No JavaScript page errors
+
+84/84 e2e235 checks passed

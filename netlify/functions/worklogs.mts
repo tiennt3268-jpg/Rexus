@@ -71,7 +71,8 @@ export default async (req: Request, context: Context) => {
         RETURNING *
       `;
       await logActivity(db, {
-        userId: user.uid, project: parent.project, taskId: l.task_id, action: "log_work",
+        userId: user.uid, project: parent.project, taskId: l.task_id, subtaskId: l.subtask_id || null, ownerId: parent.user_id, action: "log_work",
+        meta: { worklog_id: newId, hours: Number(l.hours) || 0, date: l.date },
         description: `${user.username} logged ${l.hours}h on task "${parent.task}"`
       });
       return Response.json(serializeLog(rows[0]));
@@ -106,7 +107,7 @@ export default async (req: Request, context: Context) => {
         RETURNING *
       `;
       await logActivity(db, {
-        userId: user.uid, project: parent.project, taskId: current.task_id, action: "update_log",
+        userId: user.uid, project: parent.project, taskId: current.task_id, subtaskId: current.subtask_id || null, ownerId: parent.user_id, action: "update_log",
         description: `${user.username} updated a work log entry on task "${parent.task}"`
       });
       return Response.json(serializeLog(rows[0]));
@@ -126,7 +127,7 @@ export default async (req: Request, context: Context) => {
       }
       await db.sql`DELETE FROM worklogs WHERE id = ${id}`;
       await logActivity(db, {
-        userId: user.uid, project: parent.project, taskId: current.task_id, action: "delete_log",
+        userId: user.uid, project: parent.project, taskId: current.task_id, subtaskId: current.subtask_id || null, ownerId: parent.user_id, action: "delete_log",
         description: `${user.username} deleted a work log entry on task "${parent.task}"`
       });
       return Response.json({ ok: true });

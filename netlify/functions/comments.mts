@@ -118,7 +118,8 @@ export default async (req: Request, context: Context) => {
 
       await logActivity(db, {
         userId: user.uid, project: resolved.project || "",
-        taskId: scope === "task" ? id : (scope === "subtask" ? id : null),
+        taskId: scope === "task" ? id : null, subtaskId: scope === "subtask" ? id : null, ownerId: resolved.ownerId,
+        meta: { comment_id: commentId, excerpt: text.slice(0, 160) },
         action: "comment",
         description: `${user.username} commented on ${scope} "${resolved.label}"`
       });

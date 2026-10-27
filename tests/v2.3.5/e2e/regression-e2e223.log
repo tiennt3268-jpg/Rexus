@@ -1,0 +1,77 @@
+PASS GEN-09 Request schedules opens as a page, not a pop-up
+PASS GEN-09 page has its own URL
+PASS GEN-09 breadcrumb HRM › Monthly Schedule › Request schedules
+PASS GEN-09 action buttons are sticky
+PASS GEN-09 Back returns to Team Schedules with its filter kept
+PASS GEN-09 leaving with unsaved changes asks first
+PASS GEN-09 cancelling the warning stays on the page with the input
+PASS GEN-09 browser Back with unsaved changes can be cancelled
+PASS GEN-09 refresh reopens the page
+PASS GEN-09 after refresh, browser Back lands on HRM
+PASS GEN-09 submitting closes the page and returns to the list
+PASS GEN-09 direct link #/f/approval-new opens "New approval request"
+PASS GEN-09 Back from approval-new lands on its screen
+PASS GEN-09 direct link #/f/approval-rule-new opens "Add routing rule"
+PASS GEN-09 Back from approval-rule-new lands on its screen
+PASS GEN-09 direct link #/f/approval-delegation-new opens "Delegate my approvals"
+PASS GEN-09 Back from approval-delegation-new lands on its screen
+PASS GEN-09 direct link #/f/hr-leave-new opens "New leave request"
+PASS GEN-09 Back from hr-leave-new lands on its screen
+PASS GEN-09 direct link #/f/hr-employment?user=U_TRUONGPN opens "Employment"
+PASS GEN-09 Back from hr-employment?user=U_TRUONGPN lands on its screen
+PASS GEN-09 direct link #/f/project-new opens "New project"
+PASS GEN-09 direct link #/f/task-new opens "New task"
+PASS GEN-09 task detail is a page with breadcrumb All Tasks › …
+PASS GEN-09 log time opens as a nested page on top of the task
+PASS GEN-09 browser Back returns to the task page
+PASS GEN-09 Back again lands on All Tasks
+PASS GEN-09 Add expense is a page under Project Finance
+PASS GEN-09 the same link opens the expense form in a new tab
+PASS GEN-09 Back returns to the ledger with its filter
+PASS GEN-09 permissions unchanged: member cannot open routing-rule page by link
+PASS GEN-08 recipients list has a search box at the top
+PASS GEN-08 live filter, no diacritics needed ("nguyen hoang" → Nguyễn Hoàng…)
+PASS GEN-08 case-insensitive, with diacritics too
+PASS GEN-08 matches username
+PASS GEN-08 "Select all" applies to the filtered results only
+PASS GEN-08 empty state "No results found"
+PASS GEN-08 selections are kept when the query changes
+PASS GEN-08 "Clear" empties the selection
+PASS GEN-08 keyboard: arrows move into the list, Enter selects
+PASS GEN-08 approvers multi-select is searchable
+PASS GEN-08 focus goes to the search box when the list opens
+PASS GEN-08 combobox filters without diacritics ("tran" → Trần/Trân…)
+PASS GEN-08 keyboard Space selects; the native field holds the value
+PASS GEN-08 Esc closes the list and returns focus to the field
+PASS GEN-08 combobox empty state
+PASS GEN-08 single select: type + Enter picks the match and shows it
+PASS GEN-08 150-item list opens and filters fast (< 150 ms excl. debounce)
+PASS GEN-08 task-form people picker ignores diacritics
+PASS GEN-08 task-form people picker: arrows + Enter pick a person
+PASS GEN-08 task-form people picker empty state
+PASS GEN-10 success result shows in the centre of the screen
+PASS GEN-10 success has an icon, short English text and role=status
+PASS GEN-10 the old corner/ring popup is gone
+PASS GEN-10 success closes by itself after ~2.5 s
+PASS GEN-10 Esc closes a success notification early
+PASS GEN-10 click closes a success notification early
+PASS GEN-10 a failed form submit keeps the message at the form (inline), not a pop-up
+PASS GEN-10 network error shows a centred Error with OK (role=alert)
+PASS GEN-10 focus moves to OK
+PASS GEN-10 error does not close by itself
+PASS GEN-10 a new notification replaces the old one (never stacked)
+PASS GEN-10 OK closes a warning
+PASS GEN-10 error can offer an action (Retry)
+PASS GEN-10 background progress keeps the small corner indicator
+PASS GEN-10 fits a phone screen in dark mode
+PASS GEN-12 every badge reaches 4.5:1 in light mode (26 checked)
+PASS GEN-12 badges are full-fill, no outline or dot (light)
+PASS GEN-12 every badge reaches 4.5:1 in dark mode (26 checked)
+PASS GEN-12 badges are full-fill, no outline or dot (dark)
+PASS GEN-12 central tokens match palette 4.1 (light)
+PASS GEN-11 no row or card carries more than 2 badges
+PASS GEN-11 no badge inside a badge
+PASS GEN-11 flat cards (no drop shadow)
+PASS No JavaScript errors
+
+75/75 passed

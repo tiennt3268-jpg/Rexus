@@ -1,0 +1,225 @@
+/* REXUS v2.3.5 — REXUS_Requirements_v2.3.4 Detailed Addendum. Loaded last.
+   UI-01 square corners · UI-02 compact spacing · PRJ-01/02 · DSH-01/02 · DTL-01/02 · LOG-01 components. */
+
+/* ============ UI-01: square corners through the shared tokens ============ */
+:root, :root[data-rx-mode="dark"]{
+  --rx-radius-xs: 0px; --rx-radius-sm: 0px; --rx-radius-md: 0px; --rx-radius-lg: 0px; --rx-radius-xl: 0px; --rx-radius-pill: 0px;
+  --sv-radius: 0px; --sv-radius-sm: 0px;
+}
+/* Components that hard-code a radius. Kept round on purpose: avatars (inline 50%), spinners/loaders,
+   status dots, radio buttons and the Survey on/off switch. No blanket rule on SVGs or charts. */
+body :is(input:not([type=radio]):not([type=range]), select, textarea, button, a[class],
+  .wm-btn, .wm-new-btn, .wm-icon-btn, .wm-input, .wm-select, .wm-badge, .wm-chip, .wm-modal, .wm-page-modal, .wm-card, .wm-stat-card,
+  .wm-project-card, .wm-task-row, .wm-table-wrap, .wm-progress-track, .wm-progress-fill, .wm-user-picker-dropdown, .wm-pd-more-menu,
+  .wm-view-only-banner, .wm-period-toggle, .wm-period-btn, .wm-filters, .wm-tabs, .wm-tab,
+  [class*="card"], [class*="menu"], [class*="dropdown"], [class*="popover"], [class*="tooltip"], [class*="panel"], [class*="dialog"],
+  [class*="toast"], [class*="chip"], [class*="badge"], [class*="btn"], [class*="button"], [class*="banner"], [class*="notice"], [class*="pill"],
+  [class*="field"], [class*="input"], [class*="search"], [class*="tab"], [class*="sheet"], [class*="box"], [class*="tile"], [class*="bar"]):not([class*="avatar"]):not([class*="dot"]):not([class*="spin"]):not([class*="loader"]):not([class*="ring"]):not(.sv-switch):not([class*="knob"]){
+  border-radius: 0 !important;
+}
+body :is(.wm-btn, .wm-new-btn, .wm-icon-btn, .wm-badge, .wm-chip, .wm-period-btn, [class*="btn"])::before,
+body :is(.wm-btn, .wm-new-btn, .wm-icon-btn, .wm-period-btn, [class*="btn"])::after{ border-radius: 0 !important; }
+body .wm-table thead th:first-child, body .wm-table thead th:last-child{ border-radius: 0 !important; }
+body input[type=checkbox]{ border-radius: 0 !important; }
+/* focus stays clearly visible on square controls */
+body :is(input, select, textarea, button, [tabindex]):focus-visible{ outline: 2px solid var(--rx-focus, #2b63c4) !important; outline-offset: 1px !important; }
+
+/* ============ UI-02: compact line spacing and input padding ============ */
+:root{
+  --rx-lh-md: 20px; --rx-lh-sm: 17px; --rx-control-h: 34px; --rx-cell-y: 6px; --rx-cell-x: 10px;
+}
+body{ line-height: 1.4; }
+.wm-app .wm-input, .wm-app .wm-select, .wm-app .wm-form-row input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=color]),
+.wm-app .wm-form-row select, .wm-app .wm-user-picker-input, .wm-app .rx210-field input, .wm-app .rx210-field select, .wm-app .rx210-search input,
+.wm-modal-overlay :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select),
+#rexusDocsShell :is(.rd-editor input, .rd-dialog input:not([type=checkbox]):not([type=radio]), .rd-dialog select, .rd-drive-controls select, .rd-search-scope, .rd-label-input input, .rd-share-dialog select, .rd-space-dropdown input),
+:is(.sv-shell, .sv-builder, .sv-form, .rx-gate) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]), select){
+  padding: 6px 11px !important; line-height: 20px !important;
+}
+.wm-app .wm-form-row textarea, .wm-modal-overlay textarea, #rexusDocsShell :is(.rd-dialog, .rd-editor, .rd-folder-side) textarea, :is(.sv-shell, .sv-builder, .sv-form, .rx-gate) textarea{
+  padding: 7px 11px !important; line-height: 1.45 !important;
+}
+.wm-app .wm-form-row, .wm-modal-overlay .wm-form-row{ margin-bottom: 10px; }
+.wm-app .wm-form-row > label, .wm-modal-overlay .wm-form-row > label{ margin-bottom: 4px !important; line-height: 17px; }
+.wm-app .wm-form-grid{ gap: 8px 14px !important; }
+.wm-app .wm-detail-item, .wm-app .wm-task-row{ line-height: 1.4; }
+.wm-app .wm-task-row{ padding-top: 8px !important; padding-bottom: 8px !important; }
+.wm-app .wm-modal-body{ line-height: 1.4; }
+.sv-card{ padding: 12px 14px !important; margin-bottom: 12px !important; }
+/* buttons keep usable hit areas */
+.wm-app :is(.wm-btn, .wm-new-btn){ min-height: 32px; }
+
+/* ============ PRJ-02: semantic status colours (one map for lists, cards, details) ============ */
+.wm-app .wm-badge.rx-st, .wm-app .wm-badge[class*="status-"]{ border: 0 !important; box-shadow: none !important; text-decoration: none !important; font-weight: 600; }
+.wm-app :is(.rx-st-gray, .wm-badge.status-Not-Started, .wm-badge.status-Draft){ background: #eef0f3 !important; color: #4b5563 !important; }
+.wm-app :is(.rx-st-slate, .wm-badge.status-Planned){ background: #e2e8f0 !important; color: #334155 !important; }
+.wm-app :is(.rx-st-green, .wm-badge.status-Active){ background: #dcfce7 !important; color: #166534 !important; }
+.wm-app :is(.rx-st-teal, .wm-badge.status-In-Progress){ background: #ccfbf1 !important; color: #115e59 !important; }
+.wm-app :is(.rx-st-violet, .wm-badge.status-Review){ background: #ede9fe !important; color: #5b21b6 !important; }
+.wm-app :is(.rx-st-amber, .wm-badge.status-Blocked, .wm-badge.status-On-Hold){ background: #fef3c7 !important; color: #92400e !important; }
+.wm-app :is(.rx-st-orange, .wm-badge.status-Urgent){ background: #ffedd5 !important; color: #9a3412 !important; }
+.wm-app :is(.rx-st-red, .wm-badge.status-Overdue){ background: #fee2e2 !important; color: #991b1b !important; }
+.wm-app :is(.rx-st-navy, .wm-badge.status-Completed){ background: #e0e7ff !important; color: #1e2a6e !important; }
+.wm-app :is(.rx-st-blue, .wm-badge.status-Cancelled){ background: #dbeafe !important; color: #1d4ed8 !important; }
+.wm-app .rx-st-neutral{ background: #f3f4f6 !important; color: #374151 !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-gray, .wm-badge.status-Not-Started, .wm-badge.status-Draft){ background: #2a3038 !important; color: #d1d5db !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-slate, .wm-badge.status-Planned){ background: #2b3442 !important; color: #cbd5e1 !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-green, .wm-badge.status-Active){ background: #163a26 !important; color: #86efac !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-teal, .wm-badge.status-In-Progress){ background: #12393a !important; color: #5eead4 !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-violet, .wm-badge.status-Review){ background: #2e2550 !important; color: #c4b5fd !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-amber, .wm-badge.status-Blocked, .wm-badge.status-On-Hold){ background: #3d2f0f !important; color: #fcd34d !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-orange, .wm-badge.status-Urgent){ background: #43260f !important; color: #fdba74 !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-red, .wm-badge.status-Overdue){ background: #451a1a !important; color: #fca5a5 !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-navy, .wm-badge.status-Completed){ background: #262a52 !important; color: #c7d2fe !important; }
+:root[data-rx-mode="dark"] .wm-app :is(.rx-st-blue, .wm-badge.status-Cancelled){ background: #172d50 !important; color: #93c5fd !important; }
+:root[data-rx-mode="dark"] .wm-app .rx-st-neutral{ background: #2a2f37 !important; color: #e5e7eb !important; }
+
+/* ============ PRJ-01: completion bar + performance chip + tooltip ============ */
+.rx-completion{ display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rx-completion .wm-progress-track{ flex: 1; min-width: 60px; }
+.rx-completion > span{ font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rx-perf{ display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; font-size: 12.5px; font-weight: 600; white-space: nowrap; border: 1px solid; cursor: help; font-variant-numeric: tabular-nums; vertical-align: middle; }
+.rx-perf-dot{ width: 8px; height: 8px; border-radius: 50% !important; background: currentColor; flex: none; }
+.rx-perf--ahead{ background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+.rx-perf--ontrack{ background: #ccfbf1; color: #115e59; border-color: #99f6e4; }
+.rx-perf--behind{ background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+.rx-perf--na{ background: #f3f4f6; color: #4b5563; border-color: #e5e7eb; }
+:root[data-rx-mode="dark"] .rx-perf--ahead{ background: rgba(34,197,94,.16); color: #86efac; border-color: rgba(34,197,94,.35); }
+:root[data-rx-mode="dark"] .rx-perf--ontrack{ background: rgba(20,184,166,.16); color: #5eead4; border-color: rgba(20,184,166,.35); }
+:root[data-rx-mode="dark"] .rx-perf--behind{ background: rgba(239,68,68,.18); color: #fca5a5; border-color: rgba(239,68,68,.4); }
+:root[data-rx-mode="dark"] .rx-perf--na{ background: rgba(255,255,255,.08); color: #d1d5db; border-color: rgba(255,255,255,.16); }
+.rx-tip{ position: fixed; z-index: 10050; background: #111827; color: #f9fafb; padding: 8px 10px; font-size: 12.5px; line-height: 1.45; white-space: pre-line; box-shadow: 0 6px 20px rgba(0,0,0,.25); pointer-events: none; }
+.wm-app .rx-perf-row{ align-items: center; }
+.wm-app .wm-pd-header .rx-perf{ margin-left: 2px; }
+
+/* ============ DSH-01: five-tab task panel ============ */
+.rx-dash-panel{ margin: 18px 0 8px; }
+.rx-tabs{ display: flex; gap: 0; border-bottom: 1px solid var(--rx-hairline-strong, #d6d9de); overflow-x: auto; scrollbar-width: thin; }
+.rx-tab{ appearance: none; background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 8px 14px; font: inherit; font-weight: 600; color: var(--rx-ink-2, #4b5563); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; margin-bottom: -1px; min-height: 38px; }
+.rx-tab:hover{ color: var(--rx-ink-1, #111827); background: rgba(127,127,127,.06); }
+.rx-tab.active{ color: var(--rx-ink-1, #111827); border-bottom-color: var(--rx-accent, #2b63c4); }
+.rx-tab-count{ font-size: 12px; padding: 0 6px; background: rgba(127,127,127,.14); font-variant-numeric: tabular-nums; }
+.rx-tab.active .rx-tab-count{ background: var(--rx-accent, #2b63c4); color: #fff; }
+.rx-dash-list{ margin-top: 10px; }
+.rx-more-note{ font-size: 13px; color: var(--rx-ink-2, #6b7280); padding: 8px 2px; }
+
+/* ============ DSH-02: read-only Gantt ============ */
+.rx-gantt{ margin: 22px 0 8px; }
+.rx-gantt-head{ display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.rx-g-scroll{ overflow-x: auto; border: 1px solid var(--rx-hairline, #e3e5e8); background: rgba(var(--rx-wash, 255,255,255), .6); max-height: 520px; overflow-y: auto; }
+.rx-g-grid{ display: grid; min-width: calc(220px + var(--rx-g-w)); }
+.rx-g-row{ display: flex; align-items: stretch; border-bottom: 1px solid var(--rx-hairline, #eceef1); min-height: 34px; }
+.rx-g-row:last-child{ border-bottom: 0; }
+.rx-g-name{ position: sticky; left: 0; z-index: 2; flex: 0 0 220px; width: 220px; text-align: left; background: var(--rx-surface, #fff); border: 0; border-right: 1px solid var(--rx-hairline, #e3e5e8); padding: 4px 10px; font: inherit; font-size: 13px; color: inherit; cursor: pointer; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: flex; flex-direction: column; justify-content: center; }
+.rx-g-name small{ color: var(--rx-ink-2, #6b7280); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; }
+.rx-g-axis .rx-g-name{ cursor: default; font-weight: 600; font-size: 12px; text-transform: uppercase; color: var(--rx-ink-2, #6b7280); }
+.rx-g-track{ position: relative; flex: none; }
+.rx-g-axis .rx-g-track{ height: 38px; }
+.rx-g-month{ position: absolute; top: 3px; font-size: 11.5px; font-weight: 600; white-space: nowrap; padding-left: 3px; border-left: 1px solid var(--rx-hairline-strong, #cfd3d8); }
+.rx-g-day{ position: absolute; bottom: 3px; font-size: 10.5px; color: var(--rx-ink-2, #6b7280); padding-left: 2px; }
+.rx-g-today{ position: absolute; top: 0; bottom: 0; width: 0; border-left: 2px solid #dc2626; z-index: 1; pointer-events: none; }
+.rx-g-today-label{ font-size: 10.5px; color: #dc2626; font-weight: 700; padding-left: 3px; white-space: nowrap; top: auto; bottom: 0; height: 14px; border-left-width: 2px; }
+.rx-g-bar{ position: absolute; top: 8px; height: 18px; min-width: 6px; border: 0; padding: 0; cursor: pointer; background: #0f766e; z-index: 1; user-select: none; touch-action: pan-x pan-y; }
+.rx-g-bar.partial{ background: repeating-linear-gradient(45deg, #0f766e, #0f766e 6px, #14b8a6 6px, #14b8a6 10px); }
+.rx-g-bar.late{ background: #b91c1c; }
+.rx-g-bar:hover, .rx-g-bar:focus-visible{ filter: brightness(1.15); }
+:root[data-rx-mode="dark"] .rx-g-name{ background: #141a24; }
+.rx-g-undated{ font-size: 13px; margin-top: 8px; }
+.rx-g-note{ font-size: 12px; color: var(--rx-ink-2, #6b7280); margin-top: 6px; }
+.rx-link{ background: none; border: 0; padding: 0; font: inherit; color: var(--rx-accent, #2b63c4); text-decoration: underline; cursor: pointer; }
+
+/* ============ DTL-01/02/03: detail read mode, inline edit, action bar ============ */
+#view-task-detail .wm-modal-footer, #view-subtask-detail .wm-modal-footer{ display: none !important; }
+.rx-actionbar{ display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 0 0 10px; margin-bottom: 12px; border-bottom: 1px solid var(--rx-hairline, #e3e5e8); position: sticky; top: 0; z-index: 5; background: var(--rx-surface, #fff); }
+:root[data-rx-mode="dark"] .rx-actionbar{ background: #121821; }
+.rx-actionbar-id{ display: flex; align-items: center; gap: 8px; min-width: 0; flex-wrap: wrap; }
+.rx-id-chip{ font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; padding: 2px 6px; background: rgba(127,127,127,.12); }
+.rx-parent{ font-size: 13px; color: var(--rx-ink-2, #6b7280); }
+.rx-actionbar-btns{ display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.rx-more{ position: relative; }
+.rx-menu{ position: absolute; right: 0; top: calc(100% + 4px); z-index: 60; min-width: 190px; max-width: min(260px, calc(100vw - 24px)); background: var(--rx-surface, #fff); border: 1px solid var(--rx-hairline-strong, #d6d9de); box-shadow: 0 10px 30px rgba(0,0,0,.16); padding: 4px 0; display: flex; flex-direction: column; }
+.rx-menu.rx-menu-left{ right: auto; left: 0; }
+.rx-menu[hidden]{ display: none; }
+.rx-menu [role=menuitem]{ background: none; border: 0; text-align: left; padding: 8px 14px; font: inherit; color: inherit; cursor: pointer; min-height: 36px; }
+.rx-menu [role=menuitem]:hover, .rx-menu [role=menuitem]:focus-visible{ background: rgba(127,127,127,.12); outline: none; }
+.rx-menu [role=menuitem].danger{ color: #b91c1c; }
+:root[data-rx-mode="dark"] .rx-menu{ background: #1a2230; }
+:root[data-rx-mode="dark"] .rx-menu [role=menuitem].danger{ color: #fca5a5; }
+
+.rx-detail .rx-field{ position: relative; }
+.rx-detail .rx-field-view, .rx-detail .rx-field-edit, .rx-detail .rx-field-actions{ display: none; }
+/* read mode: plain content instead of form controls */
+.rx-detail.rx-read .rx-field:not(.rx-editing) > :not(label):not(.rx-field-view):not(.rx-field-edit),
+.rx-detail .rx-field.rx-readonly > :not(label):not(.rx-field-view){ display: none !important; }
+.rx-detail.rx-read .rx-field:not(.rx-editing) > .rx-field-view, .rx-detail .rx-field.rx-readonly > .rx-field-view{ display: block; }
+.rx-detail.rx-read .rx-field.rx-gantt-off{ display: none !important; }
+.rx-detail .rx-field-view{ font-size: 14px; line-height: 1.45; min-height: 20px; padding: 2px 30px 2px 0; overflow-wrap: anywhere; }
+.rx-detail .rx-field-view .wm-rich-content > :first-child{ margin-top: 0; }
+.rx-detail .rx-field-view .wm-rich-content > :last-child{ margin-bottom: 0; }
+.rx-empty{ color: var(--rx-ink-2, #6b7280); font-style: italic; }
+.rx-muted{ color: var(--rx-ink-2, #6b7280); font-size: 13px; }
+.rx-person{ display: inline-flex; align-items: center; gap: 6px; }
+.rx-hint{ font-size: 12px; color: var(--rx-ink-2, #6b7280); margin-top: 3px; }
+.rx-detail.rx-read .rx-field:not(.rx-editing) > .rx-field-edit{ display: inline-flex; position: absolute; top: 0; right: 0; width: 28px; height: 28px; align-items: center; justify-content: center; background: transparent; border: 1px solid transparent; color: var(--rx-ink-2, #6b7280); cursor: pointer; opacity: 0; transition: opacity .12s; }
+.rx-detail.rx-read .rx-field:hover > .rx-field-edit, .rx-detail.rx-read .rx-field:focus-within > .rx-field-edit, .rx-detail.rx-read .rx-field-edit:focus-visible{ opacity: 1; }
+.rx-detail .rx-field-edit:hover{ border-color: var(--rx-hairline-strong, #d6d9de) !important; color: var(--rx-ink-1, #111827); }
+.rx-detail .rx-field-edit svg{ width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+@media (hover: none){ .rx-detail.rx-read .rx-field:not(.rx-editing) > .rx-field-edit{ opacity: .75; } }
+.rx-detail.rx-read .rx-field:hover{ background: rgba(127,127,127,.05); }
+.rx-detail .rx-field.rx-editing.rx-single{ outline: 1px dashed var(--rx-accent, #2b63c4); outline-offset: 4px; }
+.rx-detail .rx-field.rx-editing.rx-single > .rx-field-actions{ display: flex; gap: 6px; margin-top: 6px; }
+.rx-detail .wm-form-row.rx-static .wm-progress-track{ margin-top: 4px; }
+
+/* ============ LOG-01: activity timeline ============ */
+.rx-activity{ margin-top: 22px; padding-top: 16px; border-top: 1px solid var(--rx-hairline, #e3e5e8); }
+.rx-tl-title{ margin: 0 0 8px; }
+.rx-tl-meta{ display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 13px; color: var(--rx-ink-2, #6b7280); padding: 6px 0 10px; border-bottom: 1px dashed var(--rx-hairline, #e3e5e8); margin-bottom: 6px; }
+.rx-tl{ list-style: none; margin: 0; padding: 0; }
+.rx-tl-item{ display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rx-hairline, #eceef1); }
+.rx-tl-body{ min-width: 0; flex: 1; }
+.rx-tl-line{ display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-size: 13.5px; }
+.rx-tl-line time{ margin-left: auto; font-size: 12px; color: var(--rx-ink-2, #6b7280); white-space: nowrap; }
+.rx-tl-src{ font-size: 11.5px; padding: 0 5px; background: rgba(127,127,127,.12); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.rx-tl-desc{ font-size: 13.5px; color: var(--rx-ink-2, #4b5563); overflow-wrap: anywhere; }
+.rx-tl-changes{ margin: 4px 0 0; padding-left: 16px; font-size: 13px; }
+.rx-tl-field{ font-weight: 600; }
+.rx-tl-status{ font-size: 13px; color: var(--rx-ink-2, #6b7280); padding: 6px 0; }
+.rx-tl-status:empty{ display: none; }
+.rx-tl-more{ margin-top: 8px; }
+
+/* ============ dialogs (Clone / Move / Convert / Archived) ============ */
+.rx-dialog .wm-modal{ width: calc(100vw - 32px); }
+.rx-dialog .rx-dlg-error{ color: #b91c1c; font-size: 13px; margin-top: 8px; }
+.rx-dialog .rx-dlg-error:empty{ display: none; }
+:root[data-rx-mode="dark"] .rx-dialog .rx-dlg-error{ color: #fca5a5; }
+.rx-check{ display: flex; gap: 8px; align-items: center; margin: 8px 0; }
+.rx-check input{ width: auto; }
+.rx-radio{ border: 0; padding: 0; margin: 0 0 10px; display: flex; flex-direction: column; gap: 6px; }
+.rx-radio legend{ font-weight: 600; margin-bottom: 4px; }
+.rx-radio label{ display: flex; gap: 8px; align-items: center; }
+.rx-preview{ margin: 6px 0 0; padding-left: 18px; font-size: 13.5px; }
+.rx-preview li{ margin: 2px 0; }
+.rx-arch-list ul{ list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow-y: auto; }
+.rx-arch-list li{ display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--rx-hairline, #eceef1); }
+.rx-arch-list li small{ display: block; color: var(--rx-ink-2, #6b7280); font-size: 12px; }
+
+@media (max-width: 640px){
+  .rx-g-name{ flex-basis: 140px; width: 140px; }
+  .rx-g-grid{ min-width: calc(140px + var(--rx-g-w)); }
+  .rx-actionbar{ position: static; }
+  .rx-tl-line time{ margin-left: 0; width: 100%; }
+}
+
+/* [hidden] must win over component display rules */
+.rx-activity [hidden], .rx-dialog [hidden], .rx-actionbar [hidden], .rx-gantt [hidden]{ display: none !important; }
+/* read mode: the Milestone checkbox label and the read-only "Actual hours" box render as plain text */
+.rx-detail.rx-read .rx-field:not(.rx-editing) > label:has(input){ display: none !important; }
+.rx-detail.rx-read .rx-static > div[style*="background"]{ background: transparent !important; padding: 2px 0 !important; font-size: 14px !important; color: inherit !important; }
+/* UI-01 exception: avatars (rendered with an inline 50% radius) stay round even inside squared chips */
+body :is(span, img)[style*="border-radius:50%"]{ border-radius: 50% !important; }
+/* contrast (UI audit): fixed accent behind the active tab count; lighter today label in dark mode */
+.rx-tab.active .rx-tab-count{ background: #2b63c4 !important; color: #fff !important; }
+:root[data-rx-mode="dark"] .rx-g-today{ border-left-color: #f87171; }
+:root[data-rx-mode="dark"] .rx-g-today-label{ color: #fca5a5; }
+/* action bar sits on the card itself (no separate band in dark / navy themes) */
+.rx-actionbar, :root[data-rx-mode="dark"] .rx-actionbar{ position: static; background: transparent; }

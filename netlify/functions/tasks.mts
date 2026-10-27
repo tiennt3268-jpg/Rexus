@@ -3,7 +3,7 @@ import { getDatabase } from "@netlify/database";
 import { randomUUID } from "node:crypto";
 import { getUserFromRequest, unauthorized } from "./lib/auth.mts";
 import { canAccessProject, findProjectOwnerAccessibleToUser } from "./lib/collab.mts";
-import { logActivity } from "./lib/activity-log.mts";
+import { logActivity, changedFields } from "./lib/activity-log.mts";
 import { getFullUser, getEffectiveProjectRole, roleCanManage } from "./lib/rbac.mts";
 import { createNotification } from "./lib/notify.mts";
 import { emitTaskReady } from "./lib/task-ready.mts";
@@ -248,8 +248,18 @@ function serializeTask(row: any) {
     is_milestone: !!row.is_milestone,
     view_only: !!row.view_only,
     created_at: row.created_at instanceof Date ? row.created_at.toISOString() : row.created_at,
-    updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at
+    updated_at: row.updated_at instanceof Date ? row.updated_at.toISOString() : row.updated_at,
+    archived_at: row.archived_at instanceof Date ? row.archived_at.toISOString() : (row.archived_at || null)
   };
+}
+/* v2.3.5: fields the detail form can change, for the activity timeline */
+export const TASK_FIELDS = ["task","description","priority","status","progress","start_date","due_date","start_time","end_time",
+  "estimated_hours","actual_hours","notes","task_type","labels","recurring","reporter","assignee_name","predecessors","is_milestone"];
+/** v2.3.5 DTL-01: another person saved after this form was opened. */
+export function isStale(current: any, expected: any): boolean {
+  if (!expected) return false;
+  const a = new Date(current.updated_at as any).getTime(), b = new Date(expected).getTime();
+  return !isNaN(a) && !isNaN(b) && a !== b;
 }
 
 export default async (req: Request, context: Context) => {
@@ -263,6 +273,7 @@ export default async (req: Request, context: Context) => {
 
   try {
     if (req.method === "GET") {
+      const withArchived = url.searchParams.get("include_archived") === "1";
       const ownedOrMemberRows = await db.sql`
         SELECT t.*, false as view_only FROM tasks t
         WHERE t.user_id = ${user.uid}
@@ -288,7 +299,9 @@ export default async (req: Request, context: Context) => {
       for (const r of [...ownedOrMemberRows, ...taskSharedRows, ...projectSharedRows]) {
         if (!merged[r.id] || !r.view_only) merged[r.id] = r;
       }
-      return Response.json({ tasks: Object.values(merged).map(serializeTask) });
+      // v2.3.5 ACT-01: archived tasks are hidden unless the Archived view asks for them
+      const list = Object.values(merged).filter((r: any) => withArchived || !r.archived_at);
+      return Response.json({ tasks: list.map(serializeTask) });
     }
 
     if (req.method === "POST") {
@@ -362,8 +375,19 @@ export default async (req: Request, context: Context) => {
       }
 
       const patch = await req.json();
-      const merged: any = { ...current, ...patch };
+      if (current.archived_at) return Response.json({ error: "This task is archived. Restore it before editing." }, { status: 409 });
+      if (isStale(current, patch.expected_updated_at)) {
+        return Response.json({ error: "This task was changed by someone else after you opened it. Reload to see the latest version.", code: "conflict", task: serializeTask(current) }, { status: 409 });
+      }
+      delete patch.expected_updated_at;
+      if (patch.project !== undefined && patch.project !== current.project) {
+        return Response.json({ error: "Use More > Move to move a task to another project." }, { status: 400 });
+      }
+      // JSON columns come back as text: parse them so a partial patch keeps reporters and dependencies.
+      const merged: any = { ...current, reporter: parseJsonArray(current.reporter), predecessors: parseJsonArray(current.predecessors), ...patch };
       merged.updated_at = new Date().toISOString();
+      // v2.3.5 PRJ-01: Done % feeds project completion, so keep it within 0–100
+      merged.progress = Math.min(100, Math.max(0, Math.round(Number(merged.progress) || 0)));
 
       const reporterList = normalizeReporters(merged.reporter && merged.reporter.length ? merged.reporter : [{ type: "user", id: user.uid, name: user.username }]);
       for (const r of reporterList) {
@@ -377,7 +401,6 @@ export default async (req: Request, context: Context) => {
         UPDATE tasks SET
           task = ${merged.task},
           description = ${merged.description},
-          project = ${merged.project},
           priority = ${merged.priority},
           status = ${merged.status},
           progress = ${merged.progress},
@@ -404,9 +427,11 @@ export default async (req: Request, context: Context) => {
 
       // v2.1.0: dependency visualization/notifications only. Do not move Task dates.
 
+      const changes = changedFields(serializeTask(current), serializeTask(rows[0]), TASK_FIELDS.filter(f => f in patch));
+      const meta = changes.length ? { changes } : null;
       if (patch.status && patch.status !== current.status) {
         await logActivity(db, {
-          userId: user.uid, project: current.project, taskId: id, action: "change_status",
+          userId: user.uid, project: current.project, taskId: id, ownerId: current.user_id, action: "change_status", meta,
           description: `${user.username} changed task "${current.task}" status from ${current.status} to ${patch.status}`
         });
         if (current.assignee_id && current.assignee_id !== user.uid) {
@@ -424,7 +449,7 @@ export default async (req: Request, context: Context) => {
         }
       } else if (patch.assignee_id !== undefined && patch.assignee_id !== current.assignee_id) {
         await logActivity(db, {
-          userId: user.uid, project: current.project, taskId: id, action: "assign_task",
+          userId: user.uid, project: current.project, taskId: id, ownerId: current.user_id, action: "assign_task", meta,
           description: `${user.username} assigned task "${current.task}" to ${merged.assignee_name || "someone"}`
         });
         if (merged.assignee_id && merged.assignee_id !== user.uid) {
@@ -435,7 +460,7 @@ export default async (req: Request, context: Context) => {
         }
       } else {
         await logActivity(db, {
-          userId: user.uid, project: current.project, taskId: id, action: "update_task",
+          userId: user.uid, project: current.project, taskId: id, ownerId: current.user_id, action: "update_task", meta,
           description: `${user.username} updated task "${current.task}"`
         });
         if (current.assignee_id && current.assignee_id !== user.uid) {

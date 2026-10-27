@@ -1,0 +1,99 @@
+PASS Migration 035 :: users has must_change_password / profile_gate / onboarding_completed_at
+PASS Migration 035 :: survey + demographic tables exist
+PASS Migration 035 :: existing accounts are not gated after the migration
+PASS Migration 035 :: existing account keeps working
+PASS Migration 035 :: default fields: DOB + Education required (D1), others optional
+PASS AC01 First Login: password :: admin creates the account with a temporary password
+PASS AC01 First Login: password :: sign-in succeeds and reports the password step
+PASS AC01 First Login: password :: /auth/me works while gated and shows step=password
+PASS AC01 First Login: password :: business API blocked while gated: /api/tasks
+PASS AC01 First Login: password :: business API blocked while gated: /api/projects
+PASS AC01 First Login: password :: business API blocked while gated: /api/rexus-documents
+PASS AC01 First Login: password :: business API blocked while gated: /api/surveys
+PASS AC01 First Login: password :: business API blocked while gated: /api/hr/team
+PASS AC01 First Login: password :: profile cannot be filled before the password step
+PASS AC01 First Login: password :: weak password rejected (policy)
+PASS AC01 First Login: password :: confirmation must match
+PASS AC01 First Login: password :: wrong temporary password rejected
+PASS AC01 First Login: password :: cannot reuse the temporary password
+PASS AC01 First Login: password :: password changed → next step is profile
+PASS AC01 First Login: password :: flag cleared only after the server saved it
+PASS AC01 First Login: password :: passwords never written to the audit log
+PASS AC02 First Login: profile :: still blocked before the profile is complete
+PASS AC02 First Login: profile :: profile step lists the visible fields and missing required ones
+PASS AC02 First Login: profile :: missing DOB → field error, nothing completed
+PASS AC02 First Login: profile :: future DOB and unknown option rejected per field
+PASS AC02 First Login: profile :: admin-managed field cannot be self-edited
+PASS AC02 First Login: profile :: valid profile saved → no step left
+PASS AC02 First Login: profile :: workspace reachable after onboarding
+PASS AC02 First Login: profile :: demographic values not in the audit log
+PASS AC08 Demographic privacy :: another employee cannot read demographics
+PASS AC08 Demographic privacy :: a Project Manager cannot read demographics either
+PASS AC08 Demographic privacy :: System Admin can (authorised)
+PASS AC08 Demographic privacy :: admin edits an admin-managed field
+PASS AC08 Demographic privacy :: only admin configures fields
+PASS AC08 Demographic privacy :: a hidden field is never required
+PASS Survey builder :: a Member cannot create surveys
+PASS Survey builder :: a Project Manager creates from a template
+PASS Survey builder :: only admin can make a survey mandatory
+PASS Survey builder :: single choice needs ≥2 options
+PASS Survey builder :: unknown question type rejected
+PASS Survey builder :: all 9 question types saved
+PASS Survey builder :: PM publishes own survey
+PASS Survey builder :: non-owner cannot open the builder
+PASS AC03 Mandatory targeting :: mandatory needs a target group
+PASS AC03 Mandatory targeting :: estimate counts unique users (OR)
+PASS AC03 Mandatory targeting :: mandatory settings saved
+PASS AC03 Mandatory targeting :: draft mandatory survey does not gate anyone
+PASS AC03 Mandatory targeting :: publish → version 1
+PASS AC03 Mandatory targeting :: targeted by User ID → step survey
+PASS AC03 Mandatory targeting :: targeted by department (Finance) → business API blocked
+PASS AC03 Mandatory targeting :: user outside every group is not gated
+PASS AC03 Mandatory targeting :: intro data: name, question count, estimate
+PASS AC05/AC06 Responses :: respondent sees the published questions
+PASS AC05/AC06 Responses :: required question missing → error points at the question
+PASS AC05/AC06 Responses :: invalid option rejected
+PASS AC05/AC06 Responses :: rating out of range rejected
+PASS AC05/AC06 Responses :: text length limit enforced
+PASS AC05/AC06 Responses :: AC05: still gated after failed attempts (nothing saved)
+PASS AC05/AC06 Responses :: submit succeeds → gate released
+PASS AC05/AC06 Responses :: AC06: response stored with the session user, not the user_id in the request
+PASS AC05/AC06 Responses :: re-sending the same submission is idempotent
+PASS AC05/AC06 Responses :: a second, different submission is refused
+PASS AC05/AC06 Responses :: exactly one response counted
+PASS AC05/AC06 Responses :: workspace open again
+PASS AC05/AC06 Responses :: a person outside the target cannot answer
+PASS Versioning :: editing after publish keeps the published set and flags unpublished changes
+PASS Versioning :: re-publish creates version 2
+PASS Versioning :: the earlier answer stays linked to version 1
+PASS Versioning :: a stale form (old version) is asked to reload
+PASS AC07 Availability :: quota reached → gate released for people who did not answer (D3)
+PASS AC07 Availability :: server refuses new responses over quota
+PASS AC07 Availability :: closing date passed → no gate
+PASS AC07 Availability :: opening date in the future → Scheduled
+PASS AC07 Availability :: scheduled survey does not gate
+PASS AC07 Availability :: closing before opening rejected
+PASS AC07 Availability :: open again → gated again
+PASS AC07 Availability :: manual close
+PASS AC07 Availability :: closed manually → gate released
+PASS AC07 Availability :: reopen → gated again
+PASS Priority :: higher priority survey comes first
+PASS Analytics :: summary per question (choice counts)
+PASS Analytics :: rating average
+PASS Analytics :: respondent shown to the owner for an authenticated survey
+PASS Analytics :: a non-owner cannot read responses
+PASS Analytics :: export includes User ID column for authenticated surveys
+PASS Analytics :: excluding a response needs a reason
+PASS Analytics :: response excluded with a logged reason
+PASS Analytics :: the original answers are kept (not edited)
+PASS Public survey :: a public survey cannot be mandatory
+PASS Public survey :: anyone with the link can answer a public survey
+PASS Public survey :: no user id stored even when a signed-in person answers
+PASS Public survey :: public export has no respondent columns
+PASS Public survey :: authenticated survey needs sign-in
+PASS Rollout and reset :: admin enforces required fields for existing accounts
+PASS Rollout and reset :: existing account without DOB now has the profile step
+PASS Rollout and reset :: admin reset gives a temporary password and forces a change
+PASS Rollout and reset :: …and the account is gated until it is changed
+
+97/97 survey backend checks passed

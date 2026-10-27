@@ -12,6 +12,7 @@
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <link rel="stylesheet" href="/rexus-document.css?v=2.3.4">
+<script src="/rexus-metrics.js?v=2.3.5"></script>  <!-- v2.3.5 PRJ-01 project completion + performance (pure functions) -->
 <script>/* v2.2.2: apply the cached theme + Light/Dark/System mode before paint (the account preference is re-synced after sign-in) */
 try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=localStorage.getItem('rexus-mode')||'light';h.setAttribute('data-rx-theme',t==='navy'?'navy':'mono');h.setAttribute('data-rx-mode-pref',m);h.setAttribute('data-rx-mode',m==='dark'||(m==='system'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');var d=localStorage.getItem('rexus-density');if(d)h.setAttribute('data-rx-density',d);}catch(e){document.documentElement.setAttribute('data-rx-theme','mono');}</script>
 <style>html[data-rx-mode="dark"],html[data-rx-mode="dark"] body{background:#0f1319;color:#e8ecf2;color-scheme:dark}</style>
@@ -1674,7 +1675,12 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
 
   var TaskAPI = {
     getTasks: function(){
-      return apiGet('/api/tasks').then(function(json){ return json.tasks || []; });
+      // v2.3.5 ACT-01: archived tasks stay out of every active list but are kept for the Archived view and work-log names
+      return apiGet('/api/tasks?include_archived=1').then(function(json){
+        var all = json.tasks || [];
+        STATE.archivedTasks = all.filter(function(t){ return t.archived_at; });
+        return all.filter(function(t){ return !t.archived_at; });
+      });
     },
     createTask: function(task){
       return apiSend('/api/tasks', 'POST', { task: task });
@@ -1956,7 +1962,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     // Fire-and-forget: activity logging should never block or fail the
     // action it's describing, so callers don't need to handle its errors.
     log: function(entry){
-      return apiSend('/api/activity', 'POST', entry).catch(function(){});
+      return Promise.resolve();   // v2.3.5 LOG-01: the server records every change itself
     }
   };
 
@@ -2387,7 +2393,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         refreshDetailModalContent(STATE.detailTaskId);
       }
       if(byId('view-subtask-detail') && byId('view-subtask-detail').classList.contains('active') && STATE.detailSubtaskId){
-        renderSubtaskDetailBody(STATE.detailSubtaskId);
+        if(MODAL_DIRTY['wmSubtaskModal'] || (RX_DETAIL.subtask && RX_DETAIL.subtask.editing)) renderSubtaskWorkLogSection(STATE.detailSubtaskId);
+        else renderSubtaskDetailBody(STATE.detailSubtaskId);
       }
       if(STATE.activeView === 'project-detail' && STATE.currentProjectDetail){
         renderProjectDetail(STATE.currentProjectDetail);
@@ -2453,70 +2460,26 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
      6. VIEW: OVERVIEW
      ========================================================= */
   function renderOverview(){
-    var tasks = STATE.tasks;
-    var total = tasks.length;
-    var todayTasks = tasks.filter(function(t){ return isActiveOnDate(t, STATE.today.date); });
-    var completed = tasks.filter(function(t){ return t.status === 'Completed'; });
-    var inProgress = tasks.filter(function(t){ return t.status === 'In Progress'; });
-    var overdue = tasks.filter(isOverdue);
-    var overallProgress = (function(){
-      var totalEst = tasks.reduce(function(s,t){ return s + (parseFloat(t.estimated_hours)||0); }, 0);
-      var totalAct = tasks.reduce(function(s,t){ return s + computeActualHours(t.id); }, 0);
-      return progressInfoFromHours(totalAct, totalEst).pct;
-    })();
-
-    var upcoming = tasks
-      .filter(function(t){ return t.due_date > STATE.today.date && t.status !== 'Completed' && !isActiveOnDate(t, STATE.today.date); })
-      .sort(function(a,b){ return a.due_date.localeCompare(b.due_date); })
-      .slice(0, 6);
-
+    var tasks = STATE.tasks, day = rxToday();
+    var groups = rxDashGroups(tasks, day);
     var html = '';
     var welcomeName = (STATE.currentUser && (STATE.currentUser.full_name || STATE.currentUser.username)) || '';
     if(welcomeName){
       html += '<h2 style="margin:0 0 16px;">Welcome back, ' + escapeHtml(welcomeName.split(' ')[0]) + '</h2>';
     }
-    html += '<div class="wm-stats">' +
-      statCard(total, 'Total Tasks', '#2E7DD6') +
-      statCard(todayTasks.length, "Today's Tasks", '#1E9E9E') +
-      statCard(completed.length, 'Completed', '#2FA76B') +
-      statCard(inProgress.length, 'In Progress', '#E8AA1F') +
-      statCard(overdue.length, 'Overdue', '#D6425B') +
-      statCard(overallProgress + '%', 'Overall Progress', '#E8862E') +
+    // DSH-03: the standalone Progress section and the Overall Progress card are gone; progress stays on projects and tasks.
+    html += '<div class="wm-stats rx-dash-stats">' +
+      statCard(tasks.length, 'Total Tasks', '#2E7DD6') +
+      statCard(groups.today.length, "Today's Tasks", '#1E9E9E') +
+      statCard(groups.completed.length, 'Completed', '#2FA76B') +
+      statCard(groups.inprogress.length, 'In Progress', '#E8AA1F') +
+      statCard(groups.overdue.length, 'Overdue', '#D6425B') +
     '</div>';
-
-    html += '<div class="wm-section-title">Today\'s Tasks</div>';
-    html += '<div class="wm-task-list" id="ovToday">' +
-      (todayTasks.length ? todayTasks.map(taskRowHtml).join('') : '<div class="wm-empty">No tasks due today. Enjoy the breathing room.</div>') +
-    '</div>';
-
-    html += '<div class="wm-section-title">Upcoming Tasks</div>';
-    html += '<div class="wm-task-list" id="ovUpcoming">' +
-      (upcoming.length ? upcoming.map(taskRowHtml).join('') : '<div class="wm-empty">Nothing on the horizon yet.</div>') +
-    '</div>';
-
-    html += '<div class="wm-section-title">Progress</div>';
-    html += '<div class="wm-period-toggle" id="ovPeriodToggle">' +
-      ['today','week','month'].map(function(p){
-        var label = p === 'today' ? 'Today' : p === 'week' ? 'This Week' : 'This Month';
-        return '<button class="wm-period-btn' + (p===STATE.progress.period?' active':'') + '" data-period="' + p + '">' + label + '</button>';
-      }).join('') +
-    '</div>';
-    html += '<div id="ovProgressBody"></div>';
-
+    html += rxDashPanelHtml(groups);
+    html += rxGanttHtml();
     byId('view-overview').innerHTML = html;
-    bindTaskRowEvents(byId('ovToday'));
-    bindTaskRowEvents(byId('ovUpcoming'));
-
-    byId('ovPeriodToggle').querySelectorAll('[data-period]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        STATE.progress.period = btn.getAttribute('data-period');
-        byId('ovPeriodToggle').querySelectorAll('.wm-period-btn').forEach(function(b){
-          b.classList.toggle('active', b === btn);
-        });
-        renderOverviewProgressBody();
-      });
-    });
-    renderOverviewProgressBody();
+    rxWireDashTabs(groups);
+    rxWireGantt(byId('view-overview'));
   }
 
   function periodRange(period){
@@ -2761,7 +2724,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     var s = STATE.all;
     var projectOptions = uniqueProjects();
 
-    var html = '<div style="display:flex;justify-content:flex-end;margin-bottom:14px;">' +
+    var html = '<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px;">' +
+      '<button type="button" class="wm-btn" id="rxArchivedBtn">Archived</button>' +
       '<button class="wm-new-btn" id="wmNewTaskBtn" style="background:var(--navy);">+ New Task</button>' +
     '</div>';
     html += '<div class="wm-filters">' +
@@ -2793,6 +2757,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     byId('view-all').innerHTML = html;
 
     byId('wmNewTaskBtn').addEventListener('click', function(){ openFormModal(); });
+    byId('rxArchivedBtn').addEventListener('click', function(){ rxOpenArchived(); });
     byId('atSearch').addEventListener('input', function(e){ s.search = e.target.value; renderAllRows(); });
     byId('atTimeFilter').addEventListener('change', function(e){ s.timeFilter = e.target.value; renderAll(); });
     if(byId('atCustomStart')) byId('atCustomStart').addEventListener('change', function(e){ s.customStart = e.target.value; renderAllRows(); });
@@ -3018,7 +2983,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     });
 
     var deadlineMap = {};
-    STATE.projects.forEach(function(p){ deadlineMap[p.name] = p.deadline; });
+    var projStatus = {}, projOwner = {};
+    STATE.projects.forEach(function(p){ deadlineMap[p.name] = p.deadline; projStatus[p.name] = p.status; projOwner[p.name] = p.owner_id; });
 
     var mode = STATE.projectsView;
     var q = (STATE.projectsSearch || '').trim().toLowerCase();
@@ -3028,30 +2994,32 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     var html = '';
     if(mode === 'list'){
       html += '<div class="wm-table-wrap"><table class="wm-table"><thead><tr>' +
-        '<th>Project</th><th>Tasks</th><th>Completed</th><th>In Progress</th><th>Progress</th><th>Deadline</th><th></th>' +
+        '<th>Project</th><th>Status</th><th>Tasks</th><th>Completed</th><th>In Progress</th><th>Completion</th><th>Performance</th><th>Deadline</th><th></th>' +
         '</tr></thead><tbody>' +
         (names.length ? names.map(function(name){
           var p = byProject[name] || { total: 0, completed: 0, inProgress: 0, est: 0, act: 0 };
-          var info = progressInfoFromHours(p.act, p.est);
+          var m = rxProjectMetrics(name, projOwner[name]);
           return '<tr data-project="' + escapeHtml(name) + '">' +
             '<td style="font-weight:700;">' + escapeHtml(name) + '</td>' +
+            '<td>' + rxStatusBadge(projStatus[name] || 'Active') + '</td>' +
             '<td>' + p.total + '</td>' +
             '<td>' + p.completed + '</td>' +
             '<td>' + p.inProgress + '</td>' +
-            '<td style="min-width:120px;"><div style="display:flex;align-items:center;gap:8px;"><div style="flex:1;">' + progressBarHtml(info) + '</div><span style="font-size: 14px;">' + info.pct + '%</span></div></td>' +
+            '<td style="min-width:130px;">' + rxCompletionHtml(m) + '</td>' +
+            '<td>' + rxPerfHtml(m) + '</td>' +
             '<td>' + (deadlineMap[name] ? fmtDate(deadlineMap[name]) : '—') + '</td>' +
             '<td class="wm-row-actions">' +
               '<button class="wm-icon-btn" data-action="edit-project" data-name="' + escapeHtml(name) + '" title="Edit">' + ICON_EDIT + '</button>' +
               '<button class="wm-icon-btn danger" data-action="delete-project" data-name="' + escapeHtml(name) + '" title="Delete">' + ICON_DELETE + '</button>' +
             '</td>' +
           '</tr>';
-        }).join('') : '<tr><td colspan="7" class="wm-empty">' + emptyMsg + '</td></tr>') +
+        }).join('') : '<tr><td colspan="9" class="wm-empty">' + emptyMsg + '</td></tr>') +
         '</tbody></table></div>';
     } else {
       var PROJECT_PALETTE = ['#2E7DD6','#2FA76B','#E8AA1F','#E8862E','#D6425B','#8B5FBF','#1E9E9E'];
       var cards = names.map(function(name, idx){
         var p = byProject[name] || { total: 0, completed: 0, inProgress: 0, est: 0, act: 0 };
-        var info = progressInfoFromHours(p.act, p.est);
+        var m = rxProjectMetrics(name, projOwner[name]);
         var accent = PROJECT_PALETTE[idx % PROJECT_PALETTE.length];
         return '<div class="wm-project-card" data-project="' + escapeHtml(name) + '" style="--proj-accent:' + accent + ';--proj-tint:' + tint(accent) + ';">' +
           '<div style="display:flex;justify-content:space-between;align-items:flex-start;">' +
@@ -3062,8 +3030,9 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
             '</div>' +
           '</div>' +
           '<div class="wm-project-meta"><span>' + p.total + ' tasks</span><span>' + p.completed + ' completed</span></div>' +
-          '<div class="wm-project-meta"><span>' + p.inProgress + ' in progress</span><span>' + info.pct + '% done</span></div>' +
-          progressBarHtml(info) +
+          '<div class="wm-project-meta"><span>' + p.inProgress + ' in progress</span>' + rxStatusBadge(projStatus[name] || 'Active') + '</div>' +
+          rxCompletionHtml(m) +
+          '<div class="wm-project-meta rx-perf-row"><span>Performance</span>' + rxPerfHtml(m) + '</div>' +
           '<div class="wm-project-deadline">Deadline: ' + (deadlineMap[name] ? fmtDate(deadlineMap[name]) : '—') + '</div>' +
         '</div>';
       }).join('');
@@ -3095,7 +3064,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     var allProjectTasks = STATE.tasks.filter(function(t){ return t.project === name; });
     var total = allProjectTasks.length;
     var completed = allProjectTasks.filter(function(t){ return t.status === 'Completed'; }).length;
-    var pct = total ? Math.round((completed / total) * 100) : 0;
+    var pm = rxProjectMetrics(name, proj.owner_id);
+    var pct = pm && pm.completion !== null ? pm.completion : 0;
 
     var f = STATE.projectDetailFilters;
     var reporterOptions = {};
@@ -3109,7 +3079,6 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         (!f.reporter || (t.reporter||[]).indexOf(f.reporter) !== -1);
     });
 
-    var projectActivity = STATE.activity.filter(function(a){ return a.project === name; }).slice(0, 20);
 
     var html = '';
 
@@ -3121,10 +3090,10 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       '<div style="flex:1;min-width:0;">' +
         '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">' +
           '<h2 style="margin:0;">' + escapeHtml(name) + '</h2>' +
-          '<span class="wm-badge" style="background:' + (proj.status==='Active'?'var(--s-inprogress)':proj.status==='On Hold'?'var(--s-review)':proj.status==='Completed'?'var(--s-completed)':'var(--s-cancelled)') + ';">' + escapeHtml(proj.status) + '</span>' +
+          rxStatusBadge(proj.status || 'Active') + rxPerfHtml(pm) +
         '</div>' +
         '<div class="wm-rich-content" style="color:var(--ink-soft);margin-top:6px;max-width:640px;">' + (richTextSeedHtml(proj.description) || 'No description yet.') + '</div>' +
-        '<div style="margin-top:8px;font-size:13.5px;color:var(--ink-soft);">' + total + ' task' + (total!==1?'s':'') + ' · ' + pct + '% complete · Owner: ' + escapeHtml(proj.owner||'Me') + '</div>' +
+        '<div style="margin-top:8px;font-size:13.5px;color:var(--ink-soft);">' + total + ' task' + (total!==1?'s':'') + ' · ' + (pm ? rxNA(pm.completion, '%') : pct + '%') + ' complete · Owner: ' + escapeHtml(proj.owner||'Me') + '</div>' +
       '</div>' +
       '<div style="display:flex;gap:8px;align-items:flex-start;position:relative;">' +
         (proj.view_only ? '' :
@@ -3149,10 +3118,10 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       statCard(proj.deadline ? fmtDate(proj.deadline) : '—', 'Due Date', '#D6425B') +
       statCard(total, 'Total Tasks', '#1E9E9E') +
       statCard(completed, 'Completed', '#2FA76B') +
-      statCard(pct + '%', 'Progress', '#E8AA1F') +
+      statCard(pm ? rxNA(pm.completion, '%') : '—', 'Completion', '#E8AA1F') +
     '</div>';
     html += '<div class="wm-pd-progress-row">' +
-      '<div style="flex:1;">' + progressBarHtml({ pct: pct, normalPct: pct, overtimePct: 0 }) + '</div>' +
+      '<div style="flex:1;">' + rxCompletionHtml(pm) + '</div>' +
       '<span style="font-size:13.5px;color:var(--ink-soft);white-space:nowrap;">' + completed + ' / ' + total + ' tasks completed</span>' +
     '</div>';
 
@@ -3198,22 +3167,15 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     // 4d. Project Financials — summary; the records are managed in Finance → Project Financials.
     if(window.REXUS221) html += '<section id="pdFinance" class="rx-card rx-pd-finance" aria-label="Project financials"></section>';
 
-    // 6. Activity / History
-    html += '<h3 style="margin:26px 0 10px;">Activity</h3>';
-    html += '<div class="wm-pd-activity">' +
-      (projectActivity.length ? projectActivity.map(function(a){
-        var actor = userById(a.user_id);
-        return '<div class="wm-pd-activity-row">' + avatarHtml(actor || a.user_id, 28) +
-          '<div><div>' + escapeHtml(a.description) + '</div>' +
-          '<div style="font-size:12px;color:var(--ink-soft);">' + (a.created_at ? new Date(a.created_at).toLocaleString() : '') + '</div></div></div>';
-      }).join('') : '<div class="wm-empty">No activity recorded yet.</div>') +
-    '</div>';
+    // 6. Activity — LOG-01 timeline from the server, newest first
+    html += '<section id="pdActivity" class="rx-activity" aria-label="Project activity"></section>';
 
     // 7. Comments — discussion for everyone with access to this project.
     html += '<div id="pdComments" style="margin:26px 0 10px;"></div>';
 
     byId('view-project-detail').innerHTML = html;
     renderComments('pdComments', 'project', name);
+    rxTimeline(byId('pdActivity'), { entity: 'project', project: name, owner: proj.owner_id });
 
     // ---- wiring ----
     byId('pdBackLink').addEventListener('click', function(){ switchView('projects'); });
@@ -4979,7 +4941,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       return days.some(function(d){ return (map[d] || 0) > 0; });
     }
 
-    var tasks = STATE.tasks.filter(function(t){
+    var tasks = STATE.tasks.concat(STATE.archivedTasks || []).filter(function(t){   // archived tasks keep their logged hours visible
       var matchesQ = !q || t.task.toLowerCase().indexOf(q) !== -1;
       var matchesProject = !s.project || t.project === s.project;
       return matchesQ && matchesProject && taskHasHoursInRange(t.id);
@@ -5149,11 +5111,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     var actualHours = computeSubtaskActualHours(s.id);
 
     var html = '' +
-      '<div class="wm-detail-grid" style="margin-bottom:10px;">' +
-        detailItem('Parent Task', escapeHtml(parentTask ? parentTask.task : '—')) +
-        detailItem('Created By', escapeHtml(s.created_by || '—')) +
-        detailItem('Created', s.created_at ? s.created_at.slice(0,10) : '—') +
-      '</div>' +
+      '<div id="wmSubtaskActions"></div>' +
       '<div class="wm-form-row"><label>Subtask Name</label><input id="stdName" value="' + escapeHtml(s.name) + '"></div>' +
       '<div class="wm-form-row"><label>Description</label>' + richTextEditorHtml('stdDesc', s.description||'', 'Describe this subtask…') + '</div>' +
       '<div class="wm-form-grid">' +
@@ -5203,12 +5161,11 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
           '<div>' + progressBarHtml(info) + '<div style="font-size: 14px;color:var(--ink-soft);margin-top:4px;">' + info.pct + '% of estimate' + (info.overtimePct ? ' — includes overtime' : '') + '</div></div>' :
           '<div style="font-size: 14.5px;color:var(--ink-soft);">Set an estimate to track progress from logged hours</div>') +
       '</div>' +
-      '<div id="wmSubtaskMembers" style="margin-bottom:14px;"></div>' +
       '<div id="wmSubtaskWorkLog"></div>' +
-      '<div id="wmSubtaskComments" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line);"></div>';
+      '<div id="wmSubtaskComments" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line);"></div>' +
+      '<section id="wmSubtaskActivity" class="rx-activity" aria-label="Subtask activity"></section>';
 
     byId('wmSubtaskModalBody').innerHTML = html;
-    renderParticipants('wmSubtaskMembers', 'subtask', subtaskId);
     wireReporterField('std', s.reporter && s.reporter.length ? s.reporter : [currentUserReporterEntry()]);
     wireAssigneePicker('std');
     wireSubtaskLabels(s.labels || []);
@@ -5216,33 +5173,17 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     wireRichText('stdDesc');
     renderSubtaskWorkLogSection(subtaskId);
     renderComments('wmSubtaskComments', 'subtask', subtaskId);
+    rxTimeline(byId('wmSubtaskActivity'), { entity: 'subtask', id: subtaskId }, rxCreatedMeta(s));
+    rxEnhanceDetail({ kind: 'subtask', body: byId('wmSubtaskModalBody'), prefix: 'std', obj: s, canEdit: !s.view_only,
+      skip: '#wmSubtaskWorkLog, #wmSubtaskComments, #wmSubtaskActivity, #wmSubtaskActions',
+      parentHtml: parentTask ? '<span class="rx-parent">in <button type="button" class="rx-link" data-open-parent="' + escapeHtml(parentTask.id) + '">' + escapeHtml(parentTask.task) + '</button></span>' : '',
+      actionsHost: byId('wmSubtaskActions'), commentInputId: 'wmSubtaskCommentsInput', menu: rxSubtaskMenu(s),
+      collect: collectSubtaskData, rerender: function(){ renderSubtaskDetailBody(subtaskId); } });
+    var op = byId('wmSubtaskActions').querySelector('[data-open-parent]');
+    if(op) op.addEventListener('click', function(){ openDetailModal(op.getAttribute('data-open-parent')); });
   }
 
-  function saveSubtaskDetailForm(){
-    var data = {
-      name: byId('stdName').value.trim(),
-      description: richTextValue('stdDesc'),
-      status: byId('stdStatus').value,
-      priority: byId('stdPriority').value,
-      due_date: byId('stdDueDate').value,
-      assignee_id: byId('stdAssignee').value || '',
-      assignee_name: (function(){ var u = userById(byId('stdAssignee').value); return u ? (u.full_name || u.username) : ''; })(),
-      reporter: (FORM_REPORTER_STATE['std'] && FORM_REPORTER_STATE['std'].length ? FORM_REPORTER_STATE['std'] : [currentUserReporterEntry()]).slice(),
-      labels: (FORM_SUBTASK_LABELS_STATE || []).slice(),
-      attachments: (FORM_ATTACH_STATE['std'] || []).slice(),
-      estimated_hours: parseFloat(byId('stdEstHours').value || '0') || 0
-    };
-    if(!data.name){ showAlert('Subtask name is required.'); return; }
-    askConfirm('Save these changes?', 'Save changes').then(function(ok){
-      if(!ok) return;
-      showSync('Saving changes…');
-      SubtaskAPI.updateSubtask(STATE.detailSubtaskId, data).then(function(){
-        showSync('Subtask updated successfully', 'ok');
-        closeSubtaskDetail();
-        return refreshAllData();
-      }).catch(function(err){ showSync('Could not save changes: ' + err.message, 'error'); });
-    });
-  }
+  function saveSubtaskDetailForm(){ if(RX_DETAIL.subtask) rxSave('subtask', null); }
 
   // Work Log section inside the Subtask Detail modal — entries here are
   // logged with both task_id (the parent) and subtask_id set, so they
@@ -6004,6 +5945,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
               '<div style="font-size: 14px;color:var(--ink-soft);margin-top:4px;">' + pInfo.pct + '% of estimate' + (pInfo.overtimePct ? ' — includes overtime' : '') + '</div></div>' :
             '<div style="font-size: 14.5px;color:var(--ink-soft);padding-top:9px;">Calculated once work is logged</div>') +
         '</div>' +
+        '<div class="wm-form-row"><label for="' + p + 'DonePct">Done (%)</label><input id="' + p + 'DonePct" type="number" min="0" max="100" step="5" value="' + (Number(t.progress) || 0) + '">' +
+          '<div class="rx-hint">How much of the work is done. Feeds project completion.</div></div>' +
       '</div>' +
       '<div class="wm-form-grid">' +
         '<div class="wm-form-row"><label>Start Date</label><input id="' + p + 'StartDate" type="date" value="' + (t.start_date||'') + '"></div>' +
@@ -6425,7 +6368,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       attachments: (FORM_ATTACH_STATE[prefix] || []).slice(),
       notes: richTextValue(prefix+'Notes'),
       predecessors: (FORM_PREDECESSORS_STATE[prefix] || []).slice(),
-      is_milestone: byId(prefix+'Milestone') ? byId(prefix+'Milestone').checked : false
+      is_milestone: byId(prefix+'Milestone') ? byId(prefix+'Milestone').checked : false,
+      progress: byId(prefix+'DonePct') ? Math.min(100, Math.max(0, Math.round(parseFloat(byId(prefix+'DonePct').value) || 0))) : 0
     };
   }
 
@@ -6450,6 +6394,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
      ========================================================= */
   function openDetailModal(taskId){
     STATE.detailTaskId = taskId;
+    resetModalDirty('wmDetailModal');
     renderDetailModalBody(taskId);
     openStandaloneView('task-detail');
   }
@@ -6569,20 +6514,16 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     var t = STATE.tasks.filter(function(x){ return x.id === taskId; })[0];
     if(!t) return;
 
+    // DTL-03: no Participants panel; Created / Created by / Last updated moved into Activity at the end.
     byId('wmDetailBody').innerHTML =
+      '<div id="wmDetailActions"></div>' +
       (t.view_only ? '<div class="wm-view-only-banner">This task was shared with you — view only.</div>' : '') +
-      '<div class="wm-detail-grid" style="margin-bottom:10px;">' +
-        detailItem('Created By', escapeHtml(t.created_by || '—')) +
-        detailItem('Created', t.created_at ? t.created_at.slice(0,10) : '—') +
-        detailItem('Last Updated', t.updated_at ? t.updated_at.slice(0,10) : '—') +
-      '</div>' +
-      '<div id="wmDetailMembers" style="margin-bottom:14px;"></div>' +
       formFieldsHtml(t, 'd') +
       '<div id="wmDetailSubtasks"></div>' +
       '<div id="wmDetailWorkLog"></div>' +
-      '<div id="wmDetailComments" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line);"></div>';
+      '<div id="wmDetailComments" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line);"></div>' +
+      '<section id="wmDetailActivity" class="rx-activity" aria-label="Task activity"></section>';
 
-    renderParticipants('wmDetailMembers', 'task', taskId);
     wireLabelsAndAttachments('d', t.labels || [], t.attachments || []);
     wireAttachments('d', t.attachments || [], 'task', taskId);
     wireRichText('dDesc');
@@ -6593,16 +6534,21 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     renderDetailSubtasksSection(taskId);
     renderDetailWorkLogSection(taskId);
     renderComments('wmDetailComments', 'task', taskId);
+    rxTimeline(byId('wmDetailActivity'), { entity: 'task', id: taskId }, rxCreatedMeta(t));
 
-    byId('wmDetailBody').querySelectorAll('input, select, textarea, button').forEach(function(el){ el.disabled = !!t.view_only; });
-    if(byId('wmDetailSave')) byId('wmDetailSave').style.display = t.view_only ? 'none' : '';
-    if(byId('wmDetailDelete')) byId('wmDetailDelete').style.display = t.view_only ? 'none' : '';
-    if(byId('wmDetailShare')) byId('wmDetailShare').style.display = t.view_only ? 'none' : '';
+    byId('wmDetailBody').querySelectorAll('input, select, textarea, button').forEach(function(el){ if(!el.closest('#wmDetailComments')) el.disabled = !!t.view_only; });
+    if(byId('wmDetailTitle')) byId('wmDetailTitle').textContent = 'Task Detail';
+    rxEnhanceDetail({ kind: 'task', body: byId('wmDetailBody'), prefix: 'd', obj: t, canEdit: !t.view_only,
+      skip: '#wmDetailSubtasks, #wmDetailWorkLog, #wmDetailComments, #wmDetailActivity, #wmDetailActions',
+      actionsHost: byId('wmDetailActions'), commentInputId: 'wmDetailCommentsInput', menu: rxTaskMenu(t),
+      collect: function(){ return collectFormData('d'); }, rerender: function(){ renderDetailModalBody(taskId); } });
   }
   // Called after a work log changes while Task Detail is still open, so
   // Actual Hours / Progress / Start-End Time refresh live without closing it.
   function refreshDetailModalContent(taskId){
     if(!byId('view-task-detail').classList.contains('active')) return;
+    // keep unsaved edits: only refresh the sections that changed underneath
+    if(MODAL_DIRTY['wmDetailModal'] || (RX_DETAIL.task && RX_DETAIL.task.editing)){ renderDetailSubtasksSection(taskId); renderDetailWorkLogSection(taskId); return; }
     renderDetailModalBody(taskId);
   }
   function detailItem(label, value){
@@ -6610,24 +6556,8 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   }
   function closeDetailModal(){ closeStandaloneView(); }
 
-  function saveDetailForm(){
-    var data = collectFormData('d');
-    if(!data.task){ showAlert('Task name is required.'); return; }
-    var before = STATE.tasks.filter(function(x){ return x.id === STATE.detailTaskId; })[0];
-    askConfirm('Save these changes?', 'Save changes').then(function(ok){
-      if(!ok) return;
-      showSync('Saving changes…');
-      TaskAPI.updateTask(STATE.detailTaskId, data).then(function(){
-        showSync('Task updated successfully', 'ok');
-        closeDetailModal();
-        var desc = before && before.status !== data.status ?
-          'Task "' + data.task + '" status changed from ' + before.status + ' to ' + data.status :
-          'Task "' + data.task + '" was updated';
-        ActivityAPI.log({ project: data.project, task_id: STATE.detailTaskId, action: 'update_task', description: desc });
-        return refreshAllData();
-      }).catch(function(err){ showSync('Could not save changes: ' + err.message, 'error'); });
-    });
-  }
+  // v2.3.5 DTL-01: saves only the changed fields, with the version the page was opened at.
+  function saveDetailForm(){ if(RX_DETAIL.task) rxSave('task', null); }
 
   /* =========================================================
      14. NAVIGATION / BOOTSTRAP
@@ -6671,7 +6601,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   var STANDALONE_RETURN_STACK = [];
   var STANDALONE_PAGES = {
     'task-form': function(){ return { route: 'task-new' + (STATE.formPresetProject ? '?project=' + encodeURIComponent(STATE.formPresetProject) : ''), title: 'New task', crumbs: [['All Tasks', '#/all']], dirtyKey: 'wmFormModal', back: 'wmFormClose' }; },
-    'task-detail': function(){ var t = STATE.tasks.filter(function(x){ return x.id === STATE.detailTaskId; })[0]; return { route: 'task?id=' + encodeURIComponent(STATE.detailTaskId), title: t ? t.task : 'Task', crumbs: [['All Tasks', '#/all']].concat(t && t.project ? [[t.project, '#project/' + encodeURIComponent(t.project)]] : []), dirtyKey: null, back: null }; },
+    'task-detail': function(){ var t = STATE.tasks.filter(function(x){ return x.id === STATE.detailTaskId; })[0]; return { route: 'task?id=' + encodeURIComponent(STATE.detailTaskId), title: t ? t.task : 'Task', crumbs: [['All Tasks', '#/all']].concat(t && t.project ? [[t.project, '#project/' + encodeURIComponent(t.project)]] : []), dirtyKey: 'wmDetailModal', back: null }; },
     'subtask-detail': function(){ var st = STATE.subtasks.filter(function(x){ return x.id === STATE.detailSubtaskId; })[0], t = st && STATE.tasks.filter(function(x){ return x.id === st.task_id; })[0]; return { route: 'subtask?id=' + encodeURIComponent(STATE.detailSubtaskId), title: st ? st.name : 'Subtask', crumbs: [['All Tasks', '#/all']].concat(t ? [[t.task, '#/f/task?id=' + encodeURIComponent(t.id)]] : []), dirtyKey: 'wmSubtaskModal', back: 'wmSubtaskModalClose' }; }
   };
   function openStandaloneView(viewId){
@@ -6751,6 +6681,659 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     });
   })();
 
+  /* =========================================================
+     v2.3.5 — REXUS_Requirements_v2.3.4 Detailed Addendum
+     PRJ-01/02 project metrics + status colours · DSH-01..03 dashboard · DTL-01..03 detail read mode,
+     action bar, no Participants · ACT-01..03 clone / archive / move / convert · LOG-01 activity timeline
+     ========================================================= */
+  function rxReq(method, path, body){
+    return fetch(path, { method: method, credentials: 'same-origin', headers: { 'Content-Type': 'application/json' },
+      body: body === undefined || method === 'GET' ? undefined : JSON.stringify(body) })
+      .then(function(r){
+        return r.json().catch(function(){ return {}; }).then(function(j){
+          if(r.status === 401){ onUnauthorized(); throw new Error('Not signed in'); }
+          if(!r.ok){ var e = new Error((j && j.error) || ('Request failed (' + r.status + ')')); e.status = r.status; e.data = j; throw e; }
+          return j;
+        });
+      });
+  }
+  function rxToday(){ return localIso(new Date()); }
+  function rxEsc(s){ return escapeHtml(s == null ? '' : String(s)); }
+
+  /* ---- PRJ-02: one status → colour map for projects and tasks (unknown statuses stay neutral) ---- */
+  var RX_STATUS_TONE = { 'Draft': 'gray', 'Not Started': 'gray', 'Planned': 'slate', 'Active': 'green', 'In Progress': 'teal',
+    'Review': 'violet', 'Blocked': 'amber', 'On Hold': 'amber', 'Urgent': 'orange', 'Overdue': 'red', 'Completed': 'navy',
+    'Cancelled': 'blue', 'Canceled': 'blue', 'Archived': 'gray' };
+  function rxStatusTone(s){ return RX_STATUS_TONE[s] || 'neutral'; }
+  function rxStatusBadge(s){ return '<span class="wm-badge rx-st rx-st-' + rxStatusTone(s) + '">' + rxEsc(s || '—') + '</span>'; }
+
+  /* ---- PRJ-01: completion (0–100) and performance index ---- */
+  function rxProjectMetrics(name, ownerId){
+    var subsBy = {};
+    (STATE.subtasks || []).forEach(function(s){ (subsBy[s.task_id] = subsBy[s.task_id] || []).push(s); });
+    var tasks = STATE.tasks.filter(function(t){ return t.project === name && (!ownerId || !t.user_id || t.user_id === ownerId); })
+      .map(function(t){
+        var subs = (subsBy[t.id] || []).filter(function(s){ return s.status !== 'Cancelled'; });
+        return Object.assign({}, t, { subtask_done: subs.length ? subs.filter(function(s){ return s.status === 'Completed'; }).length / subs.length : undefined });
+      });
+    return window.REXUSMetrics ? REXUSMetrics.project(tasks, function(t){ return computeActualHours(t.id); }, rxToday()) : null;
+  }
+  function rxNA(v, suffix){ return v === null || v === undefined ? 'N/A' : v + (suffix || ''); }
+  function rxPerfTip(m){
+    return 'Estimated hours: ' + m.estimated + 'h\nLogged hours: ' + m.logged + 'h\nPlanned earned hours (by today): ' + m.planned + 'h\nEarned hours: ' + m.earned +
+      'h\nSchedule index (SPI): ' + rxNA(m.spi) + '\nEffort index (EI): ' + rxNA(m.ei) + '\nPerformance = 0.7 × SPI + 0.3 × EI\nBelow 100 behind · 100 on track · above 100 ahead';
+  }
+  function rxPerfHtml(m){
+    if(!m) return '';
+    var text = (m.performance === null ? '' : m.performance + ' · ') + m.label;
+    return '<span class="rx-perf rx-perf--' + m.state + '" tabindex="0" data-rx-tip="' + rxEsc(rxPerfTip(m)) + '" aria-label="Performance ' + rxEsc(text) + '">' +
+      '<span class="rx-perf-dot" aria-hidden="true"></span>' + rxEsc(text) + '</span>';
+  }
+  function rxCompletionHtml(m){
+    var pct = m && m.completion !== null ? m.completion : 0, txt = m ? rxNA(m.completion, '%') : 'N/A';
+    return '<div class="rx-completion" role="img" aria-label="Completion ' + txt + '"><div class="wm-progress-track"><div class="wm-progress-fill' + (pct >= 100 ? ' complete' : '') + '" style="width:' + pct + '%"></div></div><span>' + txt + '</span></div>';
+  }
+  // One floating tooltip for every [data-rx-tip] (works inside scrolling tables, on hover and on keyboard focus).
+  (function(){
+    var tip = null;
+    function show(el){
+      if(!tip){ tip = document.createElement('div'); tip.className = 'rx-tip'; tip.setAttribute('role', 'tooltip'); tip.id = 'rxTip'; document.body.appendChild(tip); }
+      tip.textContent = el.getAttribute('data-rx-tip'); tip.hidden = false; el.setAttribute('aria-describedby', 'rxTip');
+      var r = el.getBoundingClientRect(), w = Math.min(320, window.innerWidth - 16);
+      tip.style.maxWidth = w + 'px';
+      var left = Math.min(Math.max(8, r.left), window.innerWidth - tip.offsetWidth - 8);
+      var top = r.bottom + 6; if(top + tip.offsetHeight > window.innerHeight - 8) top = Math.max(8, r.top - tip.offsetHeight - 6);
+      tip.style.left = left + 'px'; tip.style.top = top + 'px';
+    }
+    function hide(){ if(tip) tip.hidden = true; }
+    document.addEventListener('mouseover', function(e){ var el = e.target.closest && e.target.closest('[data-rx-tip]'); if(el) show(el); else hide(); });
+    document.addEventListener('focusin', function(e){ var el = e.target.closest && e.target.closest('[data-rx-tip]'); if(el) show(el); else hide(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hide(); });
+    window.addEventListener('scroll', hide, true);
+  })();
+
+  /* ---- DSH-01: one task panel with five tabs ---- */
+  var RX_DASH_TABS = [['today', 'Today'], ['upcoming', 'Upcoming'], ['inprogress', 'In Progress'], ['overdue', 'Overdue'], ['completed', 'Completed']];
+  function rxDashGroups(tasks, day){
+    var open = function(t){ return t.status !== 'Completed' && t.status !== 'Cancelled'; };
+    var byDue = function(a, b){ return String(a.due_date || '9999').localeCompare(String(b.due_date || '9999')); };
+    return {
+      today: tasks.filter(function(t){ return t.status !== 'Cancelled' && (t.due_date === day || isActiveOnDate(t, day)); }).sort(byDue),
+      upcoming: tasks.filter(function(t){ return open(t) && t.due_date && t.due_date > day; }).sort(byDue),
+      inprogress: tasks.filter(function(t){ return t.status === 'In Progress'; }).sort(byDue),
+      overdue: tasks.filter(function(t){ return open(t) && t.due_date && t.due_date < day; }).sort(byDue),
+      completed: tasks.filter(function(t){ return t.status === 'Completed'; }).sort(function(a, b){ return String(b.updated_at || '').localeCompare(String(a.updated_at || '')); })
+    };
+  }
+  function rxDashPanelHtml(groups){
+    if(!STATE.dashTab){ try { STATE.dashTab = localStorage.getItem('rx_dash_tab') || ''; } catch(e){} }   // remembered per browser
+    if(!groups[STATE.dashTab]) STATE.dashTab = 'today';
+    var cur = STATE.dashTab;
+    return '<section class="rx-dash-panel" aria-label="Tasks">' +
+      '<div class="rx-tabs" role="tablist" aria-label="Task lists">' +
+      RX_DASH_TABS.map(function(tb){
+        var on = tb[0] === cur;
+        return '<button type="button" role="tab" class="rx-tab' + (on ? ' active' : '') + '" id="rxDashTab-' + tb[0] + '" data-tab="' + tb[0] + '" aria-selected="' + on + '" aria-controls="rxDashList" tabindex="' + (on ? 0 : -1) + '">' +
+          '<span class="rx-tab-label">' + tb[1] + '</span><span class="rx-tab-count">' + groups[tb[0]].length + '</span></button>';
+      }).join('') + '</div>' +
+      '<div class="wm-task-list rx-dash-list" id="rxDashList" role="tabpanel" aria-labelledby="rxDashTab-' + cur + '"></div></section>';
+  }
+  var RX_DASH_EMPTY = { today: 'No tasks due or scheduled today.', upcoming: 'Nothing due after today.', inprogress: 'No task is in progress.', overdue: 'Nothing is overdue.', completed: 'No completed tasks yet.' };
+  function rxRenderDashList(groups){
+    var cur = STATE.dashTab || 'today', list = groups[cur] || [], host = byId('rxDashList');
+    if(!host) return;
+    var shown = list.slice(0, 50);
+    host.innerHTML = shown.length ? shown.map(taskRowHtml).join('') + (list.length > shown.length ? '<div class="rx-more-note">Showing 50 of ' + list.length + '. See <a href="#/all">All Tasks</a> for the rest.</div>' : '') :
+      '<div class="wm-empty">' + RX_DASH_EMPTY[cur] + '</div>';
+    bindTaskRowEvents(host);
+  }
+  function rxWireDashTabs(groups){
+    var bar = document.querySelector('.rx-dash-panel .rx-tabs');
+    if(!bar) return;
+    var tabs = [].slice.call(bar.querySelectorAll('[role=tab]'));
+    function select(btn, focus){
+      STATE.dashTab = btn.getAttribute('data-tab');
+      try { localStorage.setItem('rx_dash_tab', STATE.dashTab); } catch(e){}
+      tabs.forEach(function(b){ var on = b === btn; b.classList.toggle('active', on); b.setAttribute('aria-selected', on); b.tabIndex = on ? 0 : -1; });
+      byId('rxDashList').setAttribute('aria-labelledby', btn.id);
+      rxRenderDashList(groups);
+      if(focus) btn.focus();
+    }
+    tabs.forEach(function(b, i){
+      b.addEventListener('click', function(){ select(b); });
+      b.addEventListener('keydown', function(e){
+        var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : null;
+        if(n === null) return; e.preventDefault(); select(tabs[(n + tabs.length) % tabs.length], true);
+      });
+    });
+    rxRenderDashList(groups);
+  }
+
+  /* ---- DSH-02: read-only Gantt of in-progress tasks ---- */
+  function rxDayNum(iso){ if(!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return null; return Math.round(Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +iso.slice(8, 10)) / 86400000); }
+  function rxIsoFromNum(n){ return new Date(n * 86400000).toISOString().slice(0, 10); }
+  function rxGanttHtml(){
+    var me = STATE.currentUser ? STATE.currentUser.id : '';
+    var mine = STATE.dashGanttMine === true;
+    var all = STATE.tasks.filter(function(t){ return t.status === 'In Progress' && (!mine || t.assignee_id === me); });
+    var dated = [], undated = [];
+    all.forEach(function(t){
+      var s = rxDayNum(t.start_date), d = rxDayNum(t.due_date);
+      if(d === null && s === null){ undated.push(t); return; }
+      if(s === null) s = d; if(d === null) d = s; if(s > d){ var x = s; s = d; d = x; }
+      dated.push({ t: t, s: s, d: d });
+    });
+    dated.sort(function(a, b){ return a.s - b.s || a.d - b.d; });
+    var head = '<div class="rx-gantt-head"><h3 class="wm-section-title" style="margin:0;">In progress — timeline</h3>' +
+      '<div class="wm-period-toggle rx-gantt-scope" role="group" aria-label="Whose tasks" style="margin:0;">' +
+        '<button type="button" class="wm-period-btn' + (mine ? '' : ' active') + '" data-scope="all" aria-pressed="' + !mine + '">All visible</button>' +
+        '<button type="button" class="wm-period-btn' + (mine ? ' active' : '') + '" data-scope="mine" aria-pressed="' + mine + '">Assigned to me</button></div></div>';
+    if(!dated.length && !undated.length) return '<section class="rx-gantt" aria-label="In-progress timeline">' + head + '<div class="wm-empty">No task is in progress' + (mine ? ' for you' : '') + '.</div></section>';
+    var today = rxDayNum(rxToday());
+    var cap = dated.slice(0, 100);
+    var min = today - 3, max = today + 14;
+    cap.forEach(function(r){ if(r.s < min) min = r.s; if(r.d > max) max = r.d; });
+    if(max - min > 730) min = Math.max(min, today - 365), max = Math.min(max, today + 365);
+    var days = max - min + 1, dw = Math.max(6, Math.min(28, Math.floor(1100 / days))), W = days * dw;
+    var ticks = '';
+    for(var n = min; n <= max; n++){
+      var iso = rxIsoFromNum(n), first = iso.slice(8) === '01';
+      if(n === min || first) ticks += '<span class="rx-g-month" style="left:' + ((n - min) * dw) + 'px">' + new Date(iso + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) + '</span>';
+      if(dw >= 14 || new Date(iso + 'T00:00:00').getDay() === 1) ticks += '<span class="rx-g-day" style="left:' + ((n - min) * dw) + 'px">' + (+iso.slice(8)) + '</span>';
+    }
+    var todayX = (today - min) * dw + dw / 2;
+    var rows = cap.map(function(r){
+      var s = Math.max(r.s, min), d = Math.min(r.d, max), t = r.t;
+      var late = t.due_date && t.due_date < rxToday();
+      var label = t.task + ' — ' + (t.start_date ? fmtDate(t.start_date) : 'no start') + ' → ' + (t.due_date ? fmtDate(t.due_date) : 'no due date') + (t.assignee_name ? ' · ' + t.assignee_name : '');
+      return '<div class="rx-g-row" role="row"><button type="button" class="rx-g-name" role="rowheader" data-open="' + rxEsc(t.id) + '" title="' + rxEsc(t.task) + '">' + rxEsc(t.task) + '<small>' + rxEsc(t.project || '') + '</small></button>' +
+        '<div class="rx-g-track" role="gridcell" style="width:' + W + 'px"><span class="rx-g-today" style="left:' + todayX + 'px" aria-hidden="true"></span>' +
+        '<button type="button" class="rx-g-bar' + (late ? ' late' : '') + (!t.start_date || !t.due_date ? ' partial' : '') + '" draggable="false" data-open="' + rxEsc(t.id) + '" style="left:' + ((s - min) * dw) + 'px;width:' + Math.max(dw, (d - s + 1) * dw) + 'px" aria-label="' + rxEsc(label) + '" title="' + rxEsc(label) + '"></button></div></div>';
+    }).join('');
+    return '<section class="rx-gantt" aria-label="In-progress timeline">' + head +
+      '<div class="rx-g-scroll" tabindex="0" aria-label="Timeline, scroll sideways"><div class="rx-g-grid" role="grid" aria-readonly="true" style="--rx-g-w:' + W + 'px">' +
+        '<div class="rx-g-row rx-g-axis" role="row"><span class="rx-g-name" role="columnheader">Task</span><div class="rx-g-track" style="width:' + W + 'px">' + ticks +
+        '<span class="rx-g-today rx-g-today-label" style="left:' + todayX + 'px">Today</span></div></div>' + rows + '</div></div>' +
+      (dated.length > cap.length ? '<div class="rx-more-note">Showing the first 100 of ' + dated.length + ' tasks.</div>' : '') +
+      (undated.length ? '<div class="rx-g-undated"><strong>No dates set (' + undated.length + '):</strong> ' + undated.map(function(t){ return '<button type="button" class="rx-link" data-open="' + rxEsc(t.id) + '">' + rxEsc(t.task) + '</button>'; }).join(', ') + '</div>' : '') +
+      '<div class="rx-g-note">View only. Change dates in the task.</div></section>';
+  }
+  function rxWireGantt(host){
+    var sec = host.querySelector('.rx-gantt');
+    if(!sec) return;
+    sec.addEventListener('click', function(e){
+      var o = e.target.closest('[data-open]'); if(o){ openDetailModal(o.getAttribute('data-open')); return; }
+      var sc = e.target.closest('[data-scope]');
+      if(sc){ STATE.dashGanttMine = sc.getAttribute('data-scope') === 'mine'; sec.outerHTML = rxGanttHtml(); rxWireGantt(host); }
+    });
+    sec.addEventListener('dragstart', function(e){ e.preventDefault(); });
+    var scroller = sec.querySelector('.rx-g-scroll'), todayEl = sec.querySelector('.rx-g-today-label');
+    if(scroller && todayEl){   // bring today into view only when the range is wider than the visible area
+      var vis = scroller.clientWidth - (sec.querySelector('.rx-g-name') || { offsetWidth: 0 }).offsetWidth;
+      if(todayEl.offsetLeft > vis * 0.7) scroller.scrollLeft = Math.max(0, todayEl.offsetLeft - vis * 0.5);
+    }
+  }
+
+  /* ---- LOG-01: activity timeline ---- */
+  var RX_ACTION_LABEL = {
+    create_task: 'Task created', update_task: 'Task updated', change_status: 'Status changed', assign_task: 'Assignee changed', delete_task: 'Task deleted',
+    create_subtask: 'Subtask created', update_subtask: 'Subtask updated', delete_subtask: 'Subtask deleted', comment: 'Comment added',
+    log_work: 'Work logged', update_log: 'Work log edited', delete_log: 'Work log deleted', create_project: 'Project created', update_project: 'Project updated',
+    delete_project: 'Project deleted', archive_task: 'Archived', restore_task: 'Restored', archive_subtask: 'Archived', restore_subtask: 'Restored',
+    clone_task: 'Cloned', cloned_to: 'Copy made', clone_subtask: 'Cloned', move_task: 'Moved', move_task_out: 'Task moved out', move_subtask: 'Moved',
+    move_subtask_out: 'Subtask moved out', convert_task: 'Converted', convert_subtask: 'Converted', auto_schedule: 'Dates rescheduled', apply_template: 'Template applied'
+  };
+  var RX_FIELD_LABEL = { task: 'Name', name: 'Name', description: 'Description', priority: 'Priority', status: 'Status', progress: 'Done %', start_date: 'Start date',
+    due_date: 'Due date', start_time: 'Start time', end_time: 'End time', estimated_hours: 'Estimated hours', actual_hours: 'Actual hours', notes: 'Notes',
+    task_type: 'Type', labels: 'Labels', recurring: 'Recurring', reporter: 'Reporter', assignee_name: 'Assignee', predecessors: 'Dependencies',
+    is_milestone: 'Milestone', deadline: 'Deadline', owner: 'Owner', budget: 'Budget' };
+  function rxShortVal(field, v){
+    if(v === '' || v === undefined || v === null) return '—';
+    if(field === 'reporter' || field === 'labels' || field === 'predecessors'){
+      try { var a = JSON.parse(v); if(Array.isArray(a)) return a.length ? a.map(function(x){ return typeof x === 'string' ? x : (x.name || x.id); }).join(', ') : '—'; } catch(e){}
+    }
+    return v;
+  }
+  function rxEventHtml(a){
+    var name = RX_ACTION_LABEL[a.action] || String(a.action || '').replace(/_/g, ' ');
+    var who = a.actor_name || (userById(a.user_id) || {}).full_name || a.user_id || 'Someone';
+    var src = a.entity_type ? '<span class="rx-tl-src">' + rxEsc(a.entity_type === 'subtask' ? 'Subtask ' + (a.subtask_id || '') : a.entity_type === 'task' ? 'Task ' + (a.task_id || '') : 'Project') + '</span>' : '';
+    var ch = a.meta && a.meta.changes ? '<ul class="rx-tl-changes">' + a.meta.changes.map(function(c){
+      var label = RX_FIELD_LABEL[c.field] || c.field;
+      return '<li><span class="rx-tl-field">' + rxEsc(label) + '</span>' + ('from' in c ? ': ' + rxEsc(rxShortVal(c.field, c.from)) + ' → ' + rxEsc(rxShortVal(c.field, c.to)) : ' changed') + '</li>';
+    }).join('') + '</ul>' : '';
+    var d = a.created_at ? new Date(a.created_at) : null;
+    return '<li class="rx-tl-item">' + avatarHtml(userById(a.user_id) || who, 26) +
+      '<div class="rx-tl-body"><div class="rx-tl-line"><strong>' + rxEsc(name) + '</strong> · <span>' + rxEsc(who) + '</span>' + src +
+      (d ? '<time datetime="' + rxEsc(a.created_at) + '">' + rxEsc(d.toLocaleString()) + '</time>' : '') + '</div>' +
+      '<div class="rx-tl-desc">' + rxEsc(a.description) + '</div>' + ch + '</div></li>';
+  }
+  function rxTimeline(host, q, metaHtml){
+    if(!host) return;
+    host.innerHTML = '<h3 class="rx-tl-title">Activity</h3>' + (metaHtml || '') +
+      '<ol class="rx-tl" aria-label="Activity, newest first"></ol><div class="rx-tl-status" role="status">Loading activity…</div>' +
+      '<button type="button" class="wm-btn rx-tl-more" hidden>Load older activity</button>';
+    var ol = host.querySelector('.rx-tl'), more = host.querySelector('.rx-tl-more'), st = host.querySelector('.rx-tl-status'), before = null;
+    function load(){
+      var url = '/api/activity?entity=' + q.entity + (q.id ? '&id=' + encodeURIComponent(q.id) : '') + (q.project ? '&project=' + encodeURIComponent(q.project) : '') +
+        (q.owner ? '&owner=' + encodeURIComponent(q.owner) : '') + '&limit=50' + (before ? '&before=' + encodeURIComponent(before) : '');
+      more.disabled = true;
+      rxReq('GET', url).then(function(j){
+        ol.insertAdjacentHTML('beforeend', (j.activity || []).map(rxEventHtml).join(''));
+        before = j.next_before; more.hidden = !before; more.disabled = false;
+        st.textContent = ol.children.length ? '' : 'No activity recorded yet.';
+      }).catch(function(e){ st.textContent = 'Could not load activity: ' + e.message; more.disabled = false; });
+    }
+    more.addEventListener('click', load);
+    load();
+  }
+  function rxCreatedMeta(o){
+    var t = function(v){ return v ? '<time datetime="' + rxEsc(v) + '">' + rxEsc(new Date(v).toLocaleString()) + '</time>' : '—'; };
+    return '<div class="rx-tl-meta"><span>Created by <strong>' + rxEsc(o.created_by || '—') + '</strong></span><span>Created ' + t(o.created_at) + '</span><span>Last updated ' + t(o.updated_at) + '</span></div>';
+  }
+
+  /* ---- generic dialog (forms for Clone / Move / Convert) ---- */
+  function rxDialog(o){
+    return new Promise(function(resolve){
+      var wrap = document.createElement('div');
+      wrap.className = 'wm-modal-overlay open rx-dialog';
+      wrap.innerHTML = '<div class="wm-modal" role="dialog" aria-modal="true" aria-labelledby="rxDlgTitle" style="max-width:' + (o.width || 520) + 'px;">' +
+        '<div class="wm-modal-head"><h3 id="rxDlgTitle">' + rxEsc(o.title) + '</h3></div>' +
+        '<div class="wm-modal-body">' + o.body + '<div class="rx-dlg-error" role="alert"></div></div>' +
+        '<div class="wm-modal-footer"><button type="button" class="wm-btn" data-x="cancel">Cancel</button><button type="button" class="wm-btn primary" data-x="ok">' + rxEsc(o.ok || 'Confirm') + '</button></div></div>';
+      var host = byId('wmConfirmModal') ? byId('wmConfirmModal').parentNode : document.body;
+      host.appendChild(wrap);
+      var prevFocus = document.activeElement;
+      var okBtn = wrap.querySelector('[data-x=ok]'), err = wrap.querySelector('.rx-dlg-error');
+      function close(v){ wrap.remove(); if(prevFocus && prevFocus.focus) prevFocus.focus(); resolve(v); }
+      if(o.wire) o.wire(wrap);
+      wrap.querySelector('[data-x=cancel]').addEventListener('click', function(){ close(null); });
+      wrap.addEventListener('keydown', function(e){ if(e.key === 'Escape') close(null); });
+      okBtn.addEventListener('click', function(){
+        if(okBtn.disabled) return;
+        err.textContent = '';
+        var p = o.submit(wrap);
+        if(!p || !p.then){ if(p !== false) close(p); return; }
+        okBtn.disabled = true; okBtn.setAttribute('aria-busy', 'true');
+        p.then(function(v){ close(v); }, function(e){ okBtn.disabled = false; okBtn.removeAttribute('aria-busy'); err.textContent = e.message || String(e); });
+      });
+      var first = wrap.querySelector('.wm-modal-body input, .wm-modal-body select') || okBtn;
+      setTimeout(function(){ first.focus(); }, 0);
+    });
+  }
+  function rxAct(body){ return rxReq('POST', '/api/work-actions', body); }
+
+  /* ---- ACT-01..03 ---- */
+  function rxCloneTask(t){
+    var subs = (STATE.subtasks || []).filter(function(s){ return s.task_id === t.id; }).length;
+    return rxDialog({ title: 'Clone task', ok: 'Clone',
+      body: '<p>Creates a new task “' + rxEsc(t.task) + ' (copy)” in ' + rxEsc(t.project) + ' with the same description, dates, assignee, reporters, labels, estimate and notes. Status restarts at Not Started.</p>' +
+        '<label class="rx-check"><input type="checkbox" id="rxCloneSubs"' + (subs ? ' checked' : ' disabled') + '> Also copy its subtasks (' + subs + ')</label>' +
+        '<p class="rx-muted">Not copied: work logs, comments, activity history, attachments and dependencies.</p>',
+      submit: function(w){ return rxAct({ action: 'clone', type: 'task', id: t.id, include_subtasks: w.querySelector('#rxCloneSubs').checked }); }
+    }).then(function(res){ if(!res) return; showSync('Task cloned', 'ok'); return refreshAllData().then(function(){ openDetailModal(res.id); }); });
+  }
+  function rxCloneSubtask(s){
+    return rxDialog({ title: 'Clone subtask', ok: 'Clone', body: '<p>Creates “' + rxEsc(s.name) + ' (copy)” under the same task, with the same description, due date, assignee, reporters, labels and estimate. Status restarts at Not Started.</p><p class="rx-muted">Not copied: work logs, comments, activity history and attachments.</p>',
+      submit: function(){ return rxAct({ action: 'clone', type: 'subtask', id: s.id }); }
+    }).then(function(res){ if(!res) return; showSync('Subtask cloned', 'ok'); return refreshAllData().then(function(){ openSubtaskDetail(res.id); }); });
+  }
+  function rxArchive(type, obj){
+    var name = type === 'task' ? obj.task : obj.name;
+    var subs = type === 'task' ? (STATE.subtasks || []).filter(function(s){ return s.task_id === obj.id; }).length : 0;
+    return askConfirm('Archive “' + name + '”?' + (subs ? ' Its ' + subs + ' subtask(s) are hidden with it.' : '') +
+      '\nIt disappears from active lists. Its activity and work logs are kept, and it can be restored from All Tasks → Archived.', 'Archive ' + type).then(function(ok){
+      if(!ok) return;
+      showSync('Archiving…');
+      return rxAct({ action: 'archive', type: type, id: obj.id }).then(function(){
+        showSync('Archived', 'ok'); resetModalDirty(type === 'task' ? 'wmDetailModal' : 'wmSubtaskModal');
+        if(type === 'task') closeDetailModal(); else closeSubtaskDetail();
+        return refreshAllData();
+      }).catch(function(e){ showSync('Could not archive: ' + e.message, 'error'); });
+    });
+  }
+  function rxMoveTask(t){
+    var dests = (STATE.projects || []).filter(function(p){ return !p.view_only && !(p.name === t.project && (p.owner_id || '') === (t.user_id || p.owner_id || '')); });
+    var links = (t.predecessors || []).length + STATE.tasks.filter(function(o){ return o.project === t.project && (o.predecessors || []).some(function(p){ return p.id === t.id; }); }).length;
+    return rxDialog({ title: 'Move task', ok: 'Move',
+      body: '<div class="wm-form-row"><label for="rxMoveDest">Destination project</label><select id="rxMoveDest"><option value="">Choose a project…</option>' +
+        dests.map(function(p){ return '<option value="' + rxEsc((p.owner_id || '') + '::' + p.name) + '">' + rxEsc(p.name) + '</option>'; }).join('') + '</select></div>' +
+        '<p class="rx-muted">The task keeps its ID, subtasks, work logs, comments and history.' + (links ? ' ' + links + ' dependency link(s) with tasks in “' + rxEsc(t.project) + '” will be removed and recorded in Activity.' : '') + '</p>',
+      submit: function(w){
+        var v = w.querySelector('#rxMoveDest').value; if(!v) return Promise.reject(new Error('Choose a destination project.'));
+        var i = v.indexOf('::'); return rxAct({ action: 'move', type: 'task', id: t.id, owner: v.slice(0, i), project: v.slice(i + 2) });
+      }
+    }).then(function(res){ if(!res) return; showSync('Task moved', 'ok'); return refreshAllData().then(function(){ openDetailModal(t.id); }); });
+  }
+  function rxTaskOptions(excludeIds){
+    return STATE.tasks.filter(function(x){ return excludeIds.indexOf(x.id) === -1 && !x.view_only; })
+      .sort(function(a, b){ return (a.project + a.task).localeCompare(b.project + b.task); })
+      .map(function(x){ return '<option value="' + rxEsc(x.id) + '">' + rxEsc(x.project + ' › ' + x.task) + '</option>'; }).join('');
+  }
+  function rxMoveSubtask(s){
+    return rxDialog({ title: 'Move subtask', ok: 'Move',
+      body: '<div class="wm-form-row"><label for="rxMoveTask">Destination task</label><select id="rxMoveTask"><option value="">Choose a task…</option>' + rxTaskOptions([s.task_id]) + '</select></div>' +
+        '<p class="rx-muted">The subtask keeps its ID, work logs, comments and history.</p>',
+      submit: function(w){ var v = w.querySelector('#rxMoveTask').value; if(!v) return Promise.reject(new Error('Choose a destination task.')); return rxAct({ action: 'move', type: 'subtask', id: s.id, parent_id: v }); }
+    }).then(function(res){ if(!res) return; showSync('Subtask moved', 'ok'); return refreshAllData().then(function(){ openSubtaskDetail(s.id); }); });
+  }
+  function rxConvertTask(t){
+    var subs = (STATE.subtasks || []).filter(function(s){ return s.task_id === t.id; });
+    var logs = (STATE.worklogs || []).filter(function(l){ return l.task_id === t.id; });
+    var ownLogs = logs.filter(function(l){ return !l.subtask_id; }).length;
+    return rxDialog({ title: 'Convert task', ok: 'Convert', width: 560,
+      body: '<fieldset class="rx-radio"><legend>Convert “' + rxEsc(t.task) + '” into</legend>' +
+          '<label><input type="radio" name="rxConvTo" value="project" checked> A project</label>' +
+          '<label><input type="radio" name="rxConvTo" value="subtask"' + (subs.length ? ' disabled' : '') + '> A subtask of another task' + (subs.length ? ' <span class="rx-muted">(only for a task without subtasks)</span>' : '') + '</label></fieldset>' +
+        '<div data-for="project"><div class="wm-form-row"><label for="rxConvName">New project name</label><input id="rxConvName" value="' + rxEsc(t.task) + '"></div>' +
+          '<ul class="rx-preview"><li>New project “<span data-name>' + rxEsc(t.task) + '</span>” with the same members as “' + rxEsc(t.project) + '”.</li>' +
+          '<li>' + subs.length + ' subtask(s) become tasks of the new project; their work logs move with them.</li>' +
+          (ownLogs ? '<li>' + ownLogs + ' work log(s) on the task itself stay with the archived task in “' + rxEsc(t.project) + '”.</li>' : '') +
+          '<li>The task gets archived. Links to ' + rxEsc(t.id) + ' open the new project.</li></ul></div>' +
+        '<div data-for="subtask" hidden><div class="wm-form-row"><label for="rxConvParent">Parent task</label><select id="rxConvParent"><option value="">Choose a task…</option>' + rxTaskOptions([t.id]) + '</select></div>' +
+          '<ul class="rx-preview"><li>A new subtask gets a new ID; ' + rxEsc(t.id) + ' is archived and its links open the subtask.</li>' +
+          '<li>' + logs.length + ' work log(s), participants and history follow it.</li><li>Dependency links of this task are removed and recorded in Activity.</li></ul></div>',
+      wire: function(w){
+        w.addEventListener('change', function(e){
+          if(e.target.name !== 'rxConvTo') return;
+          w.querySelectorAll('[data-for]').forEach(function(d){ d.hidden = d.getAttribute('data-for') !== e.target.value; });
+        });
+        w.querySelector('#rxConvName').addEventListener('input', function(e){ w.querySelector('[data-name]').textContent = e.target.value; });
+      },
+      submit: function(w){
+        var to = w.querySelector('[name=rxConvTo]:checked').value;
+        if(to === 'project'){ var n = w.querySelector('#rxConvName').value.trim(); if(!n) return Promise.reject(new Error('Enter a project name.')); return rxAct({ action: 'convert', type: 'task', id: t.id, to: 'project', name: n }).then(function(r){ r.to = 'project'; return r; }); }
+        var p = w.querySelector('#rxConvParent').value; if(!p) return Promise.reject(new Error('Choose the parent task.'));
+        return rxAct({ action: 'convert', type: 'task', id: t.id, to: 'subtask', parent_id: p }).then(function(r){ r.to = 'subtask'; return r; });
+      }
+    }).then(function(res){
+      if(!res) return;
+      showSync('Task converted', 'ok');
+      return refreshAllData().then(function(){ if(res.to === 'project') openProjectDetail(res.project); else openSubtaskDetail(res.id); });
+    });
+  }
+  function rxConvertSubtask(s){
+    var t = STATE.tasks.filter(function(x){ return x.id === s.task_id; })[0] || {};
+    var logs = (STATE.worklogs || []).filter(function(l){ return l.subtask_id === s.id; }).length;
+    return rxDialog({ title: 'Convert to task', ok: 'Convert',
+      body: '<ul class="rx-preview"><li>“' + rxEsc(s.name) + '” becomes a task in “' + rxEsc(t.project || '') + '”, with a new task ID.</li>' +
+        '<li>' + logs + ' work log(s), participants and history follow it.</li><li>The subtask is archived; links to ' + rxEsc(s.id) + ' open the new task.</li></ul>',
+      submit: function(){ return rxAct({ action: 'convert', type: 'subtask', id: s.id, to: 'task' }); }
+    }).then(function(res){ if(!res) return; showSync('Subtask converted', 'ok'); return refreshAllData().then(function(){ openDetailModal(res.id); }); });
+  }
+  function rxOpenArchived(){
+    var body = '<div id="rxArchList" class="rx-arch-list">Loading…</div>';
+    var wrapPromise = rxDialog({ title: 'Archived items', ok: 'Close', width: 640, body: body,
+      wire: function(w){
+        var host = w.querySelector('#rxArchList');
+        function paint(){
+          rxReq('GET', '/api/subtasks?include_archived=1').then(function(j){
+            var tasks = (STATE.archivedTasks || []), subs = (j.subtasks || []).filter(function(s){ return s.archived_at; });
+            var row = function(type, id, name, where, when){ return '<li><div><strong>' + rxEsc(name) + '</strong><small>' + rxEsc(type + ' ' + id + ' · ' + where + (when ? ' · archived ' + new Date(when).toLocaleDateString() : '')) + '</small></div>' +
+              '<button type="button" class="wm-btn" data-restore="' + type + '" data-id="' + rxEsc(id) + '">Restore</button></li>'; };
+            host.innerHTML = (tasks.length || subs.length) ? '<ul>' + tasks.map(function(t){ return row('task', t.id, t.task, t.project, t.archived_at); }).join('') +
+              subs.map(function(s){ var p = STATE.tasks.concat(tasks).filter(function(t){ return t.id === s.task_id; })[0]; return row('subtask', s.id, s.name, p ? p.task : s.task_id, s.archived_at); }).join('') + '</ul>' :
+              '<div class="wm-empty">Nothing is archived.</div>';
+          }).catch(function(e){ host.textContent = 'Could not load archived items: ' + e.message; });
+        }
+        host.addEventListener('click', function(e){
+          var b = e.target.closest('[data-restore]'); if(!b || b.disabled) return;
+          b.disabled = true;
+          rxAct({ action: 'restore', type: b.getAttribute('data-restore'), id: b.getAttribute('data-id') })
+            .then(function(){ showSync('Restored', 'ok'); return refreshAllData(); }).then(paint)
+            .catch(function(err){ b.disabled = false; showSync('Could not restore: ' + err.message, 'error'); });
+        });
+        paint();
+      },
+      submit: function(){ return true; }
+    });
+    return wrapPromise;
+  }
+  function rxResolveAlias(id){
+    return rxReq('GET', '/api/work-actions?resolve=' + encodeURIComponent(id)).then(function(a){
+      return refreshAllData().then(function(){
+        if(a.new_type === 'task' && STATE.tasks.some(function(t){ return t.id === a.new_id; })){ openDetailModal(a.new_id); return true; }
+        if(a.new_type === 'subtask' && STATE.subtasks.some(function(t){ return t.id === a.new_id; })){ openSubtaskDetail(a.new_id); return true; }
+        if(a.new_type === 'project' && a.project){ openProjectDetail(a.project); return true; }
+        return false;
+      });
+    }).catch(function(){ return false; });
+  }
+
+  /* ---- DTL-01 / DTL-02: read mode, inline edit, action bar ---- */
+  var RX_TASK_FIELDS = { Task: ['task'], Desc: ['description'], Project: null, Priority: ['priority'], TaskType: ['task_type'], Recurring: ['recurring'],
+    ReporterChips: ['reporter'], Status: ['status'], Assignee: ['assignee_id', 'assignee_name'], DonePct: ['progress'], StartDate: ['start_date'], DueDate: ['due_date'],
+    GanttSection: ['predecessors', 'is_milestone'], StartTime: ['start_time'], EndTime: ['end_time'], EstHours: ['estimated_hours'], LabelsChips: ['labels'],
+    AttachList: ['attachments'], Notes: ['notes'] };
+  var RX_SUB_FIELDS = { Name: ['name'], Desc: ['description'], Status: ['status'], Priority: ['priority'], DueDate: ['due_date'], Assignee: ['assignee_id', 'assignee_name'],
+    ReporterChips: ['reporter'], LabelsChips: ['labels'], AttachList: ['attachments'], EstHours: ['estimated_hours'] };
+  var ICON_PENCIL = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+  function rxPersonName(r){ if(!r) return ''; if(typeof r === 'string') return r; var u = r.id ? userById(r.id) : null; return u ? (u.full_name || u.username) : (r.name || ''); }
+  function rxFieldView(key, o){
+    var empty = function(txt){ return '<span class="rx-empty">' + txt + '</span>'; };
+    switch(key){
+      case 'task': case 'name': return rxEsc(o[key]) || empty('No name');
+      case 'description': return richTextSeedHtml(o.description) ? '<div class="wm-rich-content">' + richTextSeedHtml(o.description) + '</div>' : empty('No description');
+      case 'notes': return richTextSeedHtml(o.notes) ? '<div class="wm-rich-content">' + richTextSeedHtml(o.notes) + '</div>' : empty('No notes');
+      case 'project': return rxEsc(o.project) + ' <span class="rx-muted">(use More › Move to change)</span>';
+      case 'priority': return o.priority ? '<span class="wm-badge ' + priorityClass(o.priority) + '">' + rxEsc(o.priority) + '</span>' : empty('None');
+      case 'status': return rxStatusBadge(o.status || 'Not Started');
+      case 'task_type': return rxEsc(o.task_type || 'Task');
+      case 'recurring': return o.recurring ? rxEsc(o.recurring.charAt(0).toUpperCase() + o.recurring.slice(1)) : empty('Does not repeat');
+      case 'reporter': var rs = (o.reporter || []).map(rxPersonName).filter(Boolean); return rs.length ? rxEsc(rs.join(', ')) : empty('No reporter');
+      case 'assignee_id': var u = o.assignee_id ? userById(o.assignee_id) : null; return u || o.assignee_name ? '<span class="rx-person">' + avatarHtml(u || o.assignee_name, 22) + rxEsc(u ? userDisplayLabel(u) : o.assignee_name) + '</span>' : empty('Unassigned');
+      case 'progress': return (Number(o.progress) || 0) + '%';
+      case 'start_date': case 'due_date': return o[key] ? rxEsc(fmtDate(o[key])) : empty('Not set');
+      case 'start_time': case 'end_time': return o[key] ? rxEsc(o[key]) : empty('Not set');
+      case 'estimated_hours': return o.estimated_hours ? rxEsc(o.estimated_hours) + 'h' : empty('No estimate');
+      case 'labels': return (o.labels || []).length ? o.labels.map(function(l){ return '<span class="wm-chip">' + rxEsc(l) + '</span>'; }).join(' ') : empty('No labels');
+      case 'attachments': return (o.attachments || []).length ? o.attachments.map(function(a){ return '<div class="wm-attach-row"><a href="' + rxEsc(a.url) + '" target="_blank" rel="noopener">' + rxEsc(a.name || a.url) + '</a></div>'; }).join('') : empty('No attachments');
+      case 'predecessors':
+        var ps = (o.predecessors || []).map(function(p){ var x = STATE.tasks.filter(function(t){ return t.id === p.id; })[0]; return (x ? x.task : p.id) + ' (' + p.type + (p.lag_days ? ', ' + p.lag_days + 'd' : '') + ')'; });
+        return (ps.length ? 'Depends on: ' + rxEsc(ps.join(', ')) : empty('No dependencies')) + (o.is_milestone ? ' · <strong>Milestone</strong>' : '');
+    }
+    return '';
+  }
+  function rxNorm(v){ return v === undefined || v === null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v); }
+  var RX_DETAIL = {};
+  function rxEnhanceDetail(cfg){
+    var body = cfg.body, kind = cfg.kind, o = cfg.obj, dirtyKey = kind === 'task' ? 'wmDetailModal' : 'wmSubtaskModal';
+    var state = RX_DETAIL[kind] = { editing: false, cfg: cfg };
+    body.classList.add('rx-detail', 'rx-read');
+    var skip = cfg.skip ? body.querySelectorAll(cfg.skip) : [];
+    var map = kind === 'task' ? RX_TASK_FIELDS : RX_SUB_FIELDS;
+    var rows = [].slice.call(body.querySelectorAll('.wm-form-row')).filter(function(r){
+      for(var i = 0; i < skip.length; i++) if(skip[i].contains(r)) return false;
+      return true;
+    });
+    rows.forEach(function(row){
+      var ids = [row.id].concat([].map.call(row.querySelectorAll('[id]'), function(e){ return e.id; }));
+      var suffix = null;
+      for(var i = 0; i < ids.length && suffix === null; i++){
+        var id = ids[i]; if(!id || id.indexOf(cfg.prefix) !== 0) continue;
+        var sfx = id.slice(cfg.prefix.length); if(Object.prototype.hasOwnProperty.call(map, sfx)) suffix = sfx;
+      }
+      if(suffix === null){ row.classList.add('rx-static'); return; }
+      var keys = map[suffix], label = row.querySelector('label');
+      var viewKey = keys ? keys[0] : 'project';
+      row.classList.add('rx-field'); row.setAttribute('data-rx-keys', keys ? keys.join(',') : '');
+      row.insertAdjacentHTML('beforeend', '<div class="rx-field-view">' + rxFieldView(viewKey, o) + '</div>');
+      if(row.id === cfg.prefix + 'GanttSection'){ row.style.display = ''; row.classList.toggle('rx-gantt-off', !(o.predecessors || []).length && !o.is_milestone); }
+      if(!keys){ row.classList.add('rx-readonly'); return; }
+      if(!cfg.canEdit) return;
+      var name = label ? label.textContent.trim() : viewKey;
+      row.insertAdjacentHTML('beforeend', '<button type="button" class="rx-field-edit" aria-label="Edit ' + rxEsc(name) + '" title="Edit ' + rxEsc(name) + '">' + ICON_PENCIL + '</button>' +
+        '<div class="rx-field-actions"><button type="button" class="wm-btn primary" data-rx="save-field">Save</button><button type="button" class="wm-btn" data-rx="cancel-field">Cancel</button></div>');
+    });
+    // Only edits inside an open field count as unsaved changes (typing a comment does not).
+    if(!body._rxWired){
+      body._rxWired = true;
+      var markDirty = function(e){
+        var k = body._rxKind, f = e.target.closest && e.target.closest('.rx-field.rx-editing');
+        if(!f || e.target.closest('.rx-field-actions')) return;
+        if(e.type === 'click' && !e.target.closest('button, .wm-chip-remove')) return;
+        MODAL_DIRTY[k === 'task' ? 'wmDetailModal' : 'wmSubtaskModal'] = true;
+      };
+      ['input', 'change', 'click'].forEach(function(ev){ body.addEventListener(ev, markDirty); });
+      body.addEventListener('click', function(e){
+        var k = body._rxKind, b = e.target.closest('.rx-field-edit, [data-rx]');
+        if(!b || !body.contains(b)) return;
+        var row = b.closest('.rx-field');
+        if(b.classList.contains('rx-field-edit')) return rxEditField(k, row);
+        var act = b.getAttribute('data-rx');
+        if(act === 'save-field') return rxSave(k, row);
+        if(act === 'cancel-field') return rxDiscard(k);
+      });
+    }
+    body._rxKind = kind;
+    resetModalDirty(dirtyKey);
+    rxRenderActionBar(kind);
+  }
+  function rxEditField(kind, row){
+    var st = RX_DETAIL[kind], dirtyKey = kind === 'task' ? 'wmDetailModal' : 'wmSubtaskModal';
+    var open = st.cfg.body.querySelector('.rx-field.rx-editing');
+    var go = function(){
+      if(open && open !== row){ st.cfg.rerender(); var again = st.cfg.body.querySelector('.rx-field[data-rx-keys="' + row.getAttribute('data-rx-keys') + '"]'); if(again) row = again; }
+      row.classList.add('rx-editing', 'rx-single');
+      row.classList.remove('rx-gantt-off');
+      var f = row.querySelector('input:not([type=hidden]):not([disabled]), select, textarea, [contenteditable=true]');
+      if(f) f.focus();
+    };
+    if(open && open !== row && MODAL_DIRTY[dirtyKey]) askConfirm('You have unsaved changes in another field. Discard them?', 'Discard changes').then(function(ok){ if(ok){ resetModalDirty(dirtyKey); go(); } });
+    else go();
+  }
+  function rxDiscard(kind){
+    var st = RX_DETAIL[kind], dirtyKey = kind === 'task' ? 'wmDetailModal' : 'wmSubtaskModal';
+    var go = function(){ resetModalDirty(dirtyKey); st.cfg.rerender(); };
+    if(MODAL_DIRTY[dirtyKey]) askConfirm('Discard your unsaved changes?', 'Discard changes').then(function(ok){ if(ok) go(); });
+    else go();
+  }
+  function rxStartEditAll(kind){
+    var st = RX_DETAIL[kind];
+    st.editing = true;
+    st.cfg.body.classList.remove('rx-read');
+    st.cfg.body.querySelectorAll('.rx-field:not(.rx-readonly)').forEach(function(r){ r.classList.add('rx-editing'); r.classList.remove('rx-single', 'rx-gantt-off'); });
+    rxRenderActionBar(kind);
+    var f = st.cfg.body.querySelector('.rx-field.rx-editing input:not([type=hidden]), .rx-field.rx-editing select');
+    if(f) f.focus();
+  }
+  /** Saves the open field (row) or, without a row, every changed field. Sends only changed fields + the version it was opened at. */
+  function rxSave(kind, row){
+    var st = RX_DETAIL[kind], cfg = st.cfg, o = cfg.obj, dirtyKey = kind === 'task' ? 'wmDetailModal' : 'wmSubtaskModal';
+    if(st.saving) return;
+    var data = cfg.collect(), patch = {}, keys = [];
+    var scope = row ? [row] : [].slice.call(cfg.body.querySelectorAll('.rx-field.rx-editing'));
+    scope.forEach(function(r){ (r.getAttribute('data-rx-keys') || '').split(',').filter(Boolean).forEach(function(k){ keys.push(k); }); });
+    keys.forEach(function(k){ if(rxNorm(data[k]) !== rxNorm(o[k] === undefined ? '' : o[k])) patch[k] = data[k]; });
+    var nameKey = kind === 'task' ? 'task' : 'name';
+    if(nameKey in patch && !String(patch[nameKey] || '').trim()){ showAlert((kind === 'task' ? 'Task' : 'Subtask') + ' name is required.'); return; }
+    if('progress' in patch){ var p = Number(patch.progress); if(!isFinite(p) || p < 0 || p > 100){ showAlert('Done % must be between 0 and 100.'); return; } }
+    if(!Object.keys(patch).length){ resetModalDirty(dirtyKey); showSync('No changes to save', 'ok'); cfg.rerender(); return; }
+    patch.expected_updated_at = o.updated_at;
+    st.saving = true; rxRenderActionBar(kind);
+    scope.forEach(function(r){ r.querySelectorAll('[data-rx=save-field]').forEach(function(b){ b.disabled = true; }); });
+    showSync('Saving changes…');
+    rxReq('PUT', '/api/' + (kind === 'task' ? 'tasks/' : 'subtasks/') + encodeURIComponent(o.id), patch).then(function(){
+      st.saving = false; st.editing = false; resetModalDirty(dirtyKey);
+      showSync((kind === 'task' ? 'Task' : 'Subtask') + ' updated', 'ok');
+      return refreshAllData();
+    }).catch(function(e){
+      st.saving = false;
+      scope.forEach(function(r){ r.querySelectorAll('[data-rx=save-field]').forEach(function(b){ b.disabled = false; }); });
+      rxRenderActionBar(kind);
+      if(e.status === 409 && e.data && e.data.code === 'conflict'){
+        askConfirm('Someone else changed this ' + kind + ' after you opened it. Load the latest version? Your unsaved changes will be lost.', 'Changed by someone else')
+          .then(function(ok){ if(ok){ resetModalDirty(dirtyKey); refreshAllData(); } });
+      } else showSync('Could not save changes: ' + e.message, 'error');
+    });
+  }
+  function rxRenderActionBar(kind){
+    var st = RX_DETAIL[kind], cfg = st.cfg, host = cfg.actionsHost, o = cfg.obj;
+    if(!host) return;
+    var ro = !cfg.canEdit, busy = st.saving ? ' disabled aria-busy="true"' : '';
+    var idChip = '<span class="rx-id-chip" title="ID">' + rxEsc(o.id) + '</span>' + (cfg.parentHtml || '');
+    var btns = st.editing ?
+      '<button type="button" class="wm-btn primary" data-act="save"' + busy + '>Save</button><button type="button" class="wm-btn" data-act="cancel">Cancel</button>' :
+      (ro ? '' : '<button type="button" class="wm-btn primary" data-act="edit" aria-keyshortcuts="E">Edit</button><button type="button" class="wm-btn" data-act="assign">Assign</button>') +
+      '<button type="button" class="wm-btn" data-act="comment">Comment</button>' +
+      (ro ? '' : '<div class="rx-more"><button type="button" class="wm-btn" data-act="more" aria-haspopup="menu" aria-expanded="false">More <span aria-hidden="true">▾</span></button>' +
+        '<div class="rx-menu" role="menu" hidden>' + cfg.menu.map(function(m){ return '<button type="button" role="menuitem" class="' + (m.danger ? 'danger' : '') + '" data-menu="' + m.id + '">' + rxEsc(m.label) + '</button>'; }).join('') + '</div></div>');
+    host.innerHTML = '<div class="rx-actionbar" role="toolbar" aria-label="' + (kind === 'task' ? 'Task' : 'Subtask') + ' actions"><div class="rx-actionbar-id">' + idChip + '</div><div class="rx-actionbar-btns">' + btns + '</div></div>';
+    if(host._rxWired) return;
+    host._rxWired = true;
+    host.addEventListener('click', function(e){
+      var b = e.target.closest('[data-act], [data-menu]'); if(!b || b.disabled) return;
+      var s = RX_DETAIL[kind], c = s.cfg, menu = host.querySelector('.rx-menu');
+      var act = b.getAttribute('data-act');
+      if(act === 'edit') return rxStartEditAll(kind);
+      if(act === 'save') return rxSave(kind, null);
+      if(act === 'cancel') return rxDiscard(kind);
+      if(act === 'assign'){ var row = c.body.querySelector('.rx-field[data-rx-keys^="assignee_id"]'); if(row){ rxEditField(kind, row); var inp = row.querySelector('.wm-user-picker-input'); if(inp){ inp.focus(); inp.select && inp.select(); } } return; }
+      if(act === 'comment'){ var ta = byId(c.commentInputId); if(ta){ ta.scrollIntoView({ block: 'center', behavior: 'smooth' }); ta.focus(); } return; }
+      if(act === 'more'){ rxToggleMenu(host, menu.hidden); return; }
+      var m = b.getAttribute('data-menu');
+      if(m){ rxToggleMenu(host, false); var item = c.menu.filter(function(x){ return x.id === m; })[0]; if(item) item.run(); }
+    });
+    host.addEventListener('keydown', function(e){
+      var menu = host.querySelector('.rx-menu'); if(!menu || menu.hidden) return;
+      var items = [].slice.call(menu.querySelectorAll('[role=menuitem]')), i = items.indexOf(document.activeElement);
+      if(e.key === 'Escape'){ rxToggleMenu(host, false); host.querySelector('[data-act=more]').focus(); }
+      else if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){ e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length].focus(); }
+    });
+    document.addEventListener('click', function(e){ if(!host.contains(e.target)) rxToggleMenu(host, false); });
+  }
+  function rxToggleMenu(host, open){
+    var menu = host.querySelector('.rx-menu'), btn = host.querySelector('[data-act=more]');
+    if(!menu) return;
+    menu.hidden = !open; if(btn) btn.setAttribute('aria-expanded', !!open);
+    if(open){
+      menu.classList.remove('rx-menu-left');
+      var r = menu.getBoundingClientRect(); if(r.left < 8) menu.classList.add('rx-menu-left');
+      var f = menu.querySelector('[role=menuitem]'); if(f) f.focus();
+    }
+  }
+  // keyboard: E starts editing on a detail page (not while typing)
+  document.addEventListener('keydown', function(e){
+    if(e.key !== 'e' && e.key !== 'E' || e.ctrlKey || e.metaKey || e.altKey) return;
+    if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName) || (document.activeElement && document.activeElement.isContentEditable)) return;
+    var kind = byId('view-task-detail') && byId('view-task-detail').classList.contains('active') ? 'task' : byId('view-subtask-detail') && byId('view-subtask-detail').classList.contains('active') ? 'subtask' : null;
+    if(kind && RX_DETAIL[kind] && RX_DETAIL[kind].cfg.canEdit && !RX_DETAIL[kind].editing){ e.preventDefault(); rxStartEditAll(kind); }
+  });
+  function rxTaskMenu(t){
+    return [
+      { id: 'clone', label: 'Clone…', run: function(){ rxCloneTask(t); } },
+      { id: 'archive', label: 'Archive', run: function(){ rxArchive('task', t); } },
+      { id: 'move', label: 'Move…', run: function(){ rxMoveTask(t); } },
+      { id: 'convert', label: 'Convert…', run: function(){ rxConvertTask(t); } },
+      { id: 'share', label: 'Share', run: function(){ openShareModal('task', t.id, t.task); } },
+      { id: 'delete', label: 'Delete', danger: true, run: function(){ byId('wmDetailDelete').click(); } }
+    ];
+  }
+  function rxSubtaskMenu(s){
+    return [
+      { id: 'clone', label: 'Clone…', run: function(){ rxCloneSubtask(s); } },
+      { id: 'archive', label: 'Archive', run: function(){ rxArchive('subtask', s); } },
+      { id: 'move', label: 'Move…', run: function(){ rxMoveSubtask(s); } },
+      { id: 'convert', label: 'Convert to task…', run: function(){ rxConvertSubtask(s); } },
+      { id: 'delete', label: 'Delete', danger: true, run: function(){ byId('wmSubtaskDeleteBtn').click(); } }
+    ];
+  }
+  function collectSubtaskData(){
+    return {
+      name: byId('stdName').value.trim(),
+      description: richTextValue('stdDesc'),
+      status: byId('stdStatus').value,
+      priority: byId('stdPriority').value,
+      due_date: byId('stdDueDate').value,
+      assignee_id: byId('stdAssignee').value || '',
+      assignee_name: (function(){ var u = userById(byId('stdAssignee').value); return u ? (u.full_name || u.username) : ''; })(),
+      reporter: (FORM_REPORTER_STATE['std'] && FORM_REPORTER_STATE['std'].length ? FORM_REPORTER_STATE['std'] : [currentUserReporterEntry()]).slice(),
+      labels: (FORM_SUBTASK_LABELS_STATE || []).slice(),
+      attachments: (FORM_ATTACH_STATE['std'] || []).slice(),
+      estimated_hours: parseFloat(byId('stdEstHours').value || '0') || 0
+    };
+  }
+
   // Resolve document references through REXUS's existing view controllers.
   // Caller must validate access via the normal authenticated API first.
   window.REXUSDeepLink = function(kind, id){
@@ -6760,11 +7343,11 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
       openProjectDetail(id);return true;
     }
     if(kind === 'task') {
-      if(!STATE.tasks.some(function(t){return t.id === id;}))return false;
+      if(!STATE.tasks.some(function(t){return t.id === id;})){ rxResolveAlias(id); return false; }
       openDetailModal(id);return true;
     }
     if(kind === 'subtask') {
-      if(!STATE.subtasks.some(function(t){return t.id === id;}))return false;
+      if(!STATE.subtasks.some(function(t){return t.id === id;})){ rxResolveAlias(id); return false; }
       openSubtaskDetail(id);return true;
     }
     return false;
@@ -6785,6 +7368,7 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
         var target = { 'resource-planning': 'organization', 'project-financials': 'finance' }[v[1]] || v[1];   // old links keep working
         if(target === 'finance' && byId('wmFinanceTab') && byId('wmFinanceTab').style.display === 'none'){ switchView('overview'); return true; }
         if(target !== v[1] || STATE.activeView !== v[1] || !byId('view-' + v[1]).classList.contains('active')) switchView(v[1]);
+        else if(v[1] === 'overview' && !byId('view-overview').children.length) renderActiveView();   // v2.3.5: a reload on #/overview rendered an empty page
         return true;
       }
     }
@@ -6814,8 +7398,17 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
     var notFound = function(what, parent){ showAlert(what + ' was not found or you no longer have access to it.'); switchView(parent); };
     var fromRoute = function(fn){ return function(q){ STATE.pageFromRoute = true; fn(q); STATE.pageFromRoute = false; }; };
     REXUSPages.register('task-new', fromRoute(function(q){ openFormModal(q.get('project') || ''); }));
-    REXUSPages.register('task', fromRoute(function(q){ var id = q.get('id'); if(STATE.tasks.some(function(t){ return t.id === id; })) openDetailModal(id); else notFound('This task', 'all'); }));
-    REXUSPages.register('subtask', fromRoute(function(q){ var id = q.get('id'); if(STATE.subtasks.some(function(t){ return t.id === id; })) openSubtaskDetail(id); else notFound('This subtask', 'all'); }));
+    // ACT-02: an old link to a converted item opens the new one; an archived one explains itself.
+    var openOrAlias = function(id, kind){
+      rxResolveAlias(id).then(function(ok){
+        if(ok) return;
+        var arch = kind === 'task' && (STATE.archivedTasks || []).some(function(t){ return t.id === id; });
+        if(arch){ showAlert('This task is archived. Restore it from All Tasks → Archived to open it.'); switchView('all'); }
+        else notFound(kind === 'task' ? 'This task' : 'This subtask', 'all');
+      });
+    };
+    REXUSPages.register('task', fromRoute(function(q){ var id = q.get('id'); if(STATE.tasks.some(function(t){ return t.id === id; })) openDetailModal(id); else openOrAlias(id, 'task'); }));
+    REXUSPages.register('subtask', fromRoute(function(q){ var id = q.get('id'); if(STATE.subtasks.some(function(t){ return t.id === id; })) openSubtaskDetail(id); else openOrAlias(id, 'subtask'); }));
     REXUSPages.register('project-new', fromRoute(function(){ openProjectModal(); }));
     REXUSPages.register('project-edit', fromRoute(function(q){ var n = q.get('name'); if(STATE.projects.some(function(p){ return p.name === n; })) openProjectModal(n); else notFound('This project', 'projects'); }));
     REXUSPages.register('worklog-new', fromRoute(function(q){ openLogModal(null, q.get('task') || undefined, q.get('date') || undefined, q.get('subtask') || undefined); }));
@@ -8192,10 +8785,11 @@ try{var h=document.documentElement,t=localStorage.getItem('rexus-theme'),m=local
   <link rel="stylesheet" href="/rexus-ui.css?v=2.3.4">
   <link rel="stylesheet" href="/rexus-dark.css?v=2.2.3">
   <link rel="stylesheet" href="/rexus-survey.css?v=2.3.4">
-  <link rel="stylesheet" href="/rexus-v234.css?v=2.3.4">  <!-- v2.3.4: GEN-01/02, WM-01..06, DOC-01 visual rules (loaded last) -->
+  <link rel="stylesheet" href="/rexus-v234.css?v=2.3.4">  <!-- v2.3.4: GEN-01/02, WM-01..06, DOC-01 visual rules -->
+  <link rel="stylesheet" href="/rexus-v235.css?v=2.3.5">  <!-- v2.3.5: UI-01 square corners, UI-02 compact spacing, PRJ/DSH/DTL/LOG components (loaded last) -->
   <script src="/rexus-v221.js?v=2.3.4"></script>
 </section>
 
-  <script src="/rexus-ui.js?v=2.3.4" defer></script>
+  <script src="/rexus-ui.js?v=2.3.5" defer></script>
 </body>
 </html>

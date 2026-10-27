@@ -1,0 +1,36 @@
+== dark mono 1440
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+dashboard-tabs       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+dashboard-gantt      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notif-important      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark mono 768
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+dashboard-tabs       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+dashboard-gantt      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notif-important      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark mono 375
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+dashboard-tabs       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+dashboard-gantt      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notif-important      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []
+== dark navy 1440
+overview             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+dashboard-tabs       fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+dashboard-gantt      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+user-menu            fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notifications        fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+notif-important      fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+launcher             fail<3=  0 warn<4.5=  0 light=  0 overflow=0
+JS errors: []

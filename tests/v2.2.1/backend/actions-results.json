@@ -1,0 +1,392 @@
+[
+ {
+  "section": "Migration 037",
+  "name": "column activity_log.owner_id",
+  "pass": true
+ },
+ {
+  "section": "Migration 037",
+  "name": "column activity_log.subtask_id",
+  "pass": true
+ },
+ {
+  "section": "Migration 037",
+  "name": "column activity_log.meta",
+  "pass": true
+ },
+ {
+  "section": "Migration 037",
+  "name": "column tasks.archived_at",
+  "pass": true
+ },
+ {
+  "section": "Migration 037",
+  "name": "column subtasks.archived_at",
+  "pass": true
+ },
+ {
+  "section": "Migration 037",
+  "name": "alias table",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "create task",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "assignee saves one field",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "reporter kept after partial patch",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "dependency kept after partial patch",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "labels kept",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "stale form refused with 409 + latest copy",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "fresh form saves",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "project cannot change through edit (Move instead)",
+  "pass": true
+ },
+ {
+  "section": "DTL-01 partial edit",
+  "name": "edit without expected_updated_at still works (older clients)",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "create subtask",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "task timeline readable by member",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "task timeline has create_task",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "task timeline has update_task",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "task timeline has change_status",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "task timeline has create_subtask",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "task timeline has log_work",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "task timeline has comment",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "newest first",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "changed fields recorded (from → to)",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "actor name included",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "progress change recorded 0 → 40",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "subtask timeline: create, log_work, comment",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "subtask comment stored under the subtask and its task",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "outsider cannot read task timeline",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "paging: 2 rows + cursor",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "next page continues older",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "project timeline includes task events",
+  "pass": true
+ },
+ {
+  "section": "LOG-01 timeline",
+  "name": "client-written events are ignored",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 clone",
+  "name": "member cannot clone (cannot create tasks)",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 clone",
+  "name": "manager clones with subtasks",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 clone",
+  "name": "clone: name, assignee, labels, dates copied; status reset; no deps",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 clone",
+  "name": "clone: worklogs and comments not copied",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 clone",
+  "name": "assignee clones a subtask",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 archive / restore",
+  "name": "outsider cannot archive",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 archive / restore",
+  "name": "archive task",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 archive / restore",
+  "name": "archived task hidden from list",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 archive / restore",
+  "name": "its subtasks hidden too",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 archive / restore",
+  "name": "Archived view lists it with archived_at",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 archive / restore",
+  "name": "archived task cannot be edited",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 archive / restore",
+  "name": "restore",
+  "pass": true
+ },
+ {
+  "section": "ACT-01 archive / restore",
+  "name": "archive + restore logged",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "second project",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "member of destination (not manager) cannot move in",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "move task to another project",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "same id, new project",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "cross-project dependency links removed and reported",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "both subtasks (original + clone) and the worklog follow the task",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "move logged with from/to and removed links",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "subtask assignee without access to the moved task's new project is refused",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "admin moves subtask to another task",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "its worklog follows",
+  "pass": true
+ },
+ {
+  "section": "ACT-03 move",
+  "name": "closed project cost blocks a cross-project move",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "subtask → task",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "worklog moved to the new task",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "old subtask archived + alias",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "old link resolves to the new task",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "outsider cannot resolve",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "new task timeline includes the old subtask history",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "task → subtask",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "worklog follows into the subtask",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "alias chain updated (first id → newest)",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "task with subtasks cannot become a subtask",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "task → project",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "subtask became a task in the new project",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "project members carried over",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "duplicate project name refused",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "member cannot convert",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "a converted task cannot be restored (would duplicate it)",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "Done % is kept within 0–100",
+  "pass": true
+ },
+ {
+  "section": "ACT-02 convert",
+  "name": "new project timeline has its creation",
+  "pass": true
+ },
+ {
+  "section": "Transactions",
+  "name": "failure inside convert returns 500",
+  "pass": true
+ },
+ {
+  "section": "Transactions",
+  "name": "nothing half-done: no new task, subtask not archived",
+  "pass": true
+ }
+]

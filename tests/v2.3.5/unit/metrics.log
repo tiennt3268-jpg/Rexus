@@ -1,0 +1,22 @@
+PASS worked example: completion 60
+PASS worked example: planned 50, earned 60
+PASS worked example: SPI 120, EI 120, performance 120 Ahead
+PASS completion never above 100 while performance can be
+PASS due today, half done, hours on budget → SPI 50, EI 100, 65 Behind
+PASS done on time and on budget → exactly 100 On track
+PASS Completed counts as 100 % whatever the stored progress
+PASS completed with fewer hours → effort index above 100
+PASS no tasks → N/A, no NaN
+PASS no estimates → completion from progress (20), performance N/A
+PASS future task, nothing done → Not started
+PASS severely overdue with no earned work → 0 Behind (never ahead)
+PASS work started early, nothing planned yet, no logs → Insufficient data (no division by zero)
+PASS no dates → schedule index N/A, performance from effort only
+PASS progress capped at 100, negative hours ignored, cancelled excluded
+PASS no Done % → share of completed subtasks
+PASS explicit Done % wins over subtasks
+PASS huge index capped for display
+PASS planned share linear inclusive (day 3 of 5 = 0.6)
+PASS same input → same score (reproducible)
+
+20 / 20 passed
